@@ -1,0 +1,235 @@
+.treemapContainer {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+}
+
+.treemap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  transition: margin-top 600ms cubic-bezier(0.9, 0, 0.1, 1), left 600ms cubic-bezier(0.9, 0, 0.1, 1), width 600ms cubic-bezier(0.9, 0, 0.1, 1);
+}
+.treemap.infoVisible {
+  left: 25em;
+  width: calc(100% - 25em);
+}
+
+.node {
+  transition: opacity 600ms cubic-bezier(0.9, 0, 0.1, 1);
+  will-change: transform;
+  cursor: pointer;
+}
+.node rect {
+  stroke-width: 0;
+  stroke: #fff;
+  fill: none;
+  fill-opacity: 0;
+  will-change: width, height, fill-opacity;
+  transition: fill 600ms cubic-bezier(0.9, 0, 0.1, 1), fill-opacity 600ms cubic-bezier(0.9, 0, 0.1, 1);
+}
+.node .label {
+  font-style: normal;
+  font-weight: 300;
+  fill: rgba(255, 255, 255, 0);
+  text-anchor: middle;
+  transition: filter 600ms cubic-bezier(0.9, 0, 0.1, 1), fill 600ms cubic-bezier(0.9, 0, 0.1, 1);
+}
+.node .thumb {
+  opacity: 0.9;
+  transition: opacity 600ms cubic-bezier(0.9, 0, 0.1, 1);
+}
+.node .lores, .node .hires {
+  transition: opacity 600ms cubic-bezier(0.9, 0, 0.1, 1);
+}
+.node.hide {
+  pointer-events: none;
+  opacity: 0;
+}
+.node.hide rect {
+  fill-opacity: 0;
+}
+.node.hide .label {
+  fill: rgba(255, 255, 255, 0);
+}
+.node.hide .thumb {
+  opacity: 0;
+}
+.node.transparent {
+  pointer-events: none;
+  opacity: 0.2;
+}
+.node:hover rect {
+  fill-opacity: 0.9;
+}
+.node:hover .label {
+  fill: white;
+}
+.node:hover .thumb {
+  opacity: 0;
+}
+.node.level0 {
+  font-size: 10vmin;
+  display: none;
+}
+.node.level1 {
+  font-size: 6vmin;
+}
+.node.level1 .label {
+  transform: translateY(0.35em);
+}
+.node.level2 {
+  font-size: 4vmin;
+}
+.node.level2 rect {
+  fill-opacity: 0.9;
+}
+.node.level2 rect:hover {
+  fill-opacity: 0.9;
+}
+.node.level2.hide rect {
+  fill-opacity: 0;
+}
+.node.level2 .label {
+  transform: translateY(0.35em);
+}
+.node.level3 {
+  font-size: 2vmin;
+}
+
+.info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 25em;
+  height: 100%;
+  padding: 64px 24px 12px 12px;
+  border-right: 4px solid white;
+  background-color: #f8f8f8;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 600ms cubic-bezier(0.9, 0, 0.1, 1);
+}
+.info.visible {
+  transform: translateX(0);
+}
+
+.infoWrapper {
+  transition: opacity 600ms cubic-bezier(0.9, 0, 0.1, 1);
+  height: auto;
+  opacity: 0;
+}
+.infoWrapper h1 {
+  font-size: 2em;
+  font-style: normal;
+  margin-top: 0;
+}
+.infoWrapper p {
+  font-size: 1em;
+  font-style: normal;
+  line-height: 1.4;
+}
+.visible .infoWrapper {
+  opacity: 1;
+}
+
+.showInfo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #888;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  font-size: 1.5rem;
+  font-family: monospace;
+  font-weight: bold;
+  text-align: center;
+  line-height: 32px;
+  color: #888;
+  overflow: hidden;
+  transition: opacity 600ms cubic-bezier(0.9, 0, 0.1, 1);
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+}
+.showInfo.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.breadcrumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 12px;
+  z-index: 9;
+}
+.breadcrumb h1 {
+  display: inline;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 40px;
+  color: #444;
+  margin: 0;
+  cursor: pointer;
+}
+.breadcrumb h1:hover {
+  color: #d40;
+}
+.breadcrumb h1:hover:after {
+  color: #444;
+}
+.breadcrumb h1:not(:last-child) {
+  margin-right: 1.25em;
+}
+.breadcrumb h1:not(:last-child):after {
+  content: "/";
+  position: absolute;
+  display: inline-block;
+  margin: 0 0.5em;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .info {
+    width: 100%;
+  }
+
+  .infoWrapper p {
+    font-size: 1.2em;
+  }
+
+  .treemap.infoVisible {
+    left: 100%;
+    width: 100%;
+  }
+
+  .breadcrumb h1 {
+    position: relative;
+    float: left;
+    box-sizing: unset;
+    font-size: 18px;
+  }
+  .breadcrumb h1:not(:last-child) {
+    width: 2em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 1em;
+    margin-right: 0;
+  }
+  .breadcrumb h1:not(:last-child):after {
+    top: 0;
+    right: 0;
+  }
+}
+
+/*# sourceMappingURL=Treemap.module.css.map */

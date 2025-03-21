@@ -1,0 +1,299 @@
+// Variables
+$headerHeight: 64px;
+$textColor: #444;
+$textHoverColor: #d40;
+$infoWidth: 25em;
+$transitionTime: 600ms;
+$transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
+
+.treemapContainer {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - #{$headerHeight});
+  overflow: hidden;
+}
+
+.treemap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  transition:
+	margin-top $transitionTime $transitionEase,
+	left $transitionTime $transitionEase,
+	width $transitionTime $transitionEase;
+
+  &.infoVisible {
+	left: $infoWidth;
+	width: calc(100% - #{$infoWidth});
+  }
+}
+
+// Node styling
+.node {
+  transition: opacity $transitionTime $transitionEase;
+  will-change: transform;
+  cursor: pointer;
+
+  rect {
+	stroke-width: 0;
+	stroke: #fff;
+	fill: none;
+	fill-opacity: 0;
+	will-change: width, height, fill-opacity;
+	transition:
+	  fill $transitionTime $transitionEase,
+	  fill-opacity $transitionTime $transitionEase;
+  }
+
+  .label {
+	font-style: normal;
+	font-weight: 300;
+	fill: hsla(0, 0%, 100%, 0);
+	text-anchor: middle;
+	transition:
+	  filter $transitionTime $transitionEase,
+	  fill $transitionTime $transitionEase;
+  }
+
+  .thumb {
+	opacity: 0.9;
+	transition: opacity $transitionTime $transitionEase;
+  }
+
+  .lores, .hires {
+	transition: opacity $transitionTime $transitionEase;
+  }
+
+  // Hide nodes (zoom in)
+  &.hide {
+	pointer-events: none;
+	opacity: 0;
+
+	rect {
+	  fill-opacity: 0;
+	}
+
+	.label {
+	  fill: hsla(0, 0%, 100%, 0);
+	}
+
+	.thumb {
+	  opacity: 0;
+	}
+  }
+
+  // Make nodes transparent (but still present)
+  &.transparent {
+	pointer-events: none;
+	opacity: 0.2;
+  }
+
+  // Hover effects
+  &:hover {
+	rect {
+	  fill-opacity: 0.9;
+	}
+
+	.label {
+	  fill: hsla(0, 0%, 100%, 1);
+	}
+
+	.thumb {
+	  opacity: 0;
+	}
+  }
+
+  // Level-specific styling
+  &.level0 {
+	font-size: 10vmin;
+	display: none;
+  }
+
+  &.level1 {
+	font-size: 6vmin;
+
+	.label {
+	  transform: translateY(0.35em); // x-height
+	}
+  }
+
+  &.level2 {
+	font-size: 4vmin;
+
+	rect {
+	  fill-opacity: 0.9;
+
+	  &:hover {
+		fill-opacity: 0.9;
+	  }
+	}
+
+	&.hide rect {
+	  fill-opacity: 0;
+	}
+
+	.label {
+	  transform: translateY(0.35em); // x-height
+	}
+  }
+
+  &.level3 {
+	font-size: 2vmin;
+  }
+}
+
+// Info panel
+.info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: $infoWidth;
+  height: 100%;
+  padding: 64px 24px 12px 12px;
+  border-right: 4px solid white;
+  background-color: #f8f8f8;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform $transitionTime $transitionEase;
+
+  &.visible {
+	transform: translateX(0);
+  }
+}
+
+.infoWrapper {
+  transition: opacity $transitionTime $transitionEase;
+  height: auto;
+  opacity: 0;
+
+  h1 {
+	font-size: 2em;
+	font-style: normal;
+	margin-top: 0;
+  }
+
+  p {
+	font-size: 1em;
+	font-style: normal;
+	line-height: 1.4;
+  }
+
+  .visible & {
+	opacity: 1;
+  }
+}
+
+// Show info button
+.showInfo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #888;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  font-size: 1.5rem;
+  font-family: monospace;
+  font-weight: bold;
+  text-align: center;
+  line-height: 32px;
+  color: #888;
+  overflow: hidden;
+  transition: opacity $transitionTime $transitionEase;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+
+  &.show {
+	opacity: 1;
+	pointer-events: all;
+  }
+}
+
+// Breadcrumb
+.breadcrumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 12px;
+  z-index: 9;
+
+  h1 {
+	display: inline;
+	font-size: 24px;
+	font-style: normal;
+	font-weight: 400;
+	line-height: 40px;
+	color: $textColor;
+	margin: 0;
+	cursor: pointer;
+
+	&:hover {
+	  color: $textHoverColor;
+
+	  &:after {
+		color: $textColor;
+	  }
+	}
+
+	&:not(:last-child) {
+	  margin-right: 1.25em;
+
+	  &:after {
+		content: "/";
+		position: absolute;
+		display: inline-block;
+		margin: 0 0.5em;
+		pointer-events: none;
+	  }
+	}
+  }
+}
+
+// Media queries
+@media (max-width: 768px) {
+  .info {
+	width: 100%;
+  }
+
+  .infoWrapper {
+	p {
+	  font-size: 1.2em;
+	}
+  }
+
+  .treemap {
+	&.infoVisible {
+	  left: 100%;
+	  width: 100%;
+	}
+  }
+
+  .breadcrumb {
+	h1 {
+	  position: relative;
+	  float: left;
+	  box-sizing: unset;
+	  font-size: 18px;
+
+	  &:not(:last-child) {
+		width: 2em;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		padding-right: 1em;
+		margin-right: 0;
+
+		&:after {
+		  top: 0;
+		  right: 0;
+		}
+	  }
+	}
+  }
+}

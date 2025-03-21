@@ -1,0 +1,184 @@
+$headerHeight: 64px;
+$textColor: #444;
+$textHoverColor: #d40;
+$transitionTime: 400ms;
+$transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
+
+.header {
+  position: fixed;
+  width: 100%;
+  height: $headerHeight;
+  padding: 12px;
+  top: 0;
+  z-index: 100;
+  background-color: rgba(255, 255, 255, 0.95);
+  transition: height $transitionTime $transitionEase;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &.menuOpen {
+	height: auto;
+
+	.nav {
+	  max-height: calc(100vh - $headerHeight);
+	  opacity: 1;
+	  padding-top: 20px;
+	  padding-bottom: 20px;
+	}
+  }
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+
+  svg {
+	width: 100%;
+	height: auto;
+
+	path {
+	  fill: #C80000;
+	}
+  }
+}
+
+.hamburger {
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+
+  .line1, .line2, .line3 {
+	transition: transform $transitionTime $transitionEase, opacity $transitionTime $transitionEase;
+	transform-origin: center;
+  }
+
+  &.active {
+	.line1 {
+	  transform: translateY(6px) rotate(45deg);
+	}
+
+	.line2 {
+	  opacity: 0;
+	}
+
+	.line3 {
+	  transform: translateY(-6px) rotate(-45deg);
+	}
+  }
+}
+
+.nav {
+  position: absolute;
+  top: $headerHeight;
+  left: 0;
+  width: 100%;
+  max-height: 0;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.95);
+  transition:
+	max-height $transitionTime $transitionEase,
+	opacity $transitionTime $transitionEase,
+	padding $transitionTime $transitionEase;
+  opacity: 0;
+
+  ul {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+  }
+
+  li {
+	font-size: 24px;
+	font-weight: 400;
+
+	a {
+	  color: $textColor;
+	  text-decoration: none;
+	  transition: color 200ms ease;
+
+	  &:hover {
+		color: $textHoverColor;
+	  }
+	}
+  }
+
+  .social {
+	margin-top: 20px;
+	display: flex;
+	align-items: center;
+
+	a {
+	  display: flex;
+	  align-items: center;
+	  gap: 10px;
+	}
+
+	.linkedinIcon {
+	  display: flex;
+	  width: 24px;
+	  height: 24px;
+
+	  svg {
+		width: 100%;
+		height: 100%;
+		fill: currentColor;
+	  }
+	}
+  }
+}
+
+// Desktop styles
+@media (min-width: 768px) {
+  .header {
+	padding: 12px 24px;
+
+	&.menuOpen {
+	  height: $headerHeight;
+
+	  .nav {
+		max-height: none;
+		padding-top: 0;
+		padding-bottom: 0;
+	  }
+	}
+  }
+
+  .hamburger {
+	display: none; // Hide hamburger on desktop
+  }
+
+  .nav {
+	position: static;
+	max-height: none;
+	width: auto;
+	opacity: 1;
+	background-color: transparent;
+
+	ul {
+	  flex-direction: row;
+	  gap: 40px;
+	}
+
+	li {
+	  font-size: 18px;
+	}
+
+	.social {
+	  margin-top: 0;
+	  margin-left: 20px;
+	}
+  }
+}

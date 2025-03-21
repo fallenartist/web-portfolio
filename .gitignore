@@ -128,3 +128,12 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# nova
+.nova/
+
+#media
+public/media/
+
+# DS_Store
+.DS_Store

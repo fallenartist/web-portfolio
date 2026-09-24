@@ -16,14 +16,18 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [{ settings }, menu] = await Promise.all([getPortfolio(), getMainMenu()])
+  const [{ settings, treemapData }, menu] = await Promise.all([getPortfolio(), getMainMenu()])
   return (
     <html lang="en">
       <head>
         <link rel="stylesheet" href="https://fonts.typotheque.com/WF-004891-002394.css" />
       </head>
       <body>
-        <BreadcrumbProvider title={settings?.siteTitle || 'Design Portfolio'} menu={menu}>
+        <BreadcrumbProvider
+          title={settings?.siteTitle || 'Design Portfolio'}
+          menu={menu}
+          legacyRootSlug={treemapData.legacyRootSlug}
+        >
           {children}
         </BreadcrumbProvider>
       </body>

@@ -79,12 +79,17 @@ export function transformDataForTreemap(
     if (!cycle && parentID != null && map.has(parentID)) map.get(parentID)!.children!.push(node)
     else roots.push(node)
   }
+  // Imported content may already contain the portfolio's root category.
+  const rootSlug = settings?.rootCategorySlug || 'work'
+  const wrapper =
+    roots.length === 1 && ['root', rootSlug].includes(roots[0].slug) ? roots[0] : undefined
   return {
     id: 'root',
+    legacyRootSlug: wrapper?.slug,
     kind: 'root',
     slug: settings?.rootCategorySlug || 'work',
     title: settings?.rootCategoryTitle || 'WORK',
-    children: roots,
+    children: wrapper?.children ?? roots,
     settings: {
       siteTitle: settings?.siteTitle || 'Design Portfolio',
       enableAutoplay: settings?.enableAutoplay !== false,

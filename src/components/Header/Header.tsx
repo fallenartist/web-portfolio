@@ -8,6 +8,7 @@ import type { Menu, Category } from '@/payload-types'
 import type { BreadcrumbItem } from '@/types'
 
 interface HeaderProps {
+  legacyRootSlug?: string
   title?: string
   menu?: Menu | null
   breadcrumb?: BreadcrumbItem[]
@@ -17,6 +18,7 @@ interface HeaderProps {
 export default function Header({
   title = 'Design Portfolio',
   menu = null,
+  legacyRootSlug,
   breadcrumb = [],
   onBreadcrumbClick,
 }: HeaderProps) {
@@ -109,7 +111,7 @@ export default function Header({
               <li key={`menu-item-${index}`}>
                 {item.type === 'internal' && item.internalLink ? (
                   <Link
-                    href={getInternalLinkHref(item.internalLink)}
+                    href={getInternalLinkHref(item.internalLink, legacyRootSlug)}
                     onClick={() => setOpenPath(null)}
                   >
                     {item.title}
@@ -149,8 +151,13 @@ function categoryPath(category: number | Category | null | undefined): string[] 
 
 function getInternalLinkHref(
   link: NonNullable<NonNullable<Menu['items']>[number]['internalLink']>,
+  legacyRootSlug?: string,
 ): string {
   if (!link || typeof link.value !== 'object') return '/'
-  if (link.relationTo === 'categories') return '/' + categoryPath(link.value).join('/')
-  return '/' + [...categoryPath(link.value.category), encodeURIComponent(link.value.slug)].join('/')
+  const segments =
+    link.relationTo === 'categories'
+      ? categoryPath(link.value)
+      : [...categoryPath(link.value.category), encodeURIComponent(link.value.slug)]
+  if (legacyRootSlug && segments[0] === encodeURIComponent(legacyRootSlug)) segments.shift()
+  return '/' + segments.join('/')
 }

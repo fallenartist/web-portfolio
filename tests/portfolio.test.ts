@@ -110,3 +110,14 @@ test('sample endpoint no longer exposes users', async () => {
   assert.equal(response.status, 404)
   assert.deepEqual(await response.json(), { error: 'Not found' })
 })
+
+test('imported WORK root opens directly on categories and preserves nested projects', () => {
+  const tree = transformDataForTreemap(
+    [category(10, { slug: 'root', title: 'WORK' }), category(1, { parent: 10 })],
+    [project()],
+  )
+  assert.equal(tree.legacyRootSlug, 'root')
+  assert.equal(tree.children?.[0].slug, 'category-1')
+  assert.equal(findTreemapNode(tree, ['category-1', 'project'])?.title, 'Project')
+  assert.equal(findTreemapNode(tree, ['root']), undefined)
+})

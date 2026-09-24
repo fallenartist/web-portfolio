@@ -1,18 +1,11 @@
-import { getPayload } from 'payload';
-import config from '@payload-config';
-import Treemap from '@/components/Treemap/Treemap';
-import { fetchTreemapData } from '@/lib/transformers';
+import Treemap from '@/components/Treemap/Treemap'
+import { getPortfolio } from '@/lib/site-data'
 
 export default async function Home() {
-  // Initialize Payload
-  const payload = await getPayload({ config });
-
-  // Fetch and transform data
-  const { treemapData } = await fetchTreemapData(payload);
-
+  const { treemapData } = await getPortfolio()
   return (
-	<main className="min-h-screen">
-	  <Treemap data={treemapData} baseUrl="/" />
-	</main>
-  );
+    <main>
+      <Treemap data={treemapData} />
+    </main>
+  )
 }

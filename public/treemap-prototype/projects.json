@@ -1,0 +1,431 @@
+{
+  "slug": "work",
+  "title": "WORK",
+  "children": [
+    {
+      "slug": "identity",
+      "title": "Brand Identity",
+      "children": [
+        {
+          "slug": "stanford-cvi",
+          "thumb": "stanford-cvi-thumb.png",
+          "title": "Stanford CVI",
+          "desc": "<h1>Stanford Cardiovascular Institute Logo Design<\/h1><p>\"Stanford Cardiovascular Institute is the nucleus for cardiovascular research at Stanford University, California. Formed in 2004, the <a href=\"https:\/\/med.stanford.edu\/cvi.html\" target=\"_blank\" rel=\"noreferrer noopener\">Cardiovascular Institute<\/a> is home to Stanford\u2019s myriad cardiovascular-related adult and pediatric research, clinical, and educational programs, centers and laboratories, as well as over 500 Stanford basic scientists, graduate students, clinician scientists, and other researchers in heart and vessel disease and prevention.\" \u2014 Stanford CVI. <\/p><p>The Institute asked for identity that would present the organisation as more than the sum of its parts \u2014 research, education and care. The mark is a heart-shaped infinite ribbon referring to the CVI\u2019s limitless flow of novel ideas and top talent. The familiar heart shape helps instantly recognise the Institute\u2019s mission and details of the design make the logo unique and ownable. Finally, the symbol has been designed with flexibility in mind, allowing for applications in every medium, from print, to signage, to clothing. Winning entry in the Institute's 2013 Design Competition.<\/p>",
+          "children": [
+            {
+              "slug": "cvi-1",
+              "title": "Logo",
+              "thumb": "stanford-cvi-logo-thumb.jpg",
+              "image": "stanford-cvi-logo.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "cvi-2",
+              "title": "Lockup",
+              "thumb": "stanford-cvi-print-thumb.jpg",
+              "image": "stanford-cvi-print.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "cvi-3",
+              "title": "Uniform",
+              "thumb": "stanford-cvi-embroidery-thumb.jpg",
+              "image": "stanford-cvi-embroidery.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        },
+        {
+          "slug": "thames-clippers",
+          "thumb": "thames-clippers-thumb.png",
+          "title": "Thames Clippers",
+          "desc": "<h1>Thames Clippers Anniversary Logo and Packaging<\/h1><p>In 2009 Thames Clippers, London's famous river service, celebrated their 10th birthday.<\/p><p>For this occasion, a commemorative box has been designed, holding historical photographs of the crew and the fleet, and sporting an emblem visually referring to the anniversary and the firm's two founders.<\/p><p>The emblem was a big success at the company and it was requested to become an official logo of the event. It was manifested throughout the company's marketing and signage.<\/p>",
+          "children": [
+            {
+              "slug": "tc-1",
+              "title": "Logo",
+              "thumb": "thames-clippers-logo-thumb.jpg",
+              "image": "thames-clippers-logo.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "tc-2",
+              "title": "Packaging",
+              "thumb": "thames-clippers-packaging-1-thumb.jpg",
+              "image": "thames-clippers-packaging-1.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "tc-3",
+              "title": "Packaging",
+              "thumb": "thames-clippers-packaging-2-thumb.jpg",
+              "image": "thames-clippers-packaging-2.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "tc-4",
+              "title": "Packaging",
+              "thumb": "thames-clippers-packaging-3-thumb.jpg",
+              "image": "thames-clippers-packaging-3.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        },
+        {
+          "slug": "auto-lenart",
+          "thumb": "auto-lenart-thumb.png",
+          "title": "Auto Lenart",
+          "desc": "<h1>Auto Lenart<\/h1><p>Auto Lenart was a vehicle service shop with over thirty years of practice based in Wrocław, Poland.<\/p><p>The new visual identity aimed to position the local company as a modern and reliable all-round car & van service of the XXI century.<\/p><p>Inspired by unique grills of various car brands, the symbol is a dynamic part of the updated identity.<\/p>",
+          "children": [
+            {
+              "slug": "al-1",
+              "title": "Exterior",
+              "thumb": "AL-elewacja-thumb.jpg",
+              "image": "AL-elewacja.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "al-2",
+              "title": "Logo",
+              "image": "AL-logo-anim.gif",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "al-3",
+              "title": "Stationery",
+              "thumb": "AL-letterhead-thumb.jpg",
+              "image": "AL-letterhead.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "al-4",
+              "title": "Icons",
+              "thumb": "AL-buttons-thumb.jpg",
+              "image": "AL-buttons.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "al-5",
+              "title": "Poster",
+              "thumb": "AL-poster-thumb.jpg",
+              "image": "AL-poster.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        },
+        {
+          "slug": "mertz",
+          "thumb": "mertz-thumb.png",
+          "title": "Mertz",
+          "desc": "<h1>Mertz<\/h1><p>Mertz was a chain of retail stores in Poland offering doors, windows and joinery accessories for the private market.<\/p>",
+          "children": [
+            {
+              "slug": "mertz-1",
+              "title": "Logo",
+              "thumb": "MERTZ-logo-thumb.jpg",
+              "image": "MERTZ-logo.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "mertz-2",
+              "title": "Application",
+              "thumb": "MERTZ-application-thumb.jpg",
+              "image": "MERTZ-application.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        },
+        {
+          "slug": "multicolor",
+          "thumb": "multicolor-thumb.png",
+          "title": "Multicolor",
+          "desc": "<h1>Multicolor Printing House<\/h1><p>Multicolor Printing House is a dynamically growing family business and a leading manufacturer of booklet labels operating on both Polish and European markets since 2004.<\/p><p>The design encompassed a complete branding overhaul, including logo update, corporate identity and packaging.<\/p>",
+          "children": [
+            {
+              "slug": "multicolor-1",
+              "title": "Logo",
+              "thumb": "multicolor-symbol-thumb.jpg",
+              "image": "multicolor-symbol.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "multicolor-2",
+              "title": "Catalogue",
+              "thumb": "multicolor-katalog-thumb.jpg",
+              "image": "multicolor-katalog.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "multicolor-3",
+              "title": "Clothing",
+              "thumb": "multicolor-shirt-thumb.jpg",
+              "image": "multicolor-shirt.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        },
+        {
+          "slug": "progress-tour",
+          "thumb": "progress-tour-thumb.png",
+          "title": "The Progress Tour",
+          "desc": "<h1>The Progress Tour<\/h1><p>Logo and visual identity for a golf tournament aimed at beginners and non-professional players hosted at The Shire London.<\/p>",
+          "children": [
+            {
+              "slug": "progress-tour-1",
+              "title": "Logo",
+              "thumb": "progress-tour-logo-thumb.jpg",
+              "image": "progress-tour-logo.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "progress-tour-2",
+              "title": "Posters",
+              "thumb": "progress-tour-posters-thumb.jpg",
+              "image": "progress-tour-posters.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "progress-tour-3",
+              "title": "Flags",
+              "thumb": "progress-tour-flags-thumb.jpg",
+              "image": "progress-tour-flags.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        },
+        {
+          "slug": "the-o2",
+          "thumb": "",
+          "title": "The O2",
+          "desc": "<h1>The O2 VIP Pass Packaging<\/h1><p>A special invitation treatment for VIP customers of the famous London venue in form of custom packaging that included a lanyard and personalised card.<\/p>",
+          "children": [
+            {
+              "slug": "the-o2-1",
+              "title": "Packaging",
+              "thumb": "O2-packaging-thumb.jpg",
+              "image": "O2-packaging.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        },
+        {
+          "slug": "typophile",
+          "thumb": "typophile-thumb.png",
+          "title": "Typophile",
+          "desc": "<h1>Typophile<\/h1><p>Logo design for Typophile — a renowned typographic community website.<\/p><p>The logo was a winning entry in Type Battle #27, one of the site's various competitions. Used in rotating header among other chosen marks. The proposed symbol is a stylised letter T that also indicates a book/manual held in hands, referring to vast resources and educational nature of Typophile.<\/p>",
+          "children": [
+            {
+              "slug": "typophile-1",
+              "title": "Logo",
+              "thumb": "TYPOPHILE-logo-thumb.jpg",
+              "image": "TYPOPHILE-logo.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "interactive",
+      "title": "Interactive",
+      "children": [
+        {
+          "slug": "aeg-experience",
+          "thumb": "aeg-experience-thumb.png",
+          "title": "AEG Experience",
+          "desc": "<h1>TITLE<\/h1><p>Description.<\/p>",
+          "children": [
+            {
+              "slug": "aeg-exp-1",
+              "title": "Generator",
+              "thumb": "aeg-experience-generator-thumb.jpg",
+              "image": "aeg-experience-generator.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "aeg-exp-2",
+              "title": "Stationery",
+              "thumb": "aeg-experience-stationery-thumb.jpg",
+              "image": "aeg-experience-stationery.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        },
+        {
+          "slug": "cc4g",
+          "thumb": "cc4g-thumb.png",
+          "title": "CC4G",
+          "desc": "<h1>TITLE<\/h1><p>Description.<\/p>",
+          "children": [
+            {
+              "slug": "cc4g-1",
+              "title": "Cards",
+              "thumb": "cc4g-cards-thumb.jpg",
+              "image": "cc4g-cards.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "cc4g-2",
+              "title": "Email",
+              "thumb": "cc4g-email-thumb.jpg",
+              "image": "cc4g-email.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        },
+        {
+          "slug": "printhouse",
+          "thumb": "printhouse-web-thumb.png",
+          "title": "PrintHouse",
+          "desc": "",
+          "children": [
+            {
+              "slug": "printhouse-web-1",
+              "title": "Website",
+              "thumb": "printhouse-web-1-thumb.jpg",
+              "image": "printhouse-web-1.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "printhouse-web-2",
+              "title": "Mobile",
+              "thumb": "printhouse-web-2-thumb.jpg",
+              "image": "printhouse-web-2.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "printhouse-web-3",
+              "title": "UI-UX",
+              "thumb": "printhouse-web-3-thumb.jpg",
+              "image": "printhouse-web-3.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "printhouse-web-4",
+              "title": "UI-UX",
+              "thumb": "printhouse-web-4-thumb.jpg",
+              "image": "printhouse-web-4.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        },
+        {
+          "slug": "touchstone",
+          "thumb": "touchstone-web-thumb.png",
+          "title": "Touchstone",
+          "desc": "",
+          "children": [
+            {
+              "slug": "touchstone-web-1",
+              "title": "Website",
+              "thumb": "touchstone-web-1-thumb.jpg",
+              "image": "touchstone-web-1.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "touchstone-web-2",
+              "title": "Mobile",
+              "thumb": "touchstone-web-2-thumb.jpg",
+              "image": "touchstone-web-2.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "offline",
+      "title": "Offline",
+      "children": [
+        {
+          "slug": "mejking-mural",
+          "thumb": "mejking-mural-thumb.png",
+          "title": "mejKING Mural",
+          "desc": "<h1>Mural for Mejking<\/h1><p>Temporary mural painted near the main street in Gliwice, Poland for the occasion of Mejking Festival 2018 — local event celebrating maker movement.<\/p>",
+          "children": [
+            {
+              "slug": "mejking-mural-1",
+              "title": "Mural",
+              "thumb": "MEJKING-mural-1-thumb.jpg",
+              "image": "MEJKING-mural-1.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "mejking-mural-2",
+              "title": "Mural",
+              "thumb": "MEJKING-mural-2-thumb.jpg",
+              "image": "MEJKING-mural-2.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        },
+        {
+          "slug": "mejking-gulik-print",
+          "thumb": "mejking-gulik-print-thumb.png",
+          "title": "Manhole Print",
+          "desc": "",
+          "children": [
+            {
+              "slug": "mejking-gulik-1",
+              "title": "Print",
+              "thumb": "MEJKING-print-1-thumb.jpg",
+              "image": "MEJKING-print-1.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "mejking-gulik-2",
+              "title": "Print",
+              "thumb": "MEJKING-print-2-thumb.jpg",
+              "image": "MEJKING-print-2.jpg",
+              "desc": "",
+              "tags": ""
+            },
+            {
+              "slug": "mejking-gulik-3",
+              "title": "Print",
+              "thumb": "mejking-gulik-print-3-thumb.jpg",
+              "image": "mejking-gulik-print-3.jpg",
+              "desc": "",
+              "tags": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

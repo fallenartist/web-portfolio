@@ -1,81 +1,32 @@
-import type { Metadata } from 'next';
-import '@/app/globals.css';
-import '@/styles/lightbox.scss';
-import Header from '@/components/Header/Header';
-import { getPayload } from 'payload';
-import config from '@payload-config';
+import type { Metadata } from 'next'
+import '@/app/globals.css'
+import '@/styles/lightbox.scss'
+import BreadcrumbProvider from '@/components/BreadcrumbProvider'
+import { getMainMenu, getPortfolio } from '@/lib/site-data'
 
-export const metadata: Metadata = {
-  title: 'Design Portfolio',
-  description: 'A portfolio of design work',
-};
+// CMS content must reflect edits and must not require a database during build.
+export const dynamic = 'force-dynamic'
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  // Fetch menu data
-  let mainMenu = null;
-  try {
-	const payload = await getPayload({ config });
-	const { docs } = await payload.find({
-	  collection: 'menus',
-	  where: {
-		slug: {
-		  equals: 'main-menu',
-		},
-	  },
-	  limit: 1,
-	});
-
-	if (docs.length > 0) {
-	  mainMenu = docs[0];
-	}
-  } catch (error) {
-	console.warn('Could not fetch menu data:', error);
+export async function generateMetadata(): Promise<Metadata> {
+  const { settings } = await getPortfolio()
+  return {
+    title: settings?.siteTitle || 'Design Portfolio',
+    description: settings?.metaDescription || 'A portfolio of design work',
   }
+}
 
-  // Fetch site settings
-  let siteSettings = null;
-  try {
-	const payload = await getPayload({ config });
-	const settings = await payload.findGlobal({
-	  slug: 'settings',
-	});
-
-	if (settings) {
-	  siteSettings = settings;
-	}
-  } catch (error) {
-	console.warn('Could not fetch site settings:', error);
-  }
-
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const [{ settings }, menu] = await Promise.all([getPortfolio(), getMainMenu()])
   return (
-	<html lang="en">
-	  <head>
-		{/* Typotheque font - October */}
-		<link
-		  rel="stylesheet"
-		  href="https://fonts.typotheque.com/WF-004891-002394.css"
-		  type="text/css"
-		/>
-		{/* Update page title from settings if available */}
-		{siteSettings?.siteTitle && (
-		  <title>{siteSettings.siteTitle}</title>
-		)}
-		{/* Update meta description from settings if available */}
-		{siteSettings?.metaDescription && (
-		  <meta name="description" content={siteSettings.metaDescription} />
-		)}
-	  </head>
-	  <body>
-		<Header
-		  title={siteSettings?.siteTitle || 'Design Portfolio'}
-		  menu={mainMenu}
-		/>
-		{children}
-	  </body>
-	</html>
-  );
+    <html lang="en">
+      <head>
+        <link rel="stylesheet" href="https://fonts.typotheque.com/WF-004891-002394.css" />
+      </head>
+      <body>
+        <BreadcrumbProvider title={settings?.siteTitle || 'Design Portfolio'} menu={menu}>
+          {children}
+        </BreadcrumbProvider>
+      </body>
+    </html>
+  )
 }

@@ -1,56 +1,63 @@
 {
   "name": "web-portfolio",
   "version": "1.0.0",
-  "description": "A blank template to get started with Payload 3.0",
+  "description": "SVG design portfolio with Payload CMS",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "cross-env NODE_OPTIONS=--no-deprecation next build",
-    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
-    "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "build": "cross-env NODE_OPTIONS=--no-deprecation next build --webpack",
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev --webpack",
+    "devsafe": "rm -rf .next && pnpm dev",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
-    "lint": "cross-env NODE_OPTIONS=--no-deprecation next lint",
+    "lint": "eslint .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
-    "start": "cross-env NODE_OPTIONS=--no-deprecation next start"
+    "start": "cross-env NODE_OPTIONS=--no-deprecation node --env-file-if-exists=.env scripts/start.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
-    "@payloadcms/db-postgres": "latest",
-    "@payloadcms/next": "latest",
-    "@payloadcms/payload-cloud": "latest",
-    "@payloadcms/richtext-lexical": "latest",
-    "@tailwindcss/postcss": "^4.0.13",
-    "@types/d3": "^7.4.3",
-    "classnames": "^2.5.1",
-    "cross-env": "^7.0.3",
+    "@payloadcms/db-postgres": "3.90.1",
+    "@payloadcms/next": "3.90.1",
+    "@payloadcms/richtext-lexical": "3.90.1",
+    "@tailwindcss/postcss": "4.3.3",
+    "cross-env": "10.1.0",
     "d3": "^7.9.0",
-    "graphql": "^16.8.1",
-    "next": "15.2.0",
-    "payload": "latest",
-    "postcss": "^8.5.3",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "sharp": "0.32.6",
-    "tailwindcss": "^4.0.13"
+    "graphql": "16.14.2",
+    "next": "16.3.6",
+    "payload": "3.90.1",
+    "postcss": "8.5.28",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "sharp": "0.35.4",
+    "tailwindcss": "4.3.3"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.2.0",
-    "@types/node": "^22.5.4",
-    "@types/react": "19.0.10",
-    "@types/react-dom": "19.0.4",
-    "eslint": "^9.16.0",
-    "eslint-config-next": "15.2.0",
-    "prettier": "^3.4.2",
-    "sass": "^1.85.1",
-    "typescript": "5.7.3"
+    "@types/node": "22.20.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.6",
+    "prettier": "3.9.9",
+    "sass": "1.105.0",
+    "typescript": "5.9.3",
+    "@types/d3": "^7.4.3",
+    "tsx": "4.23.15"
   },
   "engines": {
-    "node": "^18.20.2 || >=20.9.0",
-    "pnpm": "^9"
+    "node": ">=22.16.0 <23 || >=24.0.0 <25",
+    "pnpm": "^9.15.9"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "sharp"
-    ]
-  }
+      "sharp",
+      "esbuild",
+      "@parcel/watcher",
+      "unrs-resolver"
+    ],
+    "overrides": {
+      "@esbuild-kit/core-utils>esbuild": "^0.25.0"
+    }
+  },
+  "packageManager": "pnpm@9.15.9"
 }

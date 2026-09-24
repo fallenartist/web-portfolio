@@ -44,6 +44,43 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   }
 }
 
+// Breadcrumb styles - Added from original design
+.breadcrumb {
+  flex: 1;
+  margin-left: 12px;
+
+  h1 {
+	display: inline;
+	font-size: 24px;
+	font-style: normal;
+	font-weight: 400;
+	line-height: 40px;
+	color: $textColor;
+	margin: 0;
+	cursor: pointer;
+
+	&:hover {
+	  color: $textHoverColor;
+
+	  &:after {
+		color: $textColor;
+	  }
+	}
+
+	&:not(:last-child) {
+	  margin-right: 1.25em;
+
+	  &:after {
+		content: "/";
+		position: absolute;
+		display: inline-block;
+		margin: 0 0.5em;
+		pointer-events: none;
+	  }
+	}
+  }
+}
+
 .hamburger {
   width: 40px;
   height: 40px;
@@ -179,6 +216,32 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
 	.social {
 	  margin-top: 0;
 	  margin-left: 20px;
+	}
+  }
+}
+
+// Mobile specific styles
+@media (max-width: 767px) {
+  .breadcrumb {
+	h1 {
+	  position: relative;
+	  float: left;
+	  box-sizing: unset;
+	  font-size: 18px;
+
+	  &:not(:last-child) {
+		width: 2em;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		padding-right: 1em;
+		margin-right: 0;
+
+		&:after {
+		  top: 0;
+		  right: 0;
+		}
+	  }
 	}
   }
 }

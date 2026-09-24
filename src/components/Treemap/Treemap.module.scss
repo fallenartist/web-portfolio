@@ -10,6 +10,7 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   position: relative;
   width: 100%;
   height: calc(100vh - #{$headerHeight});
+  margin-top: $headerHeight; // Add margin-top to offset the fixed header
   overflow: hidden;
 }
 
@@ -153,7 +154,7 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   bottom: 0;
   width: $infoWidth;
   height: 100%;
-  padding: 64px 24px 12px 12px;
+  padding: 12px 24px 12px 12px;
   border-right: 4px solid white;
   background-color: #f8f8f8;
   overflow-y: auto;
@@ -215,46 +216,6 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   }
 }
 
-// Breadcrumb
-.breadcrumb {
-  position: absolute;
-  top: 0;
-  left: 0;
-  padding: 12px;
-  z-index: 9;
-
-  h1 {
-	display: inline;
-	font-size: 24px;
-	font-style: normal;
-	font-weight: 400;
-	line-height: 40px;
-	color: $textColor;
-	margin: 0;
-	cursor: pointer;
-
-	&:hover {
-	  color: $textHoverColor;
-
-	  &:after {
-		color: $textColor;
-	  }
-	}
-
-	&:not(:last-child) {
-	  margin-right: 1.25em;
-
-	  &:after {
-		content: "/";
-		position: absolute;
-		display: inline-block;
-		margin: 0 0.5em;
-		pointer-events: none;
-	  }
-	}
-  }
-}
-
 // Media queries
 @media (max-width: 768px) {
   .info {
@@ -271,29 +232,6 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
 	&.infoVisible {
 	  left: 100%;
 	  width: 100%;
-	}
-  }
-
-  .breadcrumb {
-	h1 {
-	  position: relative;
-	  float: left;
-	  box-sizing: unset;
-	  font-size: 18px;
-
-	  &:not(:last-child) {
-		width: 2em;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		padding-right: 1em;
-		margin-right: 0;
-
-		&:after {
-		  top: 0;
-		  right: 0;
-		}
-	  }
 	}
   }
 }

@@ -2,6 +2,7 @@
   position: relative;
   width: 100%;
   height: calc(100vh - 64px);
+  margin-top: 64px;
   overflow: hidden;
 }
 
@@ -108,7 +109,7 @@
   bottom: 0;
   width: 25em;
   height: 100%;
-  padding: 64px 24px 12px 12px;
+  padding: 12px 24px 12px 12px;
   border-right: 4px solid white;
   background-color: #f8f8f8;
   overflow-y: auto;
@@ -164,40 +165,6 @@
   pointer-events: all;
 }
 
-.breadcrumb {
-  position: absolute;
-  top: 0;
-  left: 0;
-  padding: 12px;
-  z-index: 9;
-}
-.breadcrumb h1 {
-  display: inline;
-  font-size: 24px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 40px;
-  color: #444;
-  margin: 0;
-  cursor: pointer;
-}
-.breadcrumb h1:hover {
-  color: #d40;
-}
-.breadcrumb h1:hover:after {
-  color: #444;
-}
-.breadcrumb h1:not(:last-child) {
-  margin-right: 1.25em;
-}
-.breadcrumb h1:not(:last-child):after {
-  content: "/";
-  position: absolute;
-  display: inline-block;
-  margin: 0 0.5em;
-  pointer-events: none;
-}
-
 @media (max-width: 768px) {
   .info {
     width: 100%;
@@ -210,25 +177,6 @@
   .treemap.infoVisible {
     left: 100%;
     width: 100%;
-  }
-
-  .breadcrumb h1 {
-    position: relative;
-    float: left;
-    box-sizing: unset;
-    font-size: 18px;
-  }
-  .breadcrumb h1:not(:last-child) {
-    width: 2em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding-right: 1em;
-    margin-right: 0;
-  }
-  .breadcrumb h1:not(:last-child):after {
-    top: 0;
-    right: 0;
   }
 }
 

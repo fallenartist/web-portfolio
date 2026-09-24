@@ -1,0 +1,398 @@
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  font-family: "October Condensed", sans-serif;
+  font-kerning: normal;
+  -moz-font-feature-settings: "kern";
+  -webkit-font-feature-settings: "kern";
+  font-feature-settings: "kern" on;
+  font-variant-ligatures: common-ligatures;
+  -moz-font-feature-settings: "liga";
+  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga" on;
+}
+
+header {
+  position: fixed;
+  width: 100%;
+  height: 64px;
+  padding: 12px;
+  top: 0;
+  z-index: 100;
+  transition: height 600ms cubic-bezier(0.9, 0, 0.1, 1);
+}
+header .logo {
+  float: left;
+  width: 40px;
+  height: 40px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+header .logo svg {
+  width: 100%;
+  height: auto;
+}
+header .logo svg path {
+  fill: #C80000;
+}
+header nav#breadcrumb {
+  float: left;
+}
+header nav#breadcrumb h1 {
+  display: inline;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 40px;
+  color: #444;
+  margin: 0;
+  cursor: pointer;
+}
+header nav#breadcrumb h1:hover {
+  color: #d40;
+}
+header nav#breadcrumb h1:hover:after {
+  color: #444;
+}
+header nav#breadcrumb h1:not(:last-child) {
+  margin-right: 1.25em;
+}
+header nav#breadcrumb h1:not(:last-child):after {
+  content: "/";
+  position: absolute;
+  display: inline-block;
+  margin: 0 0.5em;
+  pointer-events: none;
+}
+header .featured {
+  display: none;
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #888;
+  float: right;
+}
+header .featured.playing:after {
+  display: block;
+  content: "";
+  width: 12px;
+  height: 12px;
+  margin: 8px;
+  background: #888;
+}
+header nav#main {
+  display: none;
+  float: right;
+}
+header nav#main ul {
+  margin: 0;
+}
+header nav#main li {
+  list-style: none;
+  float: left;
+  margin-right: 1.25em;
+}
+header nav#main li:last-child {
+  margin-right: 0;
+}
+header nav#main li section {
+  position: absolute;
+  left: 0;
+  padding: 8px 12px;
+}
+header nav#main li section.hide {
+  display: none;
+}
+header nav#main li h2 {
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 32px;
+  margin: 0;
+  color: #444;
+  cursor: pointer;
+}
+header nav#main li h2:hover {
+  color: #d40;
+}
+header .temp {
+  float: right;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 40px;
+  margin: 0;
+}
+header .temp a, header .temp a:active, header .temp a:visited {
+  text-decoration: none;
+  color: #444;
+}
+header .temp a:hover, header .temp a:active:hover, header .temp a:visited:hover {
+  color: #d40;
+}
+header .temp span.linkedin-icon {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+}
+header .temp span svg {
+  vertical-align: middle;
+}
+header.menu {
+  height: calc($m + 10em);
+}
+
+main {
+  width: 100%;
+  height: calc(100% - 64 * 1px);
+  margin-top: 64px;
+  position: relative;
+}
+
+#show-info {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #888;
+  float: left;
+  margin-left: 0.5em;
+  font-size: 1.5rem;
+  font-family: Courier New;
+  font-weight: bold;
+  text-align: center;
+  line-height: 40px;
+  color: #888;
+  overflow: hidden;
+  /*
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 32px;
+  height: 32px;
+  border: 2px solid white;
+  border-radius: 50%;
+  */
+  transition: opacity 600ms cubic-bezier(0.9, 0, 0.1, 1);
+  opacity: 0;
+  pointer-events: none;
+}
+#show-info.show {
+  opacity: 1;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+#info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 25em;
+  height: 100%;
+  padding: 64px 24px 12px 12px;
+  border-right: 4px solid white;
+  background-color: #f8f8f8;
+  overflow-y: auto;
+}
+
+#info-wrapper {
+  transition: opacity 600ms cubic-bezier(0.9, 0, 0.1, 1);
+  height: auto;
+  opacity: 0;
+}
+#info-wrapper h1 {
+  font-family: "October Compressed";
+  font-size: 2em;
+  font-style: normal;
+  margin-top: 0;
+}
+#info-wrapper p {
+  font-size: 1em;
+  font-style: normal;
+  line-height: 1.4;
+}
+#info-wrapper.show {
+  opacity: 1;
+}
+
+#chart {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  transition: margin-top 600ms cubic-bezier(0.9, 0, 0.1, 1), left 600ms cubic-bezier(0.9, 0, 0.1, 1), width 600ms cubic-bezier(0.9, 0, 0.1, 1);
+}
+#chart.menu {
+  height: calc(100% - 10em - 64 * 1px);
+  margin-top: calc(64 * 1px + 10em);
+}
+#chart.info-on {
+  left: 25em;
+  width: calc(100% - 25em);
+}
+
+.node {
+  transition: opacity 600ms cubic-bezier(0.9, 0, 0.1, 1);
+  will-change: transform;
+  cursor: pointer;
+}
+.node rect {
+  stroke-width: 0;
+  stroke: #fff;
+  fill: none;
+  fill-opacity: 0;
+  will-change: width, height, fill-opacity;
+  transition: fill 600ms cubic-bezier(0.9, 0, 0.1, 1), fill-opacity 600ms cubic-bezier(0.9, 0, 0.1, 1);
+}
+.node .label-bg {
+  fill: #000;
+  fill-opacity: 0.9;
+}
+.node text {
+  font-style: normal;
+  font-weight: 300;
+  fill: rgba(255, 255, 255, 0);
+  text-anchor: middle;
+  transition: filter 600ms cubic-bezier(0.9, 0, 0.1, 1), fill 600ms cubic-bezier(0.9, 0, 0.1, 1);
+}
+.node image {
+  width: 100%;
+  height: 100%;
+}
+.node .thumb {
+  opacity: 0.9;
+  transition: opacity 600ms cubic-bezier(0.9, 0, 0.1, 1);
+}
+.node.hide {
+  pointer-events: none;
+}
+.node.hide rect {
+  fill-opacity: 0;
+}
+.node.hide text {
+  fill: rgba(255, 255, 255, 0);
+}
+.node.hide .thumb {
+  opacity: 0;
+}
+.node:hover rect {
+  fill-opacity: 0.9;
+}
+.node:hover text {
+  fill: white;
+}
+.node:hover .thumb {
+  opacity: 0;
+}
+.node.level-0 {
+  font-size: 10vmin;
+  display: none;
+}
+.node.level-1 {
+  font-size: 6vmin;
+}
+.node.level-1 text {
+  transform: translateY(0.35em);
+}
+.node.level-2 {
+  font-size: 4vmin;
+}
+.node.level-2 rect {
+  fill-opacity: 0.9;
+}
+.node.level-2 rect:hover {
+  fill-opacity: 0.9;
+}
+.node.level-2.hide rect {
+  fill-opacity: 0;
+}
+.node.level-2 text {
+  transform: translateY(0.35em);
+}
+.node.level-3 {
+  font-size: 2vmin;
+}
+
+@media (pointer: coarse) {
+  #info {
+    width: 100%;
+  }
+
+  #info-wrapper p {
+    font-size: 1.2em;
+  }
+
+  #chart.info-on {
+    left: 100%;
+    width: 100%;
+  }
+
+  .node .thumb {
+    opacity: 0.9;
+  }
+  .node.hide rect {
+    fill-opacity: 0;
+  }
+  .node.hide text {
+    fill: rgba(255, 255, 255, 0);
+  }
+  .node:hover rect {
+    fill-opacity: 0;
+  }
+  .node:hover text {
+    fill: rgba(255, 255, 255, 0);
+  }
+  .node.level-1 rect {
+    fill-opacity: 0.9;
+  }
+  .node.level-1 text {
+    fill: white;
+  }
+  .node.level-1.hide rect {
+    fill-opacity: 0;
+  }
+  .node.level-1.hide text {
+    fill: rgba(255, 255, 255, 0);
+  }
+}
+@media screen and (max-width: 40em) {
+  header nav#breadcrumb h1 {
+    position: relative;
+    float: left;
+    box-sizing: unset;
+    font-size: 18px;
+  }
+  header nav#breadcrumb h1:not(:last-child) {
+    width: 2em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 1em;
+    margin-right: 0;
+  }
+  header nav#breadcrumb h1:not(:last-child):after {
+    top: 0;
+    right: 0;
+  }
+
+  .linkedin-text {
+    display: none;
+  }
+
+  #info {
+    padding: 24px 24px 12px 12px;
+    border-right: 2px solid white;
+  }
+}
+
+/*# sourceMappingURL=main.css.map */

@@ -11,6 +11,8 @@ export interface TreemapData {
   color?: string | null
   thumb?: string | null
   image?: string
+  width?: number | null
+  height?: number | null
   alt?: string
   desc?: Project['description']
   excerpt?: string

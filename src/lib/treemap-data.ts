@@ -39,6 +39,8 @@ export function transformDataForTreemap(
         title: item.title || '',
         alt: image.alt || item.title || project.title,
         image: image.url,
+        width: image.width,
+        height: image.height,
         sizes: image.sizes,
         featured: item.featured ?? false,
         priority: 100,

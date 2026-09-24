@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import * as d3 from 'd3'
-import { RichText } from '@payloadcms/richtext-lexical/react'
 import { createD3Lightbox } from '@/lib/lightbox'
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
+import ProjectStory from '@/components/ProjectStory/ProjectStory'
 import type { LightboxImage, TreemapData, TreemapNode } from '@/types'
 import styles from './Treemap.module.scss'
 
@@ -36,11 +36,9 @@ export default function Treemap({ data }: { data: TreemapData }) {
   const svgRef = useRef<SVGSVGElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const navigateRef = useRef<(path: string) => void>(() => {})
-  const toggleInfoRef = useRef<() => void>(() => {})
   const pathname = usePathname()
   const { updateBreadcrumb } = useBreadcrumb()
-  const [project, setProject] = useState<TreemapData | null>(null)
-  const [infoVisible, setInfoVisible] = useState(false)
+  const [storyProject, setStoryProject] = useState<TreemapData | null>(null)
 
   useEffect(() => {
     const element = svgRef.current
@@ -66,7 +64,8 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .sort((a, b) => b.height - a.height || (b.value ?? 0) - (a.value ?? 0)),
     )
     let current = root
-    let infoOpen = false
+    let projectMode = false
+    let storyTimer: ReturnType<typeof setTimeout> | undefined
     let disposed = false
     const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600
     const timers = new Set<ReturnType<typeof setTimeout>>()
@@ -141,16 +140,18 @@ export default function Treemap({ data }: { data: TreemapData }) {
     // Preserve overlay stacking: category labels above projects above gallery images.
     cells.sort((a, b) => b.depth - a.depth)
 
-    function setInfo(open: boolean) {
-      infoOpen = open
-      setInfoVisible(open)
-    }
-    function zoom(node: TreemapNode, changeHistory = false, preserveInfo = false) {
+    function zoom(node: TreemapNode, changeHistory = false) {
       if (disposed) return
       const isProject = node.data.kind === 'project'
-      if (!preserveInfo) setInfo(isProject && window.innerWidth > 768)
+      projectMode = isProject
+      clearTimer(storyTimer)
+      if (isProject) {
+        storyTimer = schedule(() => {
+          container!.scrollTop = 0
+          setStoryProject(node.data)
+        }, duration)
+      } else setStoryProject(null)
       current = node
-      setProject(isProject ? node.data : null)
       if (changeHistory) {
         const path = pathFor(node)
         if (window.location.pathname !== path) window.history.pushState({}, '', path)
@@ -204,9 +205,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
       if (target && target !== current) zoom(target)
     }
     navigateRef.current = goToPath
-    toggleInfoRef.current = () => {
-      if (current.data.kind === 'project') setInfo(!infoOpen)
-    }
     function activate(node: TreemapNode) {
       if (node.data.kind === 'image' && node.data.image) {
         const images: LightboxImage[] = (node.parent?.children || [])
@@ -246,7 +244,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
     let resizeTimer: ReturnType<typeof setTimeout> | undefined
     const observer = new ResizeObserver(() => {
       clearTimer(resizeTimer)
-      resizeTimer = schedule(() => zoom(current, false, true), 120)
+      resizeTimer = schedule(() => zoom(current), 120)
     })
     observer.observe(element)
     zoom(
@@ -260,6 +258,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
     let autoplayTimer: ReturnType<typeof setTimeout> | undefined
     let index = 0
     function play() {
+      if (projectMode) return
       const node = featured[index++ % featured.length]
       if (!node) return
       zoom(node, false)
@@ -290,7 +289,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
       svg.selectAll('*').interrupt().remove()
       lightbox.destroy()
       navigateRef.current = () => {}
-      toggleInfoRef.current = () => {}
     }
   }, [data, updateBreadcrumb])
 
@@ -299,31 +297,17 @@ export default function Treemap({ data }: { data: TreemapData }) {
   }, [pathname])
 
   return (
-    <div className={styles.treemapContainer} ref={containerRef}>
-      <button
-        type="button"
-        className={`${styles.showInfo} ${project ? styles.show : ''}`}
-        aria-label="Toggle project information"
-        aria-expanded={infoVisible}
-        onClick={() => toggleInfoRef.current()}
-      >
-        i
-      </button>
-      <div
-        className={`${styles.info} ${infoVisible ? styles.visible : ''}`}
-        aria-hidden={!infoVisible}
-        inert={!infoVisible}
-      >
-        <div className={styles.infoWrapper}>
-          {project?.desc ? <RichText data={project.desc} /> : project && <h1>{project.title}</h1>}
-        </div>
-      </div>
+    <div
+      className={`${styles.treemapContainer} ${storyProject ? styles.storyOpen : ''}`}
+      ref={containerRef}
+    >
       <svg
         ref={svgRef}
-        className={`${styles.treemap} ${infoVisible ? styles.infoVisible : ''}`}
+        className={styles.treemap}
         xmlns="http://www.w3.org/2000/svg"
         aria-label="Portfolio projects"
       />
+      {storyProject && <ProjectStory project={storyProject} />}
     </div>
   )
 }

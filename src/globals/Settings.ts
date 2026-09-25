@@ -47,6 +47,24 @@ export const Settings: GlobalConfig = {
       },
     },
     {
+      name: 'rootLogo',
+      label: 'Root-level logo',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description: 'Logo shown at the root of the portfolio',
+      },
+    },
+    {
+      name: 'upLogo',
+      label: 'Up-level logo',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description: 'Logo shown below the root; clicking it moves up one level',
+      },
+    },
+    {
       name: 'enableAutoplay',
       type: 'checkbox',
       defaultValue: true,

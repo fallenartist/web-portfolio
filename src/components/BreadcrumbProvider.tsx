@@ -15,11 +15,15 @@ export default function BreadcrumbProvider({
   title,
   menu,
   legacyRootSlug,
+  rootLogo,
+  upLogo,
 }: {
   children: React.ReactNode
   title?: string
   menu?: Menu | null
   legacyRootSlug?: string
+  rootLogo?: string
+  upLogo?: string
 }) {
   const [breadcrumb, updateBreadcrumb] = useState<BreadcrumbItem[]>([])
   return (
@@ -28,7 +32,14 @@ export default function BreadcrumbProvider({
         title={title}
         menu={menu}
         legacyRootSlug={legacyRootSlug}
+        rootLogo={rootLogo}
+        upLogo={upLogo}
         breadcrumb={breadcrumb}
+        onLogoClick={() => {
+          const parent = breadcrumb[Math.max(0, breadcrumb.length - 2)]
+          if (parent)
+            window.dispatchEvent(new CustomEvent('breadcrumb-click', { detail: parent.path }))
+        }}
         onBreadcrumbClick={(item) => {
           window.dispatchEvent(new CustomEvent('breadcrumb-click', { detail: item.path }))
         }}

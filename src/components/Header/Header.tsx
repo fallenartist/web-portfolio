@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import styles from './Header.module.scss'
 import { usePathname } from 'next/navigation'
 import type { Menu, Category } from '@/payload-types'
@@ -12,6 +13,9 @@ interface HeaderProps {
   title?: string
   menu?: Menu | null
   breadcrumb?: BreadcrumbItem[]
+  rootLogo?: string
+  upLogo?: string
+  onLogoClick?: () => void
   onBreadcrumbClick?: (item: BreadcrumbItem) => void
 }
 
@@ -20,11 +24,16 @@ export default function Header({
   menu = null,
   legacyRootSlug,
   breadcrumb = [],
+  rootLogo,
+  upLogo,
+  onLogoClick,
   onBreadcrumbClick,
 }: HeaderProps) {
   const [openPath, setOpenPath] = useState<string | null>(null)
   const pathname = usePathname()
   const menuOpen = openPath === pathname
+  const atRoot = breadcrumb.length <= 1
+  const logo = atRoot ? rootLogo : upLogo
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -44,8 +53,16 @@ export default function Header({
   return (
     <header className={`${styles.header} ${menuOpen ? styles.menuOpen : ''}`}>
       {/* Logo */}
-      <div className={styles.logo}>
-        <Link href="/" aria-label={title}>
+      <button
+        type="button"
+        className={styles.logo}
+        aria-label={atRoot ? title : 'Go up one level'}
+        disabled={atRoot}
+        onClick={onLogoClick}
+      >
+        {logo ? (
+          <Image src={logo} width={40} height={40} alt="" unoptimized />
+        ) : atRoot ? (
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img">
             <path
               d="M32,16.05c0-0.02,0-0.03,0-0.05c0-8.81-7.19-16-16-16C7.19,0,0,7.19,0,16c0,8.81,7.19,16,16,16
@@ -55,8 +72,12 @@ export default function Header({
 			c-1.12,3.34,1.63,4.26,3.45,1.93c1.39-1.78,1.72-5.07,1.64-6.75C18.19,19.7,16.3,21.42,15.61,23.46L15.61,23.46z"
             />
           </svg>
-        </Link>
-      </div>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M18.7 5.3 8 16l10.7 10.7 2.1-2.1-7.1-7.1H28v-3H13.7l7.1-7.1z" />
+          </svg>
+        )}
+      </button>
 
       {/* Breadcrumb Navigation - Added here */}
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">

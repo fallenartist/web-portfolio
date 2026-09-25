@@ -47,14 +47,15 @@ export default function Treemap({ data }: { data: TreemapData }) {
     if (!element || !container) return
     const svg = d3.select(element)
     svg.selectAll('*').remove()
-    const width = element.clientWidth || 1
-    const height = element.clientHeight || 1
-    const root = d3
+    let width = element.clientWidth || 1
+    let height = element.clientHeight || 1
+    const treemap = d3
       .treemap<TreemapData>()
       .size([width, height])
       .tile(d3.treemapSquarify)
       .paddingInner(0)
-      .round(true)(
+      .round(true)
+    const root = treemap(
       d3
         .hierarchy(data)
         .sum((d) =>
@@ -66,7 +67,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
     )
     let current = root
     let projectMode = false
-    let storyActive = false
     let storyTimer: ReturnType<typeof setTimeout> | undefined
     let disposed = false
     const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600
@@ -123,6 +123,8 @@ export default function Treemap({ data }: { data: TreemapData }) {
     cells
       .filter((d) => d.data.kind === 'project')
       .append('svg')
+      .attr('overflow', 'hidden')
+      .style('background-color', fill)
       .append('image')
       .attr('href', (d) => d.data.thumb || null)
       .attr('class', styles.thumb)
@@ -132,8 +134,8 @@ export default function Treemap({ data }: { data: TreemapData }) {
     cells
       .filter((d) => d.data.kind === 'image')
       .append('svg')
+      .attr('overflow', 'hidden')
       .append('image')
-      .attr('clip-path', (d) => `url(#clip-${d.data.id})`)
       .attr('href', (d) => d.data.sizes?.thumbnail?.url || d.data.image || null)
       .attr('class', styles.lores)
       .attr('width', '100%')
@@ -142,24 +144,26 @@ export default function Treemap({ data }: { data: TreemapData }) {
     // Preserve overlay stacking: category labels above projects above gallery images.
     cells.sort((a, b) => b.depth - a.depth)
 
-    function zoom(node: TreemapNode, changeHistory = false, preserveStory = false) {
+    function zoom(
+      node: TreemapNode,
+      changeHistory = false,
+      preserveStory = false,
+      transitionDuration = duration,
+    ) {
       if (disposed) return
       const isProject = node.data.kind === 'project'
       projectMode = isProject
       clearTimer(storyTimer)
       if (isProject) {
-        if (!preserveStory || !storyActive) {
-          storyActive = false
+        if (!preserveStory) {
           setStoryVisible(false)
           setStoryProject(node.data)
           storyTimer = schedule(() => {
             container!.scrollTop = 0
-            storyActive = true
             setStoryVisible(true)
           }, duration)
         }
       } else {
-        storyActive = false
         setStoryVisible(false)
         setStoryProject(null)
       }
@@ -186,19 +190,17 @@ export default function Treemap({ data }: { data: TreemapData }) {
       y.domain([node.y0, node.y1]).range([0, viewportHeight + gap])
       const w = (d: TreemapNode) => Math.max(0, x(d.x1) - x(d.x0))
       const h = (d: TreemapNode) => Math.max(0, y(d.y1) - y(d.y0))
-      const transition = d3.transition().duration(duration).ease(d3.easeExpInOut)
+      const innerW = (d: TreemapNode) => Math.max(0, w(d) - gap)
+      const innerH = (d: TreemapNode) => Math.max(0, h(d) - gap)
+      const transition = d3.transition().duration(transitionDuration).ease(d3.easeExpInOut)
       cells.transition(transition).attr('transform', (d) => `translate(${x(d.x0)},${y(d.y0)})`)
-      cells
-        .select('rect')
-        .transition(transition)
-        .attr('width', (d) => Math.max(0, w(d) - gap))
-        .attr('height', (d) => Math.max(0, h(d) - gap))
+      cells.select('rect').transition(transition).attr('width', innerW).attr('height', innerH)
       cells
         .select('text')
         .transition(transition)
-        .attr('x', (d) => w(d) / 2)
-        .attr('y', (d) => h(d) / 2)
-      cells.select('svg').transition(transition).attr('width', w).attr('height', h)
+        .attr('x', (d) => innerW(d) / 2)
+        .attr('y', (d) => innerH(d) / 2)
+      cells.select('svg').transition(transition).attr('width', innerW).attr('height', innerH)
       cells
         .classed(styles.hide, (d) => d.data.kind !== 'image' && d.depth <= node.depth)
         .attr('tabindex', (d) =>
@@ -212,7 +214,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .select('image')
         .attr('href', (d) =>
           d.parent === node
-            ? imageFor(d.data, w(d), h(d))
+            ? imageFor(d.data, innerW(d), innerH(d))
             : d.data.sizes?.thumbnail?.url || d.data.image || null,
         )
     }
@@ -260,7 +262,15 @@ export default function Treemap({ data }: { data: TreemapData }) {
     let resizeTimer: ReturnType<typeof setTimeout> | undefined
     const observer = new ResizeObserver(() => {
       clearTimer(resizeTimer)
-      resizeTimer = schedule(() => zoom(current, false, true), 120)
+      resizeTimer = schedule(() => {
+        const nextWidth = element.clientWidth || 1
+        const nextHeight = element.clientHeight || 1
+        if (nextWidth === width && nextHeight === height) return
+        width = nextWidth
+        height = nextHeight
+        treemap.size([width, height])(root)
+        zoom(current, false, true, 0)
+      }, 250)
     })
     observer.observe(element)
     zoom(

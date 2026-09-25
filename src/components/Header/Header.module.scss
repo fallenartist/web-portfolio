@@ -18,29 +18,40 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   align-items: center;
 
   &.menuOpen {
-	height: auto;
+    height: auto;
 
-	.nav {
-	  max-height: calc(100vh - $headerHeight);
-	  opacity: 1;
-	  padding-top: 20px;
-	  padding-bottom: 20px;
-	}
+    .nav {
+      max-height: calc(100vh - $headerHeight);
+      opacity: 1;
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
   }
 }
 
 .logo {
   width: 40px;
   height: 40px;
+  flex: 0 0 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   cursor: pointer;
 
-  svg {
-	width: 100%;
-	height: auto;
+  svg,
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 
-	path {
-	  fill: #C80000;
-	}
+  path {
+    fill: #c80000;
+  }
+
+  &:disabled {
+    cursor: default;
   }
 }
 
@@ -50,34 +61,34 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   margin-left: 12px;
 
   h1 {
-	display: inline;
-	font-size: 24px;
-	font-style: normal;
-	font-weight: 400;
-	line-height: 40px;
-	color: $textColor;
-	margin: 0;
-	cursor: pointer;
+    display: inline;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 40px;
+    color: $textColor;
+    margin: 0;
+    cursor: pointer;
 
-	&:hover {
-	  color: $textHoverColor;
+    &:hover {
+      color: $textHoverColor;
 
-	  &:after {
-		color: $textColor;
-	  }
-	}
+      &:after {
+        color: $textColor;
+      }
+    }
 
-	&:not(:last-child) {
-	  margin-right: 1.25em;
+    &:not(:last-child) {
+      margin-right: 1.25em;
 
-	  &:after {
-		content: "/";
-		position: absolute;
-		display: inline-block;
-		margin: 0 0.5em;
-		pointer-events: none;
-	  }
-	}
+      &:after {
+        content: '/';
+        position: absolute;
+        display: inline-block;
+        margin: 0 0.5em;
+        pointer-events: none;
+      }
+    }
   }
 }
 
@@ -93,23 +104,27 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   position: relative;
   z-index: 10;
 
-  .line1, .line2, .line3 {
-	transition: transform $transitionTime $transitionEase, opacity $transitionTime $transitionEase;
-	transform-origin: center;
+  .line1,
+  .line2,
+  .line3 {
+    transition:
+      transform $transitionTime $transitionEase,
+      opacity $transitionTime $transitionEase;
+    transform-origin: center;
   }
 
   &.active {
-	.line1 {
-	  transform: translateY(6px) rotate(45deg);
-	}
+    .line1 {
+      transform: translateY(6px) rotate(45deg);
+    }
 
-	.line2 {
-	  opacity: 0;
-	}
+    .line2 {
+      opacity: 0;
+    }
 
-	.line3 {
-	  transform: translateY(-6px) rotate(-45deg);
-	}
+    .line3 {
+      transform: translateY(-6px) rotate(-45deg);
+    }
   }
 }
 
@@ -122,126 +137,126 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   overflow: hidden;
   background-color: rgba(255, 255, 255, 0.95);
   transition:
-	max-height $transitionTime $transitionEase,
-	opacity $transitionTime $transitionEase,
-	padding $transitionTime $transitionEase;
+    max-height $transitionTime $transitionEase,
+    opacity $transitionTime $transitionEase,
+    padding $transitionTime $transitionEase;
   opacity: 0;
 
   ul {
-	list-style-type: none;
-	padding: 0;
-	margin: 0;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 20px;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
   }
 
   li {
-	font-size: 24px;
-	font-weight: 400;
+    font-size: 24px;
+    font-weight: 400;
 
-	a {
-	  color: $textColor;
-	  text-decoration: none;
-	  transition: color 200ms ease;
+    a {
+      color: $textColor;
+      text-decoration: none;
+      transition: color 200ms ease;
 
-	  &:hover {
-		color: $textHoverColor;
-	  }
-	}
+      &:hover {
+        color: $textHoverColor;
+      }
+    }
   }
 
   .social {
-	margin-top: 20px;
-	display: flex;
-	align-items: center;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
 
-	a {
-	  display: flex;
-	  align-items: center;
-	  gap: 10px;
-	}
+    a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-	.linkedinIcon {
-	  display: flex;
-	  width: 24px;
-	  height: 24px;
+    .linkedinIcon {
+      display: flex;
+      width: 24px;
+      height: 24px;
 
-	  svg {
-		width: 100%;
-		height: 100%;
-		fill: currentColor;
-	  }
-	}
+      svg {
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
+      }
+    }
   }
 }
 
 // Desktop styles
 @media (min-width: 768px) {
   .header {
-	padding: 12px 24px;
+    padding: 12px 24px;
 
-	&.menuOpen {
-	  height: $headerHeight;
+    &.menuOpen {
+      height: $headerHeight;
 
-	  .nav {
-		max-height: none;
-		padding-top: 0;
-		padding-bottom: 0;
-	  }
-	}
+      .nav {
+        max-height: none;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+    }
   }
 
   .hamburger {
-	display: none; // Hide hamburger on desktop
+    display: none; // Hide hamburger on desktop
   }
 
   .nav {
-	position: static;
-	max-height: none;
-	width: auto;
-	opacity: 1;
-	background-color: transparent;
+    position: static;
+    max-height: none;
+    width: auto;
+    opacity: 1;
+    background-color: transparent;
 
-	ul {
-	  flex-direction: row;
-	  gap: 40px;
-	}
+    ul {
+      flex-direction: row;
+      gap: 40px;
+    }
 
-	li {
-	  font-size: 18px;
-	}
+    li {
+      font-size: 18px;
+    }
 
-	.social {
-	  margin-top: 0;
-	  margin-left: 20px;
-	}
+    .social {
+      margin-top: 0;
+      margin-left: 20px;
+    }
   }
 }
 
 // Mobile specific styles
 @media (max-width: 767px) {
   .breadcrumb {
-	h1 {
-	  position: relative;
-	  float: left;
-	  box-sizing: unset;
-	  font-size: 18px;
+    h1 {
+      position: relative;
+      float: left;
+      box-sizing: unset;
+      font-size: 18px;
 
-	  &:not(:last-child) {
-		width: 2em;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		padding-right: 1em;
-		margin-right: 0;
+      &:not(:last-child) {
+        width: 2em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-right: 1em;
+        margin-right: 0;
 
-		&:after {
-		  top: 0;
-		  right: 0;
-		}
-	  }
-	}
+        &:after {
+          top: 0;
+          right: 0;
+        }
+      }
+    }
   }
 }

@@ -17,6 +17,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [{ settings, treemapData }, menu] = await Promise.all([getPortfolio(), getMainMenu()])
+  const rootLogo =
+    settings?.rootLogo && typeof settings.rootLogo === 'object' ? settings.rootLogo.url : undefined
+  const upLogo =
+    settings?.upLogo && typeof settings.upLogo === 'object' ? settings.upLogo.url : undefined
   return (
     <html lang="en">
       <head>
@@ -27,6 +31,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           title={settings?.siteTitle || 'Design Portfolio'}
           menu={menu}
           legacyRootSlug={treemapData.legacyRootSlug}
+          rootLogo={rootLogo || undefined}
+          upLogo={upLogo || undefined}
         >
           {children}
         </BreadcrumbProvider>

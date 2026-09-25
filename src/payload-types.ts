@@ -621,6 +621,14 @@ export interface Setting {
    * URL slug for the root level (use lowercase letters, no spaces or special characters)
    */
   rootCategorySlug?: string | null;
+  /**
+   * Logo shown at the root of the portfolio
+   */
+  rootLogo?: (number | null) | Media;
+  /**
+   * Logo shown below the root; clicking it moves up one level
+   */
+  upLogo?: (number | null) | Media;
   enableAutoplay?: boolean | null;
   autoplayDelay?: number | null;
   autoplayInterval?: number | null;
@@ -636,6 +644,8 @@ export interface SettingsSelect<T extends boolean = true> {
   metaDescription?: T;
   rootCategoryTitle?: T;
   rootCategorySlug?: T;
+  rootLogo?: T;
+  upLogo?: T;
   enableAutoplay?: T;
   autoplayDelay?: T;
   autoplayInterval?: T;

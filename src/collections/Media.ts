@@ -19,7 +19,13 @@ export const getAdminThumbnail: GetAdminThumbnail = ({ doc }) => {
     return sizes.thumbnail.url
   }
 
-  return typeof doc.url === 'string' ? doc.url : null
+  if (typeof doc.url === 'string') {
+    return doc.url
+  }
+
+  return typeof doc.filename === 'string'
+    ? `/api/media/file/${encodeURIComponent(doc.filename)}`
+    : null
 }
 
 export const Media: CollectionConfig = {

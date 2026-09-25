@@ -104,10 +104,10 @@ test('media admin thumbnail falls back to the original SVG', () => {
     getAdminThumbnail({
       doc: {
         sizes: { thumbnail: { url: null } },
-        url: '/api/media/file/logo.svg',
+        filename: 'logo mark.svg',
       },
     }),
-    '/api/media/file/logo.svg',
+    '/api/media/file/logo%20mark.svg',
   )
   assert.equal(
     getAdminThumbnail({

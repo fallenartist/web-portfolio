@@ -63,6 +63,33 @@ test('missing uploads are skipped and repeated media uploads have distinct tile 
   const gallery = tree.children![0].children![0].children!
   assert.equal(gallery.length, 2)
   assert.notEqual(gallery[0].id, gallery[1].id)
+  assert.equal(gallery[0].hero, true)
+})
+
+test('one gallery image becomes the project hero and supplies its treemap preview', () => {
+  const secondImage: Media = {
+    ...image,
+    id: 10,
+    url: '/api/media/file/hero.jpg',
+    sizes: { thumbnail: { url: '/api/media/file/hero-400.jpg', width: 400, height: 400 } },
+  }
+  const tree = transformDataForTreemap(
+    [category(1)],
+    [
+      project({
+        gallery: [
+          { image, id: 'first' },
+          { image: secondImage, hero: true, id: 'hero' },
+        ],
+      }),
+    ],
+  )
+  const projectNode = tree.children![0].children![0]
+  assert.equal(projectNode.thumb, secondImage.sizes?.thumbnail?.url)
+  assert.deepEqual(
+    projectNode.children?.map((item) => item.hero),
+    [false, true],
+  )
 })
 
 test('Lexical content stays structured rather than being assigned to innerHTML', () => {

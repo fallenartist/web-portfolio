@@ -29,7 +29,8 @@ export function transformDataForTreemap(
     const category = map.get(categoryID)
     if (!category) continue
     const children: TreemapData[] = []
-    for (const [index, item] of (project.gallery ?? []).entries()) {
+    const gallery = project.gallery ?? []
+    for (const [index, item] of gallery.entries()) {
       const image = media(item.image)
       if (!image?.url) continue
       children.push({
@@ -42,9 +43,15 @@ export function transformDataForTreemap(
         width: image.width,
         height: image.height,
         sizes: image.sizes,
+        hero: item.hero === true,
         featured: item.featured ?? false,
         priority: 100,
       })
+    }
+    let hero = children.find((item) => item.hero)
+    if (!hero && children[0]) {
+      hero = children[0]
+      hero.hero = true
     }
     category.children!.push({
       id: `project-${project.id}`,
@@ -54,7 +61,11 @@ export function transformDataForTreemap(
       priority: project.priority ?? 100,
       desc: project.description,
       excerpt: project.excerpt || '',
-      thumb: media(project.thumbnail)?.url,
+      thumb:
+        hero?.sizes?.thumbnail?.url ||
+        hero?.sizes?.small?.url ||
+        hero?.image ||
+        media(project.thumbnail)?.url,
       children,
     })
   }

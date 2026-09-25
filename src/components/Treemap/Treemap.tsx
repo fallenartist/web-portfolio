@@ -39,6 +39,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
   const pathname = usePathname()
   const { updateBreadcrumb } = useBreadcrumb()
   const [storyProject, setStoryProject] = useState<TreemapData | null>(null)
+  const [storyVisible, setStoryVisible] = useState(false)
 
   useEffect(() => {
     const element = svgRef.current
@@ -57,7 +58,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       d3
         .hierarchy(data)
         .sum((d) =>
-          d.kind === 'image' || (d.kind === 'project' && !d.children?.length)
+          (d.kind === 'image' && d.hero) || (d.kind === 'project' && !d.children?.length)
             ? (d.priority ?? 100)
             : 0,
         )
@@ -65,6 +66,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
     )
     let current = root
     let projectMode = false
+    let storyActive = false
     let storyTimer: ReturnType<typeof setTimeout> | undefined
     let disposed = false
     const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600
@@ -126,7 +128,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .attr('class', styles.thumb)
       .attr('width', '100%')
       .attr('height', '100%')
-      .attr('preserveAspectRatio', 'xMidYMid meet')
+      .attr('preserveAspectRatio', 'xMidYMid slice')
     cells
       .filter((d) => d.data.kind === 'image')
       .append('svg')
@@ -140,17 +142,27 @@ export default function Treemap({ data }: { data: TreemapData }) {
     // Preserve overlay stacking: category labels above projects above gallery images.
     cells.sort((a, b) => b.depth - a.depth)
 
-    function zoom(node: TreemapNode, changeHistory = false) {
+    function zoom(node: TreemapNode, changeHistory = false, preserveStory = false) {
       if (disposed) return
       const isProject = node.data.kind === 'project'
       projectMode = isProject
       clearTimer(storyTimer)
       if (isProject) {
-        storyTimer = schedule(() => {
-          container!.scrollTop = 0
+        if (!preserveStory || !storyActive) {
+          storyActive = false
+          setStoryVisible(false)
           setStoryProject(node.data)
-        }, duration)
-      } else setStoryProject(null)
+          storyTimer = schedule(() => {
+            container!.scrollTop = 0
+            storyActive = true
+            setStoryVisible(true)
+          }, duration)
+        }
+      } else {
+        storyActive = false
+        setStoryVisible(false)
+        setStoryProject(null)
+      }
       current = node
       if (changeHistory) {
         const path = pathFor(node)
@@ -189,8 +201,12 @@ export default function Treemap({ data }: { data: TreemapData }) {
       cells.select('svg').transition(transition).attr('width', w).attr('height', h)
       cells
         .classed(styles.hide, (d) => d.data.kind !== 'image' && d.depth <= node.depth)
-        .attr('tabindex', (d) => (d.parent === node ? 0 : -1))
-        .attr('aria-hidden', (d) => (d.parent === node ? null : 'true'))
+        .attr('tabindex', (d) =>
+          d.parent === node && (d.data.kind !== 'image' || d.data.hero) ? 0 : -1,
+        )
+        .attr('aria-hidden', (d) =>
+          d.parent === node && (d.data.kind !== 'image' || d.data.hero) ? null : 'true',
+        )
       cells
         .filter((d) => d.data.kind === 'image')
         .select('image')
@@ -244,7 +260,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
     let resizeTimer: ReturnType<typeof setTimeout> | undefined
     const observer = new ResizeObserver(() => {
       clearTimer(resizeTimer)
-      resizeTimer = schedule(() => zoom(current), 120)
+      resizeTimer = schedule(() => zoom(current, false, true), 120)
     })
     observer.observe(element)
     zoom(
@@ -298,7 +314,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
 
   return (
     <div
-      className={`${styles.treemapContainer} ${storyProject ? styles.storyOpen : ''}`}
+      className={`${styles.treemapContainer} ${storyVisible ? styles.storyOpen : ''}`}
       ref={containerRef}
     >
       <svg
@@ -307,7 +323,11 @@ export default function Treemap({ data }: { data: TreemapData }) {
         xmlns="http://www.w3.org/2000/svg"
         aria-label="Portfolio projects"
       />
-      {storyProject && <ProjectStory project={storyProject} />}
+      {storyProject && (
+        <div className={styles.storyStage} aria-hidden={!storyVisible} inert={!storyVisible}>
+          <ProjectStory project={storyProject} />
+        </div>
+      )}
     </div>
   )
 }

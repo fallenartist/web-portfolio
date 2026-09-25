@@ -78,6 +78,11 @@ export const Projects: CollectionConfig = {
     {
       name: 'gallery',
       type: 'array',
+      validate: (value) =>
+        (value || []).filter(
+          (item) =>
+            typeof item === 'object' && item !== null && 'hero' in item && item.hero === true,
+        ).length <= 1 || 'Choose only one hero image.',
       fields: [
         {
           name: 'image',
@@ -88,6 +93,14 @@ export const Projects: CollectionConfig = {
         {
           name: 'title',
           type: 'text',
+        },
+        {
+          name: 'hero',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: {
+            description: 'Use this image for the project tile and opening hero',
+          },
         },
         {
           name: 'featured',

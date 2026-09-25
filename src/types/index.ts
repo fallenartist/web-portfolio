@@ -16,6 +16,7 @@ export interface TreemapData {
   alt?: string
   desc?: Project['description']
   excerpt?: string
+  hero?: boolean
   featured?: boolean
   sizes?: Media['sizes']
   children?: TreemapData[]

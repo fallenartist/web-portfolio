@@ -281,6 +281,10 @@ export interface Project {
         image: number | Media;
         title?: string | null;
         /**
+         * Use this image for the project tile and opening hero
+         */
+        hero?: boolean | null;
+        /**
          * Featured images will be included in the automatic slideshow
          */
         featured?: boolean | null;
@@ -466,6 +470,7 @@ export interface ProjectsSelect<T extends boolean = true> {
     | {
         image?: T;
         title?: T;
+        hero?: T;
         featured?: T;
         id?: T;
       };

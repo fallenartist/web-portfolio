@@ -91,12 +91,20 @@ export default function Treemap({ data }: { data: TreemapData }) {
     })
     const x = d3.scaleLinear().domain([0, width]).range([0, width])
     const y = d3.scaleLinear().domain([0, height]).range([0, height])
-    const color = d3.scaleOrdinal<string, string>(d3.schemeDark2)
+    const livePalette = new Map([
+      ['identity', 'rgb(250, 200, 0)'],
+      ['interactive', 'rgb(50, 0, 250)'],
+      ['offline', 'rgb(250, 0, 50)'],
+    ])
+    const color = d3
+      .scaleOrdinal<string, string>()
+      .range(['rgb(250, 200, 0)', 'rgb(50, 0, 250)', 'rgb(250, 0, 50)'])
     const level = (d: TreemapNode) => ({ root: 0, category: 1, project: 2, image: 3 })[d.data.kind]
     const fill = (d: TreemapNode) => {
       let ancestor: TreemapNode | null = d
       while (ancestor && ancestor.data.kind !== 'category') ancestor = ancestor.parent
-      return ancestor?.data.color || color(ancestor?.data.slug || d.data.slug)
+      const slug = ancestor?.data.slug || d.data.slug
+      return ancestor?.data.color || livePalette.get(slug) || color(slug)
     }
     const cells = svg
       .selectAll<SVGGElement, TreemapNode>('g')
@@ -124,13 +132,12 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .filter((d) => d.data.kind === 'project')
       .append('svg')
       .attr('overflow', 'hidden')
-      .style('background-color', fill)
       .append('image')
       .attr('href', (d) => d.data.thumb || null)
       .attr('class', styles.thumb)
       .attr('width', '100%')
       .attr('height', '100%')
-      .attr('preserveAspectRatio', 'xMidYMid slice')
+      .attr('preserveAspectRatio', 'xMidYMid meet')
     cells
       .filter((d) => d.data.kind === 'image')
       .append('svg')

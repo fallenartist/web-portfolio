@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { getAdminThumbnail } from '../src/collections/Media'
 import type { Category, Project, Media } from '../src/payload-types'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
 import { fetchTreemapData } from '../src/lib/transformers'
@@ -95,6 +96,27 @@ test('project thumbnail and hero gallery image remain independent', () => {
   assert.deepEqual(
     projectNode.children?.map((item) => item.hero),
     [false, true],
+  )
+})
+
+test('media admin thumbnail falls back to the original SVG', () => {
+  assert.equal(
+    getAdminThumbnail({
+      doc: {
+        sizes: { thumbnail: { url: null } },
+        url: '/api/media/file/logo.svg',
+      },
+    }),
+    '/api/media/file/logo.svg',
+  )
+  assert.equal(
+    getAdminThumbnail({
+      doc: {
+        sizes: { thumbnail: { url: '/api/media/file/photo-400x400.jpg' } },
+        url: '/api/media/file/photo.jpg',
+      },
+    }),
+    '/api/media/file/photo-400x400.jpg',
   )
 })
 

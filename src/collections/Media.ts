@@ -1,10 +1,26 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, GetAdminThumbnail } from 'payload'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 // Get __dirname equivalent in ESM
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+export const getAdminThumbnail: GetAdminThumbnail = ({ doc }) => {
+  const sizes = doc.sizes as
+    | {
+        thumbnail?: {
+          url?: null | string
+        }
+      }
+    | undefined
+
+  if (sizes?.thumbnail?.url) {
+    return sizes.thumbnail.url
+  }
+
+  return typeof doc.url === 'string' ? doc.url : null
+}
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -42,7 +58,7 @@ export const Media: CollectionConfig = {
         position: 'centre',
       },
     ],
-    adminThumbnail: 'thumbnail',
+    adminThumbnail: getAdminThumbnail,
     mimeTypes: ['image/*'],
   },
   fields: [

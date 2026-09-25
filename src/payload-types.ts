@@ -250,7 +250,7 @@ export interface Project {
    */
   excerpt?: string | null;
   /**
-   * Full project description
+   * Legacy project description, shown when Story layout has no blocks
    */
   description?: {
     root: {
@@ -281,7 +281,7 @@ export interface Project {
         image: number | Media;
         title?: string | null;
         /**
-         * Use this image for the project tile and opening hero
+         * Use this image as the opening hero for the scrollable project view
          */
         hero?: boolean | null;
         /**
@@ -290,6 +290,69 @@ export interface Project {
         featured?: boolean | null;
         id?: string | null;
       }[]
+    | null;
+  /**
+   * Optional title overlay and tint for the opening hero image
+   */
+  heroPresentation?: {
+    showTitle?: boolean | null;
+    titlePosition?:
+      | (
+          | 'top-left'
+          | 'top-center'
+          | 'top-right'
+          | 'center-left'
+          | 'center'
+          | 'center-right'
+          | 'bottom-left'
+          | 'bottom-center'
+          | 'bottom-right'
+        )
+      | null;
+    /**
+     * Six-digit hex colour
+     */
+    tintColor?: string | null;
+    tintOpacity?: number | null;
+  };
+  /**
+   * Drag blocks to set the order of images and text after the hero
+   */
+  story?:
+    | (
+        | {
+            image: number | Media;
+            caption?: string | null;
+            width: 'full' | 'wide' | 'half';
+            position?: ('left' | 'center' | 'right') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'image';
+          }
+        | {
+            content: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            };
+            width: 'narrow' | 'medium' | 'wide';
+            position: 'left' | 'center' | 'right';
+            textAlign: 'left' | 'center' | 'right';
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'text';
+          }
+      )[]
     | null;
   tags?:
     | {
@@ -473,6 +536,38 @@ export interface ProjectsSelect<T extends boolean = true> {
         hero?: T;
         featured?: T;
         id?: T;
+      };
+  heroPresentation?:
+    | T
+    | {
+        showTitle?: T;
+        titlePosition?: T;
+        tintColor?: T;
+        tintOpacity?: T;
+      };
+  story?:
+    | T
+    | {
+        image?:
+          | T
+          | {
+              image?: T;
+              caption?: T;
+              width?: T;
+              position?: T;
+              id?: T;
+              blockName?: T;
+            };
+        text?:
+          | T
+          | {
+              content?: T;
+              width?: T;
+              position?: T;
+              textAlign?: T;
+              id?: T;
+              blockName?: T;
+            };
       };
   tags?:
     | T

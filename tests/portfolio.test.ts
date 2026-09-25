@@ -99,6 +99,62 @@ test('project thumbnail and hero gallery image remain independent', () => {
   )
 })
 
+test('project story keeps ordered image and text layout controls', () => {
+  const content: NonNullable<Project['description']> = {
+    root: {
+      type: 'root',
+      version: 1,
+      direction: null,
+      format: '',
+      indent: 0,
+      children: [
+        {
+          type: 'paragraph',
+          version: 1,
+          children: [{ type: 'text', version: 1, text: 'Story copy' }],
+        },
+      ],
+    },
+  }
+  const tree = transformDataForTreemap(
+    [category(1)],
+    [
+      project({
+        heroPresentation: {
+          showTitle: true,
+          titlePosition: 'bottom-left',
+          tintColor: '#112233',
+          tintOpacity: 40,
+        },
+        story: [
+          {
+            blockType: 'image',
+            image,
+            width: 'half',
+            position: 'right',
+          },
+          {
+            blockType: 'text',
+            content,
+            width: 'narrow',
+            position: 'left',
+            textAlign: 'left',
+          },
+        ],
+      }),
+    ],
+  )
+  const projectNode = tree.children![0].children![0]
+  assert.equal(projectNode.heroPresentation?.titlePosition, 'bottom-left')
+  assert.deepEqual(
+    projectNode.story?.map((block) => [block.blockType, block.width, block.position]),
+    [
+      ['image', 'half', 'right'],
+      ['text', 'narrow', 'left'],
+    ],
+  )
+})
+
 test('media admin thumbnail falls back to the original SVG', () => {
   assert.equal(
     getAdminThumbnail({

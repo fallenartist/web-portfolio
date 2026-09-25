@@ -3,6 +3,7 @@ import * as migration_20260924_082754_dependency_upgrade from './20260924_082754
 import * as migration_20260925_125815_project_hero from './20260925_125815_project_hero'
 import * as migration_20260925_141031_navigation_logos from './20260925_141031_navigation_logos'
 import * as migration_20260925_142451_live_category_palette from './20260925_142451_live_category_palette'
+import * as migration_20260925_214829_project_story_layout from './20260925_214829_project_story_layout'
 
 export const migrations = [
   {
@@ -29,5 +30,10 @@ export const migrations = [
     up: migration_20260925_142451_live_category_palette.up,
     down: migration_20260925_142451_live_category_palette.down,
     name: '20260925_142451_live_category_palette',
+  },
+  {
+    up: migration_20260925_214829_project_story_layout.up,
+    down: migration_20260925_214829_project_story_layout.down,
+    name: '20260925_214829_project_story_layout',
   },
 ]

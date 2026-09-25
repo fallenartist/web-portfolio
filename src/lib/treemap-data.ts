@@ -1,5 +1,5 @@
 import type { Category, Media, Project, Setting } from '@/payload-types'
-import type { TreemapData } from '@/types'
+import type { ProjectStoryBlock, TreemapData } from '@/types'
 
 function media(value: number | Media | null | undefined): Media | undefined {
   return value && typeof value === 'object' ? value : undefined
@@ -53,6 +53,35 @@ export function transformDataForTreemap(
       hero = children[0]
       hero.hero = true
     }
+    const story: ProjectStoryBlock[] = []
+    for (const [index, block] of (project.story || []).entries()) {
+      const id = block.id || `project-${project.id}-story-${index}`
+      if (block.blockType === 'text') {
+        story.push({
+          id,
+          blockType: 'text',
+          content: block.content,
+          width: block.width,
+          position: block.position,
+          textAlign: block.textAlign,
+        })
+        continue
+      }
+      const image = media(block.image)
+      if (!image?.url) continue
+      story.push({
+        id,
+        blockType: 'image',
+        image: image.url,
+        alt: image.alt || block.caption || project.title,
+        caption: block.caption || undefined,
+        width: block.width,
+        position: block.position || 'center',
+        imageWidth: image.width,
+        imageHeight: image.height,
+        sizes: image.sizes,
+      })
+    }
     category.children!.push({
       id: `project-${project.id}`,
       kind: 'project',
@@ -62,6 +91,8 @@ export function transformDataForTreemap(
       desc: project.description,
       excerpt: project.excerpt || '',
       thumb: media(project.thumbnail)?.url,
+      heroPresentation: project.heroPresentation,
+      story,
       children,
     })
   }

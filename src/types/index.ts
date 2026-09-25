@@ -1,6 +1,28 @@
 import type { HierarchyRectangularNode } from 'd3'
 import type { Media, Project } from '@/payload-types'
 
+export type ProjectStoryBlock =
+  | {
+      id: string
+      blockType: 'image'
+      image: string
+      alt: string
+      width: 'full' | 'wide' | 'half'
+      position: 'left' | 'center' | 'right'
+      caption?: string
+      imageWidth?: number | null
+      imageHeight?: number | null
+      sizes?: Media['sizes']
+    }
+  | {
+      id: string
+      blockType: 'text'
+      content: NonNullable<Project['description']>
+      width: 'narrow' | 'medium' | 'wide'
+      position: 'left' | 'center' | 'right'
+      textAlign: 'left' | 'center' | 'right'
+    }
+
 export interface TreemapData {
   id: string
   slug: string
@@ -16,6 +38,8 @@ export interface TreemapData {
   alt?: string
   desc?: Project['description']
   excerpt?: string
+  heroPresentation?: Project['heroPresentation']
+  story?: ProjectStoryBlock[]
   hero?: boolean
   featured?: boolean
   sizes?: Media['sizes']

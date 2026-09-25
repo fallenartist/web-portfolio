@@ -49,7 +49,7 @@ export const Projects: CollectionConfig = {
       name: 'description',
       type: 'richText',
       admin: {
-        description: 'Full project description',
+        description: 'Legacy project description, shown when Story layout has no blocks',
       },
     },
     {
@@ -99,7 +99,7 @@ export const Projects: CollectionConfig = {
           type: 'checkbox',
           defaultValue: false,
           admin: {
-            description: 'Use this image for the project tile and opening hero',
+            description: 'Use this image as the opening hero for the scrollable project view',
           },
         },
         {
@@ -109,6 +109,169 @@ export const Projects: CollectionConfig = {
           admin: {
             description: 'Featured images will be included in the automatic slideshow',
           },
+        },
+      ],
+    },
+    {
+      name: 'heroPresentation',
+      label: 'Hero presentation',
+      type: 'group',
+      admin: {
+        description: 'Optional title overlay and tint for the opening hero image',
+      },
+      fields: [
+        {
+          name: 'showTitle',
+          label: 'Overlay project title',
+          type: 'checkbox',
+          defaultValue: false,
+        },
+        {
+          name: 'titlePosition',
+          label: 'Title position',
+          type: 'select',
+          defaultValue: 'center',
+          options: [
+            { label: 'Top left', value: 'top-left' },
+            { label: 'Top centre', value: 'top-center' },
+            { label: 'Top right', value: 'top-right' },
+            { label: 'Centre left', value: 'center-left' },
+            { label: 'Centre', value: 'center' },
+            { label: 'Centre right', value: 'center-right' },
+            { label: 'Bottom left', value: 'bottom-left' },
+            { label: 'Bottom centre', value: 'bottom-center' },
+            { label: 'Bottom right', value: 'bottom-right' },
+          ],
+          admin: {
+            condition: (_, siblingData) => siblingData?.showTitle === true,
+          },
+        },
+        {
+          name: 'tintColor',
+          label: 'Tint colour',
+          type: 'text',
+          defaultValue: '#000000',
+          validate: (value: null | string | undefined) =>
+            !value || /^#[0-9a-f]{6}$/i.test(value) || 'Enter a six-digit hex colour, e.g. #000000.',
+          admin: {
+            condition: (_, siblingData) => siblingData?.showTitle === true,
+            description: 'Six-digit hex colour',
+          },
+        },
+        {
+          name: 'tintOpacity',
+          label: 'Tint opacity (%)',
+          type: 'number',
+          defaultValue: 35,
+          min: 0,
+          max: 90,
+          admin: {
+            condition: (_, siblingData) => siblingData?.showTitle === true,
+            step: 5,
+          },
+        },
+      ],
+    },
+    {
+      name: 'story',
+      label: 'Story layout',
+      type: 'blocks',
+      admin: {
+        description: 'Drag blocks to set the order of images and text after the hero',
+        initCollapsed: true,
+      },
+      blocks: [
+        {
+          slug: 'image',
+          labels: {
+            singular: 'Image',
+            plural: 'Images',
+          },
+          fields: [
+            {
+              name: 'image',
+              type: 'upload',
+              relationTo: 'media',
+              required: true,
+            },
+            {
+              name: 'caption',
+              type: 'text',
+            },
+            {
+              name: 'width',
+              type: 'select',
+              defaultValue: 'wide',
+              required: true,
+              options: [
+                { label: 'Full bleed', value: 'full' },
+                { label: 'Wide', value: 'wide' },
+                { label: 'Half width', value: 'half' },
+              ],
+            },
+            {
+              name: 'position',
+              type: 'select',
+              defaultValue: 'center',
+              required: true,
+              options: [
+                { label: 'Left', value: 'left' },
+                { label: 'Centre', value: 'center' },
+                { label: 'Right', value: 'right' },
+              ],
+              admin: {
+                condition: (_, siblingData) => siblingData?.width !== 'full',
+              },
+            },
+          ],
+        },
+        {
+          slug: 'text',
+          labels: {
+            singular: 'Text',
+            plural: 'Text blocks',
+          },
+          fields: [
+            {
+              name: 'content',
+              type: 'richText',
+              required: true,
+            },
+            {
+              name: 'width',
+              type: 'select',
+              defaultValue: 'narrow',
+              required: true,
+              options: [
+                { label: 'Narrow', value: 'narrow' },
+                { label: 'Medium', value: 'medium' },
+                { label: 'Wide', value: 'wide' },
+              ],
+            },
+            {
+              name: 'position',
+              type: 'select',
+              defaultValue: 'center',
+              required: true,
+              options: [
+                { label: 'Left', value: 'left' },
+                { label: 'Centre', value: 'center' },
+                { label: 'Right', value: 'right' },
+              ],
+            },
+            {
+              name: 'textAlign',
+              label: 'Text alignment',
+              type: 'select',
+              defaultValue: 'left',
+              required: true,
+              options: [
+                { label: 'Left', value: 'left' },
+                { label: 'Centre', value: 'center' },
+                { label: 'Right', value: 'right' },
+              ],
+            },
+          ],
         },
       ],
     },

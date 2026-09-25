@@ -36,10 +36,15 @@ export default function Treemap({ data }: { data: TreemapData }) {
   const svgRef = useRef<SVGSVGElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const navigateRef = useRef<(path: string) => void>(() => {})
+  const navigateProjectRef = useRef<(project: TreemapData) => void>(() => {})
   const pathname = usePathname()
   const { updateBreadcrumb } = useBreadcrumb()
   const [storyProject, setStoryProject] = useState<TreemapData | null>(null)
   const [storyVisible, setStoryVisible] = useState(false)
+  const [storyNeighbors, setStoryNeighbors] = useState<{
+    previous: TreemapData | null
+    next: TreemapData | null
+  }>({ previous: null, next: null })
 
   useEffect(() => {
     const element = svgRef.current
@@ -65,6 +70,10 @@ export default function Treemap({ data }: { data: TreemapData }) {
         )
         .sort((a, b) => b.height - a.height || (b.value ?? 0) - (a.value ?? 0)),
     )
+    const projectNodes: TreemapNode[] = []
+    root.eachBefore((node) => {
+      if (node.data.kind === 'project') projectNodes.push(node)
+    })
     let current = root
     let projectMode = false
     let storyTimer: ReturnType<typeof setTimeout> | undefined
@@ -162,6 +171,11 @@ export default function Treemap({ data }: { data: TreemapData }) {
       projectMode = isProject
       clearTimer(storyTimer)
       if (isProject) {
+        const projectIndex = projectNodes.indexOf(node)
+        setStoryNeighbors({
+          previous: projectNodes[projectIndex - 1]?.data || null,
+          next: projectNodes[projectIndex + 1]?.data || null,
+        })
         if (!preserveStory) {
           setStoryVisible(false)
           setStoryProject(node.data)
@@ -173,6 +187,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       } else {
         setStoryVisible(false)
         setStoryProject(null)
+        setStoryNeighbors({ previous: null, next: null })
       }
       current = node
       if (changeHistory) {
@@ -230,6 +245,30 @@ export default function Treemap({ data }: { data: TreemapData }) {
       if (target && target !== current) zoom(target)
     }
     navigateRef.current = goToPath
+    function animateToProject(project: TreemapData) {
+      const target = projectNodes.find((node) => node.data.id === project.id)
+      if (!target || target === current) return
+
+      clearTimer(storyTimer)
+      setStoryVisible(false)
+      container!.scrollTop = 0
+
+      const currentAncestors = current.ancestors()
+      const targetAncestors = target.ancestors()
+      const commonAncestor = currentAncestors.find((node) => targetAncestors.includes(node)) || root
+      const upward = currentAncestors.slice(1, currentAncestors.indexOf(commonAncestor) + 1)
+      const downward = targetAncestors.slice(0, targetAncestors.indexOf(commonAncestor)).reverse()
+      const steps = [...upward, ...downward]
+      const stepDuration = duration || 0
+
+      steps.forEach((step, index) => {
+        schedule(
+          () => zoom(step, step === target, false, stepDuration),
+          index * stepDuration,
+        )
+      })
+    }
+    navigateProjectRef.current = animateToProject
     function activate(node: TreemapNode) {
       if (node.data.kind === 'image' && node.data.image) {
         const images: LightboxImage[] = (node.parent?.children || [])
@@ -322,6 +361,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       svg.selectAll('*').interrupt().remove()
       lightbox.destroy()
       navigateRef.current = () => {}
+      navigateProjectRef.current = () => {}
     }
   }, [data, updateBreadcrumb])
 
@@ -342,7 +382,12 @@ export default function Treemap({ data }: { data: TreemapData }) {
       />
       {storyProject && (
         <div className={styles.storyStage} aria-hidden={!storyVisible} inert={!storyVisible}>
-          <ProjectStory project={storyProject} />
+          <ProjectStory
+            project={storyProject}
+            previousProject={storyNeighbors.previous}
+            nextProject={storyNeighbors.next}
+            onNavigateProject={(project) => navigateProjectRef.current(project)}
+          />
         </div>
       )}
     </div>

@@ -61,11 +61,7 @@ export function transformDataForTreemap(
       priority: project.priority ?? 100,
       desc: project.description,
       excerpt: project.excerpt || '',
-      thumb:
-        hero?.sizes?.thumbnail?.url ||
-        hero?.sizes?.small?.url ||
-        hero?.image ||
-        media(project.thumbnail)?.url,
+      thumb: media(project.thumbnail)?.url,
       children,
     })
   }

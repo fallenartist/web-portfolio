@@ -66,7 +66,12 @@ test('missing uploads are skipped and repeated media uploads have distinct tile 
   assert.equal(gallery[0].hero, true)
 })
 
-test('one gallery image becomes the project hero and supplies its treemap preview', () => {
+test('project thumbnail and hero gallery image remain independent', () => {
+  const thumbnail: Media = {
+    ...image,
+    id: 11,
+    url: '/api/media/file/project-thumb.png',
+  }
   const secondImage: Media = {
     ...image,
     id: 10,
@@ -77,6 +82,7 @@ test('one gallery image becomes the project hero and supplies its treemap previe
     [category(1)],
     [
       project({
+        thumbnail,
         gallery: [
           { image, id: 'first' },
           { image: secondImage, hero: true, id: 'hero' },
@@ -85,7 +91,7 @@ test('one gallery image becomes the project hero and supplies its treemap previe
     ],
   )
   const projectNode = tree.children![0].children![0]
-  assert.equal(projectNode.thumb, secondImage.sizes?.thumbnail?.url)
+  assert.equal(projectNode.thumb, thumbnail.url)
   assert.deepEqual(
     projectNode.children?.map((item) => item.hero),
     [false, true],

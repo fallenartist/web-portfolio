@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 export const Menus: CollectionConfig = {
   slug: 'menus',
   admin: {
+    group: 'Globals',
     useAsTitle: 'title',
   },
   access: {
@@ -63,7 +64,7 @@ export const Menus: CollectionConfig = {
         {
           name: 'internalLink',
           type: 'relationship',
-          relationTo: ['categories', 'projects'],
+          relationTo: ['categories', 'projects', 'industries'],
           admin: {
             condition: (data, siblingData) => siblingData.type === 'internal',
           },

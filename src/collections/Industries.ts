@@ -1,10 +1,15 @@
 import type { CollectionConfig } from 'payload'
 
-export const Categories: CollectionConfig = {
-  slug: 'categories',
+export const Industries: CollectionConfig = {
+  slug: 'industries',
+  labels: {
+    singular: 'Industry',
+    plural: 'Industries',
+  },
   admin: {
     group: 'Content',
     useAsTitle: 'title',
+    defaultColumns: ['title', 'parent', 'updatedAt'],
   },
   access: {
     read: () => true,
@@ -14,11 +19,14 @@ export const Categories: CollectionConfig = {
       name: 'title',
       type: 'text',
       required: true,
+      index: true,
     },
     {
       name: 'slug',
       type: 'text',
       required: true,
+      unique: true,
+      index: true,
       admin: {
         position: 'sidebar',
       },
@@ -37,37 +45,12 @@ export const Categories: CollectionConfig = {
       },
     },
     {
-      name: 'color',
-      type: 'text',
-      admin: {
-        description:
-          'Category color in any valid CSS format: hex (#FF0000), RGB (rgb(255,0,0)), HSL (hsl(0,100%,50%)), OKLCH (oklch(0.554 0.046 257.417)), etc.',
-      },
-    },
-    {
       name: 'parent',
       type: 'relationship',
-      relationTo: 'categories',
+      relationTo: 'industries',
       admin: {
         position: 'sidebar',
-        description: 'Optional parent category for hierarchical organization',
-      },
-    },
-    {
-      name: 'priority',
-      type: 'number',
-      defaultValue: 100,
-      admin: {
-        position: 'sidebar',
-        description: 'Higher values appear larger in the treemap (default: 100)',
-      },
-    },
-    {
-      name: 'thumbnail',
-      type: 'upload',
-      relationTo: 'media',
-      admin: {
-        description: 'Thumbnail image for the category',
+        description: 'Optional parent industry for hierarchical organisation',
       },
     },
   ],

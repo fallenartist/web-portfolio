@@ -5,8 +5,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import styles from './Header.module.scss'
 import { usePathname } from 'next/navigation'
-import type { Menu, Category } from '@/payload-types'
+import type { Menu } from '@/payload-types'
 import type { BreadcrumbItem } from '@/types'
+import { getInternalLinkHref } from '@/lib/menu-links'
 
 interface HeaderProps {
   legacyRootSlug?: string
@@ -201,29 +202,4 @@ export default function Header({
       </nav>
     </header>
   )
-}
-
-// Helper function to construct internal link paths
-function categoryPath(category: number | Category | null | undefined): string[] {
-  const result: string[] = []
-  const seen = new Set<number>()
-  while (category && typeof category === 'object' && !seen.has(category.id)) {
-    seen.add(category.id)
-    result.unshift(encodeURIComponent(category.slug))
-    category = category.parent
-  }
-  return result
-}
-
-function getInternalLinkHref(
-  link: NonNullable<NonNullable<Menu['items']>[number]['internalLink']>,
-  legacyRootSlug?: string,
-): string {
-  if (!link || typeof link.value !== 'object') return '/'
-  const segments =
-    link.relationTo === 'categories'
-      ? categoryPath(link.value)
-      : [...categoryPath(link.value.category), encodeURIComponent(link.value.slug)]
-  if (legacyRootSlug && segments[0] === encodeURIComponent(legacyRootSlug)) segments.shift()
-  return '/' + segments.join('/')
 }

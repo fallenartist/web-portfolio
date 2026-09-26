@@ -31,6 +31,7 @@ export const getAdminThumbnail: GetAdminThumbnail = ({ doc }) => {
 export const Media: CollectionConfig = {
   slug: 'media',
   admin: {
+    group: 'Content',
     useAsTitle: 'filename',
   },
   access: {

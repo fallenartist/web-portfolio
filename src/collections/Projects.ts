@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 export const Projects: CollectionConfig = {
   slug: 'projects',
   admin: {
+    group: 'Content',
     useAsTitle: 'title',
     defaultColumns: ['title', 'category', 'priority', 'updatedAt'],
   },
@@ -57,6 +58,17 @@ export const Projects: CollectionConfig = {
       type: 'relationship',
       relationTo: 'categories',
       required: true,
+    },
+    {
+      name: 'industries',
+      label: 'Industries',
+      type: 'relationship',
+      relationTo: 'industries',
+      hasMany: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Client industry; used for portfolio filtering and menu links',
+      },
     },
     {
       name: 'priority',

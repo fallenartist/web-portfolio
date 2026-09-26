@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { getAdminThumbnail } from '../src/collections/Media'
-import type { Category, Project, Media } from '../src/payload-types'
+import type { Category, Industry, Project, Media } from '../src/payload-types'
+import { getInternalLinkHref } from '../src/lib/menu-links'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
 import { fetchTreemapData } from '../src/lib/transformers'
 import { selectMainMenu } from '../src/lib/site-data'
@@ -213,6 +214,7 @@ test('CMS queries disable default pagination and enforce public read access', as
     [
       ['categories', false, false],
       ['projects', false, false],
+      ['industries', false, false],
     ],
   )
 })
@@ -227,6 +229,20 @@ test('the front end selects the menu created as Main in admin', () => {
     updatedAt: '',
   }
   assert.equal(selectMainMenu([main]), main)
+})
+
+test('industry menu links open the industry-filtered portfolio', () => {
+  const industry: Industry = {
+    id: 3,
+    title: 'Financial services',
+    slug: 'financial-services',
+    createdAt: '',
+    updatedAt: '',
+  }
+  assert.equal(
+    getInternalLinkHref({ relationTo: 'industries', value: industry }),
+    '/?industry=financial-services',
+  )
 })
 
 test('sample endpoint no longer exposes users', async () => {

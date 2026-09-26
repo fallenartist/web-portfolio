@@ -186,6 +186,7 @@ export default function Header({
                     href={item.externalLink || '#'}
                     target={item.openInNewTab ? '_blank' : undefined}
                     rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
+                    onClick={() => setOpenPath(null)}
                   >
                     {item.title}
                   </a>

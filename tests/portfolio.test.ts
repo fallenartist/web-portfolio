@@ -4,6 +4,7 @@ import { getAdminThumbnail } from '../src/collections/Media'
 import type { Category, Project, Media } from '../src/payload-types'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
 import { fetchTreemapData } from '../src/lib/transformers'
+import { selectMainMenu } from '../src/lib/site-data'
 import { GET } from '../src/app/my-route/route'
 import type { Payload } from 'payload'
 
@@ -214,6 +215,18 @@ test('CMS queries disable default pagination and enforce public read access', as
       ['projects', false, false],
     ],
   )
+})
+
+test('the front end selects the menu created as Main in admin', () => {
+  const main = {
+    id: 1,
+    title: 'Main',
+    slug: 'main',
+    items: [],
+    createdAt: '',
+    updatedAt: '',
+  }
+  assert.equal(selectMainMenu([main]), main)
 })
 
 test('sample endpoint no longer exposes users', async () => {

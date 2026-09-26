@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import styles from './Header.module.scss'
@@ -30,6 +30,9 @@ export default function Header({
   onBreadcrumbClick,
 }: HeaderProps) {
   const [openPath, setOpenPath] = useState<string | null>(null)
+  const [abbreviateBreadcrumb, setAbbreviateBreadcrumb] = useState(false)
+  const breadcrumbRef = useRef<HTMLElement>(null)
+  const breadcrumbMeasureRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const menuOpen = openPath === pathname
   const atRoot = breadcrumb.length <= 1
@@ -49,6 +52,31 @@ export default function Header({
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
+
+  useLayoutEffect(() => {
+    const breadcrumbElement = breadcrumbRef.current
+    const measureElement = breadcrumbMeasureRef.current
+    if (!breadcrumbElement || !measureElement) return
+
+    const updateFit = () => {
+      const availableWidth = breadcrumbElement.clientWidth
+      const requiredWidth = measureElement.getBoundingClientRect().width
+      setAbbreviateBreadcrumb(requiredWidth > availableWidth + 1)
+    }
+    let active = true
+    const observer = new ResizeObserver(updateFit)
+    observer.observe(breadcrumbElement)
+    observer.observe(measureElement)
+    void document.fonts?.ready.then(() => {
+      if (active) updateFit()
+    })
+    updateFit()
+
+    return () => {
+      active = false
+      observer.disconnect()
+    }
+  }, [breadcrumb])
 
   return (
     <header className={`${styles.header} ${menuOpen ? styles.menuOpen : ''}`}>
@@ -80,23 +108,39 @@ export default function Header({
       </button>
 
       {/* Breadcrumb Navigation - Added here */}
-      <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-        {breadcrumb.map((item, index) => (
-          <h1
-            key={`breadcrumb-${index}`}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault()
-                onBreadcrumbClick?.(item)
-              }
-            }}
-            onClick={() => onBreadcrumbClick?.(item)}
-          >
-            {item.data.title || '?'}
-          </h1>
-        ))}
+      <nav
+        ref={breadcrumbRef}
+        className={`${styles.breadcrumb} ${abbreviateBreadcrumb ? styles.abbreviated : ''}`}
+        aria-label="Breadcrumb"
+      >
+        <div className={styles.breadcrumbItems}>
+          {breadcrumb.map((item, index) => (
+            <div className={styles.breadcrumbItem} key={`breadcrumb-${index}`}>
+              <h1
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    onBreadcrumbClick?.(item)
+                  }
+                }}
+                onClick={() => onBreadcrumbClick?.(item)}
+              >
+                {item.data.title || '?'}
+              </h1>
+              {index < breadcrumb.length - 1 && <span className={styles.separator}>/</span>}
+            </div>
+          ))}
+        </div>
+        <div ref={breadcrumbMeasureRef} className={styles.breadcrumbMeasure} aria-hidden="true">
+          {breadcrumb.map((item, index) => (
+            <div className={styles.breadcrumbItem} key={`measure-${index}`}>
+              <span className={styles.measureItem}>{item.data.title || '?'}</span>
+              {index < breadcrumb.length - 1 && <span className={styles.separator}>/</span>}
+            </div>
+          ))}
+        </div>
       </nav>
 
       {/* Hamburger Menu Button */}

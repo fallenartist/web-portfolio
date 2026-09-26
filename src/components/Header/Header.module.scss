@@ -156,6 +156,7 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
     transition:
       transform $transitionTime $transitionEase,
       opacity $transitionTime $transitionEase;
+    transform-box: fill-box;
     transform-origin: center;
   }
 
@@ -242,42 +243,6 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
 @media (min-width: 768px) {
   .header {
     padding: 12px 24px;
-
-    &.menuOpen {
-      height: $headerHeight;
-
-      .nav {
-        max-height: none;
-        padding-top: 0;
-        padding-bottom: 0;
-      }
-    }
-  }
-
-  .hamburger {
-    display: none; // Hide hamburger on desktop
-  }
-
-  .nav {
-    position: static;
-    max-height: none;
-    width: auto;
-    opacity: 1;
-    background-color: transparent;
-
-    ul {
-      flex-direction: row;
-      gap: 40px;
-    }
-
-    li {
-      font-size: 18px;
-    }
-
-    .social {
-      margin-top: 0;
-      margin-left: 20px;
-    }
   }
 }
 

@@ -16,9 +16,9 @@ export default async function Home({
 
   if (selectedIndustry) {
     const projects = portfolio.projects.filter((project) =>
-      project.industries?.some((item) =>
-        typeof item === 'object' ? item.id === selectedIndustry.id : item === selectedIndustry.id,
-      ),
+      typeof project.industry === 'object'
+        ? project.industry?.id === selectedIndustry.id
+        : project.industry === selectedIndustry.id,
     )
     treemapData = transformDataForTreemap(portfolio.categories, projects, portfolio.settings)
     treemapData.title = selectedIndustry.title

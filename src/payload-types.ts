@@ -71,6 +71,7 @@ export interface Config {
     projects: Project;
     categories: Category;
     industries: Industry;
+    clients: Client;
     media: Media;
     menus: Menu;
     'payload-kv': PayloadKv;
@@ -84,6 +85,7 @@ export interface Config {
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     industries: IndustriesSelect<false> | IndustriesSelect<true>;
+    clients: ClientsSelect<false> | ClientsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     menus: MenusSelect<false> | MenusSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -186,11 +188,12 @@ export interface Project {
     };
     [k: string]: unknown;
   } | null;
+  client?: (number | null) | Client;
   category: number | Category;
   /**
    * Client industry; used for portfolio filtering and menu links
    */
-  industries?: (number | Industry)[] | null;
+  industry?: (number | null) | Industry;
   /**
    * Higher values appear larger in the treemap (default: 100)
    */
@@ -283,6 +286,17 @@ export interface Project {
         id?: string | null;
       }[]
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "clients".
+ */
+export interface Client {
+  id: number;
+  title: string;
+  slug: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -458,6 +472,10 @@ export interface PayloadLockedDocument {
         value: number | Industry;
       } | null)
     | ({
+        relationTo: 'clients';
+        value: number | Client;
+      } | null)
+    | ({
         relationTo: 'media';
         value: number | Media;
       } | null)
@@ -540,8 +558,9 @@ export interface ProjectsSelect<T extends boolean = true> {
   slug?: T;
   excerpt?: T;
   description?: T;
+  client?: T;
   category?: T;
-  industries?: T;
+  industry?: T;
   priority?: T;
   thumbnail?: T;
   gallery?:
@@ -616,6 +635,16 @@ export interface IndustriesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   parent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "clients_select".
+ */
+export interface ClientsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
   updatedAt?: T;
   createdAt?: T;
 }

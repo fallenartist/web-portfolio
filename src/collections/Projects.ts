@@ -5,7 +5,7 @@ export const Projects: CollectionConfig = {
   admin: {
     group: 'Content',
     useAsTitle: 'title',
-    defaultColumns: ['title', 'category', 'priority', 'updatedAt'],
+    defaultColumns: ['title', 'client', 'category', 'industry', 'priority', 'updatedAt'],
   },
   access: {
     read: () => true,
@@ -54,6 +54,14 @@ export const Projects: CollectionConfig = {
       },
     },
     {
+      name: 'client',
+      type: 'relationship',
+      relationTo: 'clients',
+      admin: {
+        position: 'sidebar',
+      },
+    },
+    {
       name: 'category',
       type: 'relationship',
       relationTo: 'categories',
@@ -63,11 +71,10 @@ export const Projects: CollectionConfig = {
       },
     },
     {
-      name: 'industries',
-      label: 'Industries',
+      name: 'industry',
+      label: 'Industry',
       type: 'relationship',
       relationTo: 'industries',
-      hasMany: true,
       admin: {
         position: 'sidebar',
         description: 'Client industry; used for portfolio filtering and menu links',

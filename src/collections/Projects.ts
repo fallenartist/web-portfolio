@@ -58,6 +58,9 @@ export const Projects: CollectionConfig = {
       type: 'relationship',
       relationTo: 'categories',
       required: true,
+      admin: {
+        position: 'sidebar',
+      },
     },
     {
       name: 'industries',

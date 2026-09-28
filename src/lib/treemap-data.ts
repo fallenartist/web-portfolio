@@ -1,5 +1,6 @@
 import type { Category, Media, Project, Setting } from '@/payload-types'
 import type { ProjectStoryBlock, TreemapData } from '@/types'
+import { getVideoEmbed } from '@/lib/video-embed'
 
 function media(value: number | Media | null | undefined): Media | undefined {
   return value && typeof value === 'object' ? value : undefined
@@ -64,6 +65,28 @@ export function transformDataForTreemap(
           width: block.width,
           position: block.position,
           textAlign: block.textAlign,
+        })
+        continue
+      }
+      if (block.blockType === 'video') {
+        const video = getVideoEmbed(block.url, block.playback)
+        if (!video) continue
+        const poster = media(block.poster)
+        story.push({
+          id,
+          blockType: 'video',
+          url: video.embedURL,
+          provider: video.provider,
+          playback: block.playback,
+          aspectRatio: block.aspectRatio,
+          caption: block.caption || undefined,
+          width: block.width,
+          position: block.position || 'center',
+          poster: poster?.url || undefined,
+          posterAlt: poster?.alt || block.caption || `${project.title} video`,
+          posterWidth: poster?.width,
+          posterHeight: poster?.height,
+          posterSizes: poster?.sizes,
         })
         continue
       }

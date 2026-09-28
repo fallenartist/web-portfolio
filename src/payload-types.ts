@@ -242,7 +242,7 @@ export interface Project {
     tintOpacity?: number | null;
   };
   /**
-   * Drag blocks to set the order of images and text after the hero
+   * Drag blocks to set the order of images, videos and text after the hero
    */
   story?:
     | (
@@ -254,6 +254,24 @@ export interface Project {
             id?: string | null;
             blockName?: string | null;
             blockType: 'image';
+          }
+        | {
+            /**
+             * Paste a normal Vimeo or YouTube share URL
+             */
+            url: string;
+            /**
+             * Optional image shown until the visitor starts the video
+             */
+            poster?: (number | null) | Media;
+            caption?: string | null;
+            playback: 'standard' | 'background';
+            aspectRatio: '16-9' | '4-3' | '1-1' | '9-16';
+            width: 'full' | 'wide' | 'half';
+            position?: ('left' | 'center' | 'right') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'video';
           }
         | {
             content: {
@@ -588,6 +606,19 @@ export interface ProjectsSelect<T extends boolean = true> {
           | {
               image?: T;
               caption?: T;
+              width?: T;
+              position?: T;
+              id?: T;
+              blockName?: T;
+            };
+        video?:
+          | T
+          | {
+              url?: T;
+              poster?: T;
+              caption?: T;
+              playback?: T;
+              aspectRatio?: T;
               width?: T;
               position?: T;
               id?: T;

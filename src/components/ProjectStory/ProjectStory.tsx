@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { RichText } from '@payloadcms/richtext-lexical/react'
+import { useState } from 'react'
 import type { ProjectStoryBlock, TreemapData } from '@/types'
 import styles from './ProjectStory.module.scss'
 
@@ -37,6 +38,60 @@ function storyImageSource(block: Extract<ProjectStoryBlock, { blockType: 'image'
     height: block.imageHeight,
     sizes: block.sizes,
   })
+}
+
+function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 'video' }> }) {
+  const [started, setStarted] = useState(!block.poster)
+  const posterSource = block.poster
+    ? imageSource({
+        image: block.poster,
+        width: block.posterWidth,
+        height: block.posterHeight,
+        sizes: block.posterSizes,
+      })
+    : null
+
+  return (
+    <figure
+      className={`${styles.storyBlock} ${styles.videoBlock}`}
+      data-aspect-ratio={block.aspectRatio}
+      data-position={block.position}
+      data-width={block.width}
+    >
+      <div className={styles.videoFrame}>
+        {started ? (
+          <iframe
+            src={block.url}
+            title={block.caption || `${block.provider === 'vimeo' ? 'Vimeo' : 'YouTube'} video`}
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        ) : (
+          <button
+            className={styles.videoPoster}
+            type="button"
+            onClick={() => setStarted(true)}
+            aria-label={`Play ${block.caption || 'video'}`}
+          >
+            {posterSource && (
+              <Image
+                src={posterSource.src}
+                width={posterSource.width}
+                height={posterSource.height}
+                sizes={block.width === 'half' ? '(max-width: 720px) 100vw, 50vw' : '100vw'}
+                alt={block.posterAlt || ''}
+                unoptimized
+              />
+            )}
+            <span className={styles.playButton} aria-hidden="true" />
+          </button>
+        )}
+      </div>
+      {block.caption && <figcaption>{block.caption}</figcaption>}
+    </figure>
+  )
 }
 
 function ProjectPreview({ project }: { project: TreemapData }) {
@@ -140,6 +195,9 @@ export default function ProjectStory({
                   <RichText data={block.content} />
                 </section>
               )
+            }
+            if (block.blockType === 'video') {
+              return <StoryVideo block={block} key={block.id} />
             }
             const source = storyImageSource(block)
             return (

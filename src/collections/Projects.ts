@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { validateVideoURL } from '@/lib/video-embed'
 
 export const Projects: CollectionConfig = {
   slug: 'projects',
@@ -199,7 +200,7 @@ export const Projects: CollectionConfig = {
       label: 'Story layout',
       type: 'blocks',
       admin: {
-        description: 'Drag blocks to set the order of images and text after the hero',
+        description: 'Drag blocks to set the order of images, videos and text after the hero',
         initCollapsed: true,
       },
       blocks: [
@@ -219,6 +220,87 @@ export const Projects: CollectionConfig = {
             {
               name: 'caption',
               type: 'text',
+            },
+            {
+              name: 'width',
+              type: 'select',
+              defaultValue: 'wide',
+              required: true,
+              options: [
+                { label: 'Full bleed', value: 'full' },
+                { label: 'Wide', value: 'wide' },
+                { label: 'Half width', value: 'half' },
+              ],
+            },
+            {
+              name: 'position',
+              type: 'select',
+              defaultValue: 'center',
+              required: true,
+              options: [
+                { label: 'Left', value: 'left' },
+                { label: 'Centre', value: 'center' },
+                { label: 'Right', value: 'right' },
+              ],
+              admin: {
+                condition: (_, siblingData) => siblingData?.width !== 'full',
+              },
+            },
+          ],
+        },
+        {
+          slug: 'video',
+          labels: {
+            singular: 'Video',
+            plural: 'Videos',
+          },
+          fields: [
+            {
+              name: 'url',
+              label: 'Vimeo or YouTube URL',
+              type: 'text',
+              required: true,
+              validate: validateVideoURL,
+              admin: {
+                description: 'Paste a normal Vimeo or YouTube share URL',
+              },
+            },
+            {
+              name: 'poster',
+              label: 'Poster image',
+              type: 'upload',
+              relationTo: 'media',
+              admin: {
+                description: 'Optional image shown until the visitor starts the video',
+              },
+            },
+            {
+              name: 'caption',
+              type: 'text',
+            },
+            {
+              name: 'playback',
+              label: 'Playback mode',
+              type: 'select',
+              defaultValue: 'standard',
+              required: true,
+              options: [
+                { label: 'Standard player', value: 'standard' },
+                { label: 'Background: autoplay, muted and looping', value: 'background' },
+              ],
+            },
+            {
+              name: 'aspectRatio',
+              label: 'Aspect ratio',
+              type: 'select',
+              defaultValue: '16-9',
+              required: true,
+              options: [
+                { label: 'Widescreen (16:9)', value: '16-9' },
+                { label: 'Standard (4:3)', value: '4-3' },
+                { label: 'Square (1:1)', value: '1-1' },
+                { label: 'Vertical (9:16)', value: '9-16' },
+              ],
             },
             {
               name: 'width',

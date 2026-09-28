@@ -16,6 +16,22 @@ export type ProjectStoryBlock =
     }
   | {
       id: string
+      blockType: 'video'
+      url: string
+      provider: 'vimeo' | 'youtube'
+      playback: 'background' | 'standard'
+      aspectRatio: '16-9' | '4-3' | '1-1' | '9-16'
+      width: 'full' | 'wide' | 'half'
+      position: 'left' | 'center' | 'right'
+      caption?: string
+      poster?: string
+      posterAlt?: string
+      posterWidth?: number | null
+      posterHeight?: number | null
+      posterSizes?: Media['sizes']
+    }
+  | {
+      id: string
       blockType: 'text'
       content: NonNullable<Project['description']>
       width: 'narrow' | 'medium' | 'wide'

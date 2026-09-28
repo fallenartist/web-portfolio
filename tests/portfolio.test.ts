@@ -6,6 +6,7 @@ import { getInternalLinkHref } from '../src/lib/menu-links'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
 import { fetchTreemapData } from '../src/lib/transformers'
 import { selectMainMenu } from '../src/lib/site-data'
+import { getVideoEmbed, validateVideoURL } from '../src/lib/video-embed'
 import { GET } from '../src/app/my-route/route'
 import type { Payload } from 'payload'
 
@@ -101,7 +102,7 @@ test('project thumbnail and hero gallery image remain independent', () => {
   )
 })
 
-test('project story keeps ordered image and text layout controls', () => {
+test('project story keeps ordered image, video and text layout controls', () => {
   const content: NonNullable<Project['description']> = {
     root: {
       type: 'root',
@@ -142,6 +143,16 @@ test('project story keeps ordered image and text layout controls', () => {
             position: 'left',
             textAlign: 'left',
           },
+          {
+            blockType: 'video',
+            url: 'https://vimeo.com/76979871/abc123',
+            poster: image,
+            caption: 'Project film',
+            playback: 'standard',
+            aspectRatio: '16-9',
+            width: 'wide',
+            position: 'center',
+          },
         ],
       }),
     ],
@@ -153,8 +164,26 @@ test('project story keeps ordered image and text layout controls', () => {
     [
       ['image', 'half', 'right'],
       ['text', 'narrow', 'left'],
+      ['video', 'wide', 'center'],
     ],
   )
+  const video = projectNode.story?.[2]
+  assert.equal(video?.blockType, 'video')
+  if (video?.blockType === 'video') {
+    assert.match(video.url, /^https:\/\/player\.vimeo\.com\/video\/76979871\?/)
+    assert.match(video.url, /h=abc123/)
+    assert.equal(video.poster, image.url)
+  }
+})
+
+test('video links are validated and normalized for safe responsive embeds', () => {
+  const youtube = getVideoEmbed('https://youtu.be/M7lc1UVf-VE', 'background')
+  assert.equal(youtube?.provider, 'youtube')
+  assert.match(youtube?.embedURL || '', /^https:\/\/www\.youtube-nocookie\.com\/embed\/M7lc1UVf-VE\?/)
+  assert.match(youtube?.embedURL || '', /autoplay=1/)
+  assert.match(youtube?.embedURL || '', /mute=1/)
+  assert.match(youtube?.embedURL || '', /playlist=M7lc1UVf-VE/)
+  assert.equal(validateVideoURL('https://example.com/video'), 'Enter a valid Vimeo or YouTube video URL.')
 })
 
 test('media admin thumbnail falls back to the original SVG', () => {

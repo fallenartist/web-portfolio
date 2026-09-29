@@ -26,7 +26,7 @@ const project = (extra: Partial<Project> = {}): Project => ({
   category: 1,
   createdAt: '',
   updatedAt: '',
-  gallery: [{ image, id: 'first' }],
+  hero: { type: 'image', image },
   ...extra,
 })
 
@@ -59,18 +59,16 @@ test('nested categories work and cyclic parents cannot create a circular tree', 
   assert.equal(cycle.children?.length, 2)
 })
 
-test('missing uploads are skipped and repeated media uploads have distinct tile IDs', () => {
+test('missing and populated hero uploads are handled safely', () => {
   const tree = transformDataForTreemap(
     [category(1)],
-    [project({ gallery: [{ image: 9 }, { image, id: 'a' }, { image, id: 'b' }] })],
+    [project({ hero: { type: 'image', image: 9 } }), project({ id: 3, hero: { type: 'image', image } })],
   )
-  const gallery = tree.children![0].children![0].children!
-  assert.equal(gallery.length, 2)
-  assert.notEqual(gallery[0].id, gallery[1].id)
-  assert.equal(gallery[0].hero, true)
+  assert.equal(tree.children![0].children![0].children?.length, 0)
+  assert.equal(tree.children![0].children![1].children?.[0].hero, true)
 })
 
-test('project thumbnail and hero gallery image remain independent', () => {
+test('project thumbnail and hero image remain independent', () => {
   const thumbnail: Media = {
     ...image,
     id: 11,
@@ -87,22 +85,46 @@ test('project thumbnail and hero gallery image remain independent', () => {
     [
       project({
         thumbnail,
-        gallery: [
-          { image, id: 'first' },
-          { image: secondImage, hero: true, id: 'hero' },
-        ],
+        hero: { type: 'image', image: secondImage },
       }),
     ],
   )
   const projectNode = tree.children![0].children![0]
   assert.equal(projectNode.thumb, thumbnail.url)
-  assert.deepEqual(
-    projectNode.children?.map((item) => item.hero),
-    [false, true],
-  )
+  assert.equal(projectNode.children?.[0].hero, true)
+  assert.equal(projectNode.children?.[0].image, secondImage.url)
 })
 
-test('project story keeps ordered image, video and text layout controls', () => {
+test('video heroes use their cover for the treemap transition and preserve playback options', () => {
+  const tree = transformDataForTreemap(
+    [category(1)],
+    [
+      project({
+        hero: {
+          type: 'video',
+          videoURL: 'https://youtu.be/M7lc1UVf-VE',
+          videoCover: image,
+          videoFit: 'contain',
+          autoplay: true,
+          loop: true,
+          muted: false,
+          controls: false,
+        },
+      }),
+    ],
+  )
+  const projectNode = tree.children![0].children![0]
+  assert.equal(projectNode.children?.[0].image, image.url)
+  assert.equal(projectNode.children?.[0].hero, true)
+  assert.equal(projectNode.projectHero?.type, 'video')
+  if (projectNode.projectHero?.type === 'video') {
+    assert.equal(projectNode.projectHero.fit, 'contain')
+    assert.equal(projectNode.projectHero.muted, true)
+    assert.match(projectNode.projectHero.url, /autoplay=1/)
+  }
+})
+
+test('project content keeps its order and derives presentation from media', () => {
   const content: NonNullable<Project['description']> = {
     root: {
       type: 'root',
@@ -123,55 +145,40 @@ test('project story keeps ordered image, video and text layout controls', () => 
     [category(1)],
     [
       project({
-        heroPresentation: {
-          showTitle: true,
-          titlePosition: 'bottom-left',
-          tintColor: '#112233',
-          tintOpacity: 40,
-        },
         story: [
           {
             blockType: 'image',
             image,
-            width: 'half',
-            position: 'right',
           },
           {
             blockType: 'text',
             content,
-            width: 'narrow',
-            position: 'left',
-            textAlign: 'left',
+            quote: true,
           },
           {
             blockType: 'video',
             url: 'https://vimeo.com/76979871/abc123',
             poster: image,
             caption: 'Project film',
-            playback: 'standard',
-            aspectRatio: '16-9',
-            width: 'wide',
-            position: 'center',
+            autoplay: true,
+            controls: false,
+            loop: true,
+            muted: false,
           },
         ],
       }),
     ],
   )
   const projectNode = tree.children![0].children![0]
-  assert.equal(projectNode.heroPresentation?.titlePosition, 'bottom-left')
-  assert.deepEqual(
-    projectNode.story?.map((block) => [block.blockType, block.width, block.position]),
-    [
-      ['image', 'half', 'right'],
-      ['text', 'narrow', 'left'],
-      ['video', 'wide', 'center'],
-    ],
-  )
+  assert.deepEqual(projectNode.story?.map((block) => block.blockType), ['image', 'text', 'video'])
+  assert.equal(projectNode.story?.[1].blockType === 'text' && projectNode.story[1].quote, true)
   const video = projectNode.story?.[2]
   assert.equal(video?.blockType, 'video')
   if (video?.blockType === 'video') {
     assert.match(video.url, /^https:\/\/player\.vimeo\.com\/video\/76979871\?/)
     assert.match(video.url, /h=abc123/)
+    assert.match(video.url, /autoplay=1/)
+    assert.equal(video.muted, true)
     assert.equal(video.poster, image.url)
   }
 })

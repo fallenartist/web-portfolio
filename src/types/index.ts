@@ -7,8 +7,6 @@ export type ProjectStoryBlock =
       blockType: 'image'
       image: string
       alt: string
-      width: 'full' | 'wide' | 'half'
-      position: 'left' | 'center' | 'right'
       caption?: string
       imageWidth?: number | null
       imageHeight?: number | null
@@ -19,10 +17,10 @@ export type ProjectStoryBlock =
       blockType: 'video'
       url: string
       provider: 'vimeo' | 'youtube'
-      playback: 'background' | 'standard'
-      aspectRatio: '16-9' | '4-3' | '1-1' | '9-16'
-      width: 'full' | 'wide' | 'half'
-      position: 'left' | 'center' | 'right'
+      autoplay: boolean
+      controls: boolean
+      loop: boolean
+      muted: boolean
       caption?: string
       poster?: string
       posterAlt?: string
@@ -34,9 +32,32 @@ export type ProjectStoryBlock =
       id: string
       blockType: 'text'
       content: NonNullable<Project['description']>
-      width: 'narrow' | 'medium' | 'wide'
-      position: 'left' | 'center' | 'right'
-      textAlign: 'left' | 'center' | 'right'
+      quote: boolean
+    }
+
+export type ProjectHero =
+  | {
+      type: 'image'
+      image: string
+      alt: string
+      width?: number | null
+      height?: number | null
+      sizes?: Media['sizes']
+    }
+  | {
+      type: 'video'
+      url: string
+      provider: 'vimeo' | 'youtube'
+      fit: 'cover' | 'contain'
+      autoplay: boolean
+      controls: boolean
+      loop: boolean
+      muted: boolean
+      cover: string
+      coverAlt: string
+      coverWidth?: number | null
+      coverHeight?: number | null
+      coverSizes?: Media['sizes']
     }
 
 export interface TreemapData {
@@ -54,7 +75,7 @@ export interface TreemapData {
   alt?: string
   desc?: Project['description']
   excerpt?: string
-  heroPresentation?: Project['heroPresentation']
+  projectHero?: ProjectHero
   story?: ProjectStoryBlock[]
   hero?: boolean
   featured?: boolean

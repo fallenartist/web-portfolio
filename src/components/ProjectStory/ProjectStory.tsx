@@ -2,8 +2,8 @@
 
 import Image from 'next/image'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { useState } from 'react'
-import type { ProjectStoryBlock, TreemapData } from '@/types'
+import { useState, type CSSProperties } from 'react'
+import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
 import styles from './ProjectStory.module.scss'
 
 type ResponsiveImage = {
@@ -24,25 +24,76 @@ function imageSource(image: ResponsiveImage) {
       }
     }
   }
-  return {
-    src: image.image!,
-    width: image.width || 1600,
-    height: image.height || 1200,
-  }
+  return { src: image.image, width: image.width || 1600, height: image.height || 1200 }
 }
 
-function storyImageSource(block: Extract<ProjectStoryBlock, { blockType: 'image' }>) {
-  return imageSource({
-    image: block.image,
-    width: block.imageWidth,
-    height: block.imageHeight,
-    sizes: block.sizes,
+function HeroVideo({ hero, title }: { hero: Extract<ProjectHero, { type: 'video' }>; title: string }) {
+  const [started, setStarted] = useState(hero.autoplay)
+  const [loaded, setLoaded] = useState(false)
+  const [fit, setFit] = useState(hero.fit)
+  const cover = imageSource({
+    image: hero.cover,
+    width: hero.coverWidth,
+    height: hero.coverHeight,
+    sizes: hero.coverSizes,
   })
+  const heroStyle = { '--hero-ratio': cover.width / cover.height } as CSSProperties
+
+  return (
+    <figure className={styles.hero} data-video-fit={fit} style={heroStyle}>
+      <Image
+        className={styles.heroCover}
+        src={cover.src}
+        width={cover.width}
+        height={cover.height}
+        sizes="100vw"
+        alt={hero.coverAlt}
+        priority
+        unoptimized
+      />
+      {started && (
+        <iframe
+          className={loaded ? styles.videoLoaded : undefined}
+          src={hero.url}
+          title={`${title} ${hero.provider === 'vimeo' ? 'Vimeo' : 'YouTube'} video`}
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+          onLoad={() => setLoaded(true)}
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      )}
+      {!started && (
+        <button
+          className={styles.heroPlay}
+          type="button"
+          onClick={() => setStarted(true)}
+          aria-label={`Play ${title} video`}
+        >
+          <span className={styles.playButton} aria-hidden="true" />
+        </button>
+      )}
+      <button
+        className={styles.fitButton}
+        type="button"
+        onClick={() => setFit((value) => (value === 'cover' ? 'contain' : 'cover'))}
+        aria-label={fit === 'cover' ? 'Show the whole video' : 'Fill the hero with the video'}
+        title={fit === 'cover' ? 'Show whole video' : 'Fill hero'}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          {fit === 'cover' ? (
+            <path d="M8 3v5H3M16 3v5h5M8 21v-5H3M16 21v-5h5" />
+          ) : (
+            <path d="M3 8V3h5M21 8V3h-5M3 16v5h5M21 16v5h-5" />
+          )}
+        </svg>
+      </button>
+    </figure>
+  )
 }
 
 function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 'video' }> }) {
-  const [started, setStarted] = useState(!block.poster)
-  const posterSource = block.poster
+  const [started, setStarted] = useState(block.autoplay || !block.poster)
+  const poster = block.poster
     ? imageSource({
         image: block.poster,
         width: block.posterWidth,
@@ -50,15 +101,14 @@ function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 
         sizes: block.posterSizes,
       })
     : null
+  const portrait = Boolean(poster && poster.height > poster.width)
+  const frameStyle = {
+    '--media-ratio': poster ? `${poster.width} / ${poster.height}` : '16 / 9',
+  } as CSSProperties
 
   return (
-    <figure
-      className={`${styles.storyBlock} ${styles.videoBlock}`}
-      data-aspect-ratio={block.aspectRatio}
-      data-position={block.position}
-      data-width={block.width}
-    >
-      <div className={styles.videoFrame}>
+    <figure className={`${styles.contentBlock} ${styles.videoBlock}`} data-portrait={portrait}>
+      <div className={styles.videoFrame} style={frameStyle}>
         {started ? (
           <iframe
             src={block.url}
@@ -75,12 +125,12 @@ function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 
             onClick={() => setStarted(true)}
             aria-label={`Play ${block.caption || 'video'}`}
           >
-            {posterSource && (
+            {poster && (
               <Image
-                src={posterSource.src}
-                width={posterSource.width}
-                height={posterSource.height}
-                sizes={block.width === 'half' ? '(max-width: 720px) 100vw, 50vw' : '100vw'}
+                src={poster.src}
+                width={poster.width}
+                height={poster.height}
+                sizes={portrait ? '(max-width: 720px) 100vw, 50vw' : '100vw'}
                 alt={block.posterAlt || ''}
                 unoptimized
               />
@@ -96,32 +146,17 @@ function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 
 
 function ProjectPreview({ project }: { project: TreemapData }) {
   const hero = project.children?.find((item) => item.kind === 'image' && item.hero)
-  const heroPreview =
-    hero?.sizes?.thumbnail?.url || hero?.sizes?.small?.url || hero?.image || undefined
+  const heroPreview = hero?.sizes?.thumbnail?.url || hero?.sizes?.small?.url || hero?.image
 
   return (
     <span className={styles.preview}>
       {heroPreview ? (
-        <Image
-          src={heroPreview}
-          width={320}
-          height={200}
-          sizes="(max-width: 720px) 45vw, 260px"
-          alt=""
-          unoptimized
-        />
+        <Image src={heroPreview} width={320} height={200} sizes="(max-width: 720px) 45vw, 260px" alt="" unoptimized />
       ) : (
         <span className={styles.previewPlaceholder} />
       )}
       {project.thumb && (
-        <Image
-          className={styles.previewThumbnail}
-          src={project.thumb}
-          width={80}
-          height={80}
-          alt=""
-          unoptimized
-        />
+        <Image className={styles.previewThumbnail} src={project.thumb} width={80} height={80} alt="" unoptimized />
       )}
     </span>
   )
@@ -138,145 +173,78 @@ export default function ProjectStory({
   nextProject?: TreemapData | null
   onNavigateProject: (project: TreemapData) => void
 }) {
-  const images = (project.children || []).filter(
-    (item): item is TreemapData & { image: string } => item.kind === 'image' && Boolean(item.image),
-  )
-  const hero = images.find((image) => image.hero) || images[0]
-  const heroSource = hero ? imageSource(hero) : null
-  const remainingImages = images.filter((image) => image !== hero)
-  const presentation = project.heroPresentation
-  const showHeroTitle = presentation?.showTitle === true
-  const titlePosition = presentation?.titlePosition || 'center'
-  const tintColor = /^#[0-9a-f]{6}$/i.test(presentation?.tintColor || '')
-    ? presentation!.tintColor!
-    : '#000000'
-  const tintOpacity = Math.min(90, Math.max(0, presentation?.tintOpacity ?? 35)) / 100
+  const hero = project.projectHero
   const story = project.story || []
 
   return (
     <article className={styles.story} aria-label={project.title}>
-      {hero && heroSource && (
-        <figure className={styles.hero}>
-          <Image
-            src={heroSource.src}
-            width={heroSource.width}
-            height={heroSource.height}
-            sizes="100vw"
-            alt={hero.alt || hero.title || project.title}
-            priority
-            unoptimized
-          />
-          {showHeroTitle && (
-            <>
-              <span
-                className={styles.heroTint}
-                style={{ backgroundColor: tintColor, opacity: tintOpacity }}
-              />
-              <h1 className={`${styles.heroTitle} ${styles[`title_${titlePosition}`]}`}>
-                {project.title}
-              </h1>
-            </>
-          )}
-        </figure>
-      )}
+      {hero?.type === 'image' && (() => {
+        const source = imageSource(hero)
+        return (
+          <figure className={styles.hero}>
+            <Image src={source.src} width={source.width} height={source.height} sizes="100vw" alt={hero.alt} priority unoptimized />
+          </figure>
+        )
+      })()}
+      {hero?.type === 'video' && <HeroVideo hero={hero} title={project.title} />}
 
-      {story.length ? (
-        <div className={styles.storyLayout}>
-          {story.map((block) => {
-            if (block.blockType === 'text') {
-              return (
-                <section
-                  className={`${styles.storyBlock} ${styles.textBlock}`}
-                  data-position={block.position}
-                  data-text-align={block.textAlign}
-                  data-width={block.width}
-                  key={block.id}
-                >
-                  <RichText data={block.content} />
-                </section>
-              )
-            }
-            if (block.blockType === 'video') {
-              return <StoryVideo block={block} key={block.id} />
-            }
-            const source = storyImageSource(block)
+      <header className={styles.introduction}>
+        <h1>{project.title}</h1>
+        {project.desc && (
+          <div className={styles.description}>
+            <RichText data={project.desc} />
+          </div>
+        )}
+      </header>
+
+      <div className={styles.content}>
+        {story.map((block) => {
+          if (block.blockType === 'text') {
             return (
-              <figure
-                className={`${styles.storyBlock} ${styles.imageBlock}`}
-                data-position={block.position}
-                data-width={block.width}
+              <section
+                className={`${styles.contentBlock} ${styles.textBlock} ${block.quote ? styles.quoteBlock : ''}`}
                 key={block.id}
               >
-                <Image
-                  src={source.src}
-                  width={source.width}
-                  height={source.height}
-                  sizes={block.width === 'half' ? '(max-width: 720px) 100vw, 50vw' : '100vw'}
-                  alt={block.alt}
-                  unoptimized
-                />
-                {block.caption && <figcaption>{block.caption}</figcaption>}
-              </figure>
+                <RichText data={block.content} />
+              </section>
             )
-          })}
-        </div>
-      ) : (
-        <>
-          {project.desc && (
-            <div className={styles.description}>
-              <RichText data={project.desc} />
-            </div>
-          )}
-
-          <div className={styles.gallery}>
-            {remainingImages.map((image) => {
-              const source = imageSource(image)
-              return (
-                <figure className={styles.media} key={image.id}>
-                  <Image
-                    src={source.src}
-                    width={source.width}
-                    height={source.height}
-                    sizes="(max-width: 720px) 100vw, 50vw"
-                    alt={image.alt || image.title || project.title}
-                    unoptimized
-                  />
-                  {image.title && <figcaption>{image.title}</figcaption>}
-                </figure>
-              )
-            })}
-          </div>
-        </>
-      )}
+          }
+          if (block.blockType === 'video') return <StoryVideo block={block} key={block.id} />
+          const source = imageSource({
+            image: block.image,
+            width: block.imageWidth,
+            height: block.imageHeight,
+            sizes: block.sizes,
+          })
+          const portrait = source.height > source.width
+          return (
+            <figure className={`${styles.contentBlock} ${styles.imageBlock}`} data-portrait={portrait} key={block.id}>
+              <Image
+                src={source.src}
+                width={source.width}
+                height={source.height}
+                sizes={portrait ? '(max-width: 720px) 100vw, 50vw' : '100vw'}
+                alt={block.alt}
+                unoptimized
+              />
+              {block.caption && <figcaption>{block.caption}</figcaption>}
+            </figure>
+          )
+        })}
+      </div>
 
       {(previousProject || nextProject) && (
         <nav className={styles.projectNavigation} aria-label="Adjacent projects">
           {previousProject ? (
-            <button
-              className={`${styles.projectLink} ${styles.previousProject}`}
-              type="button"
-              onClick={() => onNavigateProject(previousProject)}
-            >
+            <button className={`${styles.projectLink} ${styles.previousProject}`} type="button" onClick={() => onNavigateProject(previousProject)}>
               <ProjectPreview project={previousProject} />
-              <span className={styles.projectLinkLabel}>
-                <small>Previous project</small>
-                <strong>{previousProject.title}</strong>
-              </span>
+              <span className={styles.projectLinkLabel}><small>Previous project</small><strong>{previousProject.title}</strong></span>
             </button>
-          ) : (
-            <span />
-          )}
+          ) : <span />}
           {nextProject && (
-            <button
-              className={`${styles.projectLink} ${styles.nextProject}`}
-              type="button"
-              onClick={() => onNavigateProject(nextProject)}
-            >
+            <button className={`${styles.projectLink} ${styles.nextProject}`} type="button" onClick={() => onNavigateProject(nextProject)}>
               <ProjectPreview project={nextProject} />
-              <span className={styles.projectLinkLabel}>
-                <small>Next project</small>
-                <strong>{nextProject.title}</strong>
-              </span>
+              <span className={styles.projectLinkLabel}><small>Next project</small><strong>{nextProject.title}</strong></span>
             </button>
           )}
         </nav>

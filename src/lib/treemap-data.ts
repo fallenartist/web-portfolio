@@ -1,5 +1,5 @@
 import type { Category, Media, Project, Setting } from '@/payload-types'
-import type { ProjectStoryBlock, TreemapData } from '@/types'
+import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
 import { getVideoEmbed } from '@/lib/video-embed'
 
 function media(value: number | Media | null | undefined): Media | undefined {
@@ -30,29 +30,67 @@ export function transformDataForTreemap(
     const category = map.get(categoryID)
     if (!category) continue
     const children: TreemapData[] = []
-    const gallery = project.gallery ?? []
-    for (const [index, item] of gallery.entries()) {
-      const image = media(item.image)
-      if (!image?.url) continue
-      children.push({
-        id: `project-${project.id}-image-${item.id || index}`,
-        kind: 'image',
-        slug: `image-${index}`,
-        title: item.title || '',
-        alt: image.alt || item.title || project.title,
-        image: image.url,
-        width: image.width,
-        height: image.height,
-        sizes: image.sizes,
-        hero: item.hero === true,
-        featured: item.featured ?? false,
-        priority: 100,
-      })
-    }
-    let hero = children.find((item) => item.hero)
-    if (!hero && children[0]) {
-      hero = children[0]
-      hero.hero = true
+    let projectHero: ProjectHero | undefined
+    if (project.hero.type === 'video' && project.hero.videoURL) {
+      const cover = media(project.hero.videoCover)
+      const video = getVideoEmbed(project.hero.videoURL, project.hero)
+      if (cover?.url) {
+        children.push({
+          id: `project-${project.id}-hero`,
+          kind: 'image',
+          slug: 'hero',
+          title: '',
+          alt: cover.alt || project.title,
+          image: cover.url,
+          width: cover.width,
+          height: cover.height,
+          sizes: cover.sizes,
+          hero: true,
+          priority: 100,
+        })
+      }
+      if (video && cover?.url) {
+        projectHero = {
+          type: 'video',
+          url: video.embedURL,
+          provider: video.provider,
+          fit: project.hero.videoFit || 'cover',
+          autoplay: project.hero.autoplay === true,
+          controls: project.hero.controls !== false,
+          loop: project.hero.loop === true,
+          muted: project.hero.autoplay === true || project.hero.muted === true,
+          cover: cover.url,
+          coverAlt: cover.alt || project.title,
+          coverWidth: cover.width,
+          coverHeight: cover.height,
+          coverSizes: cover.sizes,
+        }
+      }
+    } else {
+      const image = media(project.hero.image)
+      if (image?.url) {
+        children.push({
+          id: `project-${project.id}-hero`,
+          kind: 'image',
+          slug: 'hero',
+          title: '',
+          alt: image.alt || project.title,
+          image: image.url,
+          width: image.width,
+          height: image.height,
+          sizes: image.sizes,
+          hero: true,
+          priority: 100,
+        })
+        projectHero = {
+          type: 'image',
+          image: image.url,
+          alt: image.alt || project.title,
+          width: image.width,
+          height: image.height,
+          sizes: image.sizes,
+        }
+      }
     }
     const story: ProjectStoryBlock[] = []
     for (const [index, block] of (project.story || []).entries()) {
@@ -62,14 +100,12 @@ export function transformDataForTreemap(
           id,
           blockType: 'text',
           content: block.content,
-          width: block.width,
-          position: block.position,
-          textAlign: block.textAlign,
+          quote: block.quote === true,
         })
         continue
       }
       if (block.blockType === 'video') {
-        const video = getVideoEmbed(block.url, block.playback)
+        const video = getVideoEmbed(block.url, block)
         if (!video) continue
         const poster = media(block.poster)
         story.push({
@@ -77,11 +113,11 @@ export function transformDataForTreemap(
           blockType: 'video',
           url: video.embedURL,
           provider: video.provider,
-          playback: block.playback,
-          aspectRatio: block.aspectRatio,
+          autoplay: block.autoplay === true,
+          controls: block.controls !== false,
+          loop: block.loop === true,
+          muted: block.autoplay === true || block.muted === true,
           caption: block.caption || undefined,
-          width: block.width,
-          position: block.position || 'center',
           poster: poster?.url || undefined,
           posterAlt: poster?.alt || block.caption || `${project.title} video`,
           posterWidth: poster?.width,
@@ -98,8 +134,6 @@ export function transformDataForTreemap(
         image: image.url,
         alt: image.alt || block.caption || project.title,
         caption: block.caption || undefined,
-        width: block.width,
-        position: block.position || 'center',
         imageWidth: image.width,
         imageHeight: image.height,
         sizes: image.sizes,
@@ -114,7 +148,7 @@ export function transformDataForTreemap(
       desc: project.description,
       excerpt: project.excerpt || '',
       thumb: media(project.thumbnail)?.url,
-      heroPresentation: project.heroPresentation,
+      projectHero,
       story,
       children,
     })

@@ -165,13 +165,8 @@ export interface User {
 export interface Project {
   id: number;
   title: string;
-  slug: string;
   /**
-   * Short description for meta tags and previews
-   */
-  excerpt?: string | null;
-  /**
-   * Legacy project description, shown when Story layout has no blocks
+   * Shown below the hero, alongside the project title
    */
   description?: {
     root: {
@@ -188,69 +183,44 @@ export interface Project {
     };
     [k: string]: unknown;
   } | null;
-  client?: (number | null) | Client;
-  category: number | Category;
   /**
-   * Client industry; used for portfolio filtering and menu links
-   */
-  industry?: (number | null) | Industry;
-  /**
-   * Higher values appear larger in the treemap (default: 100)
-   */
-  priority?: number | null;
-  /**
-   * Small preview image for the treemap
+   * Small preview image used in the treemap
    */
   thumbnail?: (number | null) | Media;
-  gallery?:
-    | {
-        image: number | Media;
-        title?: string | null;
-        /**
-         * Use this image as the opening hero for the scrollable project view
-         */
-        hero?: boolean | null;
-        /**
-         * Featured images will be included in the automatic slideshow
-         */
-        featured?: boolean | null;
-        id?: string | null;
-      }[]
-    | null;
   /**
-   * Optional title overlay and tint for the opening hero image
+   * The opening image or video. Video cover images also represent the project in transitions.
    */
-  heroPresentation?: {
-    showTitle?: boolean | null;
-    titlePosition?:
-      | (
-          | 'top-left'
-          | 'top-center'
-          | 'top-right'
-          | 'center-left'
-          | 'center'
-          | 'center-right'
-          | 'bottom-left'
-          | 'bottom-center'
-          | 'bottom-right'
-        )
-      | null;
+  hero: {
+    type: 'image' | 'video';
+    image?: (number | null) | Media;
     /**
-     * Six-digit hex colour
+     * Paste a normal Vimeo or YouTube share URL
      */
-    tintColor?: string | null;
-    tintOpacity?: number | null;
+    videoURL?: string | null;
+    /**
+     * Shown before playback and used during the treemap transition
+     */
+    videoCover?: (number | null) | Media;
+    /**
+     * Visitors can switch a cropped video to contain mode from the hero.
+     */
+    videoFit?: ('cover' | 'contain') | null;
+    /**
+     * Starts automatically when the video enters the page. Autoplay is always muted.
+     */
+    autoplay?: boolean | null;
+    loop?: boolean | null;
+    muted?: boolean | null;
+    controls?: boolean | null;
   };
   /**
-   * Drag blocks to set the order of images, videos and text after the hero
+   * Add images, videos and text in the order they should appear below the introduction
    */
   story?:
     | (
         | {
             image: number | Media;
             caption?: string | null;
-            width: 'full' | 'wide' | 'half';
-            position?: ('left' | 'center' | 'right') | null;
             id?: string | null;
             blockName?: string | null;
             blockType: 'image';
@@ -261,14 +231,17 @@ export interface Project {
              */
             url: string;
             /**
-             * Optional image shown until the visitor starts the video
+             * Recommended; also determines whether the video uses portrait or landscape sizing
              */
             poster?: (number | null) | Media;
             caption?: string | null;
-            playback: 'standard' | 'background';
-            aspectRatio: '16-9' | '4-3' | '1-1' | '9-16';
-            width: 'full' | 'wide' | 'half';
-            position?: ('left' | 'center' | 'right') | null;
+            /**
+             * Starts automatically when the video enters the page. Autoplay is always muted.
+             */
+            autoplay?: boolean | null;
+            loop?: boolean | null;
+            muted?: boolean | null;
+            controls?: boolean | null;
             id?: string | null;
             blockName?: string | null;
             blockType: 'video';
@@ -289,59 +262,37 @@ export interface Project {
               };
               [k: string]: unknown;
             };
-            width: 'narrow' | 'medium' | 'wide';
-            position: 'left' | 'center' | 'right';
-            textAlign: 'left' | 'center' | 'right';
+            /**
+             * Uses larger type and quotation marks
+             */
+            quote?: boolean | null;
             id?: string | null;
             blockName?: string | null;
             blockType: 'text';
           }
       )[]
     | null;
+  slug: string;
+  /**
+   * Short description for meta tags and previews
+   */
+  excerpt?: string | null;
+  client?: (number | null) | Client;
+  category: number | Category;
+  /**
+   * Client industry; used for portfolio filtering and menu links
+   */
+  industry?: (number | null) | Industry;
+  /**
+   * Higher values appear larger in the treemap (default: 100)
+   */
+  priority?: number | null;
   tags?:
     | {
         tag?: string | null;
         id?: string | null;
       }[]
     | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "clients".
- */
-export interface Client {
-  id: number;
-  title: string;
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories".
- */
-export interface Category {
-  id: number;
-  title: string;
-  slug: string;
-  /**
-   * Category color in any valid CSS format: hex (#FF0000), RGB (rgb(255,0,0)), HSL (hsl(0,100%,50%)), OKLCH (oklch(0.554 0.046 257.417)), etc.
-   */
-  color?: string | null;
-  /**
-   * Optional parent category for hierarchical organization
-   */
-  parent?: (number | null) | Category;
-  /**
-   * Higher values appear larger in the treemap (default: 100)
-   */
-  priority?: number | null;
-  /**
-   * Thumbnail image for the category
-   */
-  thumbnail?: (number | null) | Media;
   updatedAt: string;
   createdAt: string;
 }
@@ -400,6 +351,44 @@ export interface Media {
       filename?: string | null;
     };
   };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "clients".
+ */
+export interface Client {
+  id: number;
+  title: string;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  title: string;
+  slug: string;
+  /**
+   * Category color in any valid CSS format: hex (#FF0000), RGB (rgb(255,0,0)), HSL (hsl(0,100%,50%)), OKLCH (oklch(0.554 0.046 257.417)), etc.
+   */
+  color?: string | null;
+  /**
+   * Optional parent category for hierarchical organization
+   */
+  parent?: (number | null) | Category;
+  /**
+   * Higher values appear larger in the treemap (default: 100)
+   */
+  priority?: number | null;
+  /**
+   * Thumbnail image for the category
+   */
+  thumbnail?: (number | null) | Media;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -573,30 +562,20 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface ProjectsSelect<T extends boolean = true> {
   title?: T;
-  slug?: T;
-  excerpt?: T;
   description?: T;
-  client?: T;
-  category?: T;
-  industry?: T;
-  priority?: T;
   thumbnail?: T;
-  gallery?:
+  hero?:
     | T
     | {
+        type?: T;
         image?: T;
-        title?: T;
-        hero?: T;
-        featured?: T;
-        id?: T;
-      };
-  heroPresentation?:
-    | T
-    | {
-        showTitle?: T;
-        titlePosition?: T;
-        tintColor?: T;
-        tintOpacity?: T;
+        videoURL?: T;
+        videoCover?: T;
+        videoFit?: T;
+        autoplay?: T;
+        loop?: T;
+        muted?: T;
+        controls?: T;
       };
   story?:
     | T
@@ -606,8 +585,6 @@ export interface ProjectsSelect<T extends boolean = true> {
           | {
               image?: T;
               caption?: T;
-              width?: T;
-              position?: T;
               id?: T;
               blockName?: T;
             };
@@ -617,10 +594,10 @@ export interface ProjectsSelect<T extends boolean = true> {
               url?: T;
               poster?: T;
               caption?: T;
-              playback?: T;
-              aspectRatio?: T;
-              width?: T;
-              position?: T;
+              autoplay?: T;
+              loop?: T;
+              muted?: T;
+              controls?: T;
               id?: T;
               blockName?: T;
             };
@@ -628,13 +605,17 @@ export interface ProjectsSelect<T extends boolean = true> {
           | T
           | {
               content?: T;
-              width?: T;
-              position?: T;
-              textAlign?: T;
+              quote?: T;
               id?: T;
               blockName?: T;
             };
       };
+  slug?: T;
+  excerpt?: T;
+  client?: T;
+  category?: T;
+  industry?: T;
+  priority?: T;
   tags?:
     | T
     | {

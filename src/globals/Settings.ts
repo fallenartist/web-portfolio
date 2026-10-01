@@ -123,6 +123,53 @@ export const Settings: GlobalConfig = {
       ],
     },
     {
+      name: 'storyText',
+      label: 'Story text presentation',
+      type: 'group',
+      fields: [
+        {
+          name: 'width',
+          label: 'Text block width (%)',
+          type: 'number',
+          required: true,
+          defaultValue: 50,
+          min: 30,
+          max: 100,
+          admin: {
+            description: 'Used on wider screens; text remains full width on mobile.',
+          },
+        },
+        {
+          name: 'fontSize',
+          label: 'Text font size (px)',
+          type: 'number',
+          required: true,
+          defaultValue: 30,
+          min: 16,
+          max: 72,
+        },
+        {
+          name: 'quoteFontSize',
+          label: 'Quote font size (px)',
+          type: 'number',
+          required: true,
+          defaultValue: 60,
+          min: 24,
+          max: 140,
+        },
+        {
+          name: 'textColor',
+          label: 'Text colour',
+          type: 'text',
+          required: true,
+          defaultValue: '#222222',
+          validate: (value: null | string | undefined) =>
+            Boolean(value && /^#[0-9a-f]{6}$/i.test(value)) ||
+            'Enter a six-digit hex colour, e.g. #222222.',
+        },
+      ],
+    },
+    {
       name: 'enableAutoplay',
       type: 'checkbox',
       defaultValue: true,

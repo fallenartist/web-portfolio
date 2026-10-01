@@ -812,6 +812,15 @@ export interface Setting {
     dimColor?: string | null;
     dimIntensity?: number | null;
   };
+  storyText: {
+    /**
+     * Used on wider screens; text remains full width on mobile.
+     */
+    width: number;
+    fontSize: number;
+    quoteFontSize: number;
+    textColor: string;
+  };
   enableAutoplay?: boolean | null;
   autoplayDelay?: number | null;
   autoplayInterval?: number | null;
@@ -836,6 +845,14 @@ export interface SettingsSelect<T extends boolean = true> {
         fontSize?: T;
         dimColor?: T;
         dimIntensity?: T;
+      };
+  storyText?:
+    | T
+    | {
+        width?: T;
+        fontSize?: T;
+        quoteFontSize?: T;
+        textColor?: T;
       };
   enableAutoplay?: T;
   autoplayDelay?: T;

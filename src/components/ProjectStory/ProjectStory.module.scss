@@ -267,9 +267,14 @@
 }
 
 .textBlock {
-  width: 50%;
+  width: var(--story-text-width, 50%);
   padding-inline: clamp(20px, 4vw, 72px);
-  font-size: clamp(19px, 1.75vw, 30px);
+  color: var(--story-text-color, #222);
+  font-size: clamp(
+    var(--story-text-min-size, 19px),
+    var(--story-text-fluid-size, 1.75vw),
+    var(--story-text-size, 30px)
+  );
   line-height: 1.4;
 
   > :first-child {
@@ -284,7 +289,11 @@
 .quoteBlock {
   position: relative;
   padding-top: clamp(30px, 4vw, 64px);
-  font-size: clamp(30px, 3.25vw, 60px);
+  font-size: clamp(
+    var(--story-quote-min-size, 30px),
+    var(--story-quote-fluid-size, 3.25vw),
+    var(--story-quote-size, 60px)
+  );
   line-height: 1.14;
   letter-spacing: -0.025em;
 

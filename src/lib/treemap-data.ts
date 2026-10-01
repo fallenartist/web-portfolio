@@ -198,6 +198,12 @@ export function transformDataForTreemap(
         dimColor: settings?.projectTitle?.dimColor || '#000000',
         dimIntensity: settings?.projectTitle?.dimIntensity ?? 35,
       },
+      storyText: {
+        width: settings?.storyText?.width ?? 50,
+        fontSize: settings?.storyText?.fontSize ?? 30,
+        quoteFontSize: settings?.storyText?.quoteFontSize ?? 60,
+        textColor: settings?.storyText?.textColor || '#222222',
+      },
     },
   }
 }

@@ -14,6 +14,7 @@ type ResponsiveImage = {
 }
 
 type ProjectTitleSettings = NonNullable<TreemapData['settings']>['projectTitle']
+type StoryTextSettings = NonNullable<TreemapData['settings']>['storyText']
 
 function HeroTitle({ title, settings }: { title: string; settings: ProjectTitleSettings }) {
   const color = /^#[0-9a-f]{6}$/i.test(settings.dimColor) ? settings.dimColor : '#000000'
@@ -242,12 +243,14 @@ function ProjectPreview({ project }: { project: TreemapData }) {
 export default function ProjectStory({
   project,
   titleSettings,
+  storyTextSettings,
   previousProject,
   nextProject,
   onNavigateProject,
 }: {
   project: TreemapData
   titleSettings?: ProjectTitleSettings
+  storyTextSettings?: StoryTextSettings
   previousProject?: TreemapData | null
   nextProject?: TreemapData | null
   onNavigateProject: (project: TreemapData) => void
@@ -260,6 +263,27 @@ export default function ProjectStory({
     dimColor: '#000000',
     dimIntensity: 35,
   }
+  const textSettings = storyTextSettings || {
+    width: 50,
+    fontSize: 30,
+    quoteFontSize: 60,
+    textColor: '#222222',
+  }
+  const textColor = /^#[0-9a-f]{6}$/i.test(textSettings.textColor)
+    ? textSettings.textColor
+    : '#222222'
+  const textSize = Math.min(72, Math.max(16, textSettings.fontSize))
+  const quoteSize = Math.min(140, Math.max(24, textSettings.quoteFontSize))
+  const storyStyle = {
+    '--story-text-width': `${Math.min(100, Math.max(30, textSettings.width))}%`,
+    '--story-text-min-size': `${(textSize * 19) / 30}px`,
+    '--story-text-fluid-size': `${(textSize * 1.75) / 30}vw`,
+    '--story-text-size': `${textSize}px`,
+    '--story-quote-min-size': `${quoteSize / 2}px`,
+    '--story-quote-fluid-size': `${(quoteSize * 3.25) / 60}vw`,
+    '--story-quote-size': `${quoteSize}px`,
+    '--story-text-color': textColor,
+  } as CSSProperties
   const [videoContained, setVideoContained] = useState(
     hero?.type === 'video' && hero.fit === 'contain',
   )
@@ -270,7 +294,7 @@ export default function ProjectStory({
     !(hero?.type === 'video' && videoContained)
 
   return (
-    <article className={styles.story} aria-label={project.title}>
+    <article className={styles.story} style={storyStyle} aria-label={project.title}>
       {hero?.type === 'image' && (() => {
         const source = imageSource(hero)
         return (

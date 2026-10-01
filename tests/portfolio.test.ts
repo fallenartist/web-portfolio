@@ -69,9 +69,16 @@ test('global project title presentation is included in the front-end settings', 
       dimColor: '#123456',
       dimIntensity: 45,
     },
+    storyText: {
+      width: 60,
+      fontSize: 32,
+      quoteFontSize: 64,
+      textColor: '#345678',
+    },
   }
   const tree = transformDataForTreemap([category(1)], [project()], settings)
   assert.deepEqual(tree.settings?.projectTitle, settings.projectTitle)
+  assert.deepEqual(tree.settings?.storyText, settings.storyText)
 })
 
 test('missing and populated hero uploads are handled safely', () => {

@@ -92,6 +92,12 @@ export interface TreemapData {
       dimColor: string
       dimIntensity: number
     }
+    storyText: {
+      width: number
+      fontSize: number
+      quoteFontSize: number
+      textColor: string
+    }
   }
 }
 export type TreemapNode = HierarchyRectangularNode<TreemapData>

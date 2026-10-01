@@ -223,11 +223,14 @@ function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 
 function ProjectPreview({ project }: { project: TreemapData }) {
   const hero = project.children?.find((item) => item.kind === 'image' && item.hero)
   const heroPreview = hero?.sizes?.thumbnail?.url || hero?.sizes?.small?.url || hero?.image
+  const previewStyle = {
+    '--preview-category-color': project.color || 'transparent',
+  } as CSSProperties
 
   return (
-    <span className={styles.preview}>
+    <span className={styles.preview} style={previewStyle}>
       {heroPreview ? (
-        <Image src={heroPreview} width={320} height={200} sizes="(max-width: 720px) 45vw, 260px" alt="" unoptimized />
+        <Image className={styles.previewHero} src={heroPreview} width={320} height={200} sizes="(max-width: 720px) 45vw, 260px" alt="" unoptimized />
       ) : (
         <span className={styles.previewPlaceholder} />
       )}

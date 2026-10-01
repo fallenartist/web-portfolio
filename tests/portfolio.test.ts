@@ -31,11 +31,13 @@ const project = (extra: Partial<Project> = {}): Project => ({
 })
 
 test('numeric and populated category relationships produce the same project tree', () => {
-  const categories = [category(1)]
+  const categories = [category(1, { color: '#123456' })]
   const numeric = transformDataForTreemap(categories, [project()])
   const populated = transformDataForTreemap(categories, [project({ category: categories[0] })])
   assert.deepEqual(numeric, populated)
-  assert.equal(findTreemapNode(numeric, ['category-1', 'project'])?.children?.[0].image, image.url)
+  const projectNode = findTreemapNode(numeric, ['category-1', 'project'])
+  assert.equal(projectNode?.children?.[0].image, image.url)
+  assert.equal(projectNode?.color, '#123456')
 })
 
 test('full paths are validated; projects cannot be addressed beneath an unrelated category', () => {

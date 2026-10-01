@@ -145,6 +145,7 @@ export function transformDataForTreemap(
       slug: project.slug,
       title: project.title,
       priority: project.priority ?? 100,
+      color: category.color,
       desc: project.description,
       excerpt: project.excerpt || '',
       thumb: media(project.thumbnail)?.url,

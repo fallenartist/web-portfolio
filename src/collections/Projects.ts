@@ -65,18 +65,18 @@ export const Projects: CollectionConfig = {
         },
         {
           name: 'videoURL',
-          label: 'Vimeo or YouTube URL',
+          label: 'Vimeo URL',
           type: 'text',
           validate: (
             value: null | string | undefined,
             { siblingData }: { siblingData?: { type?: string } },
           ) => {
             if (siblingData?.type !== 'video') return true
-            return value ? validateVideoURL(value) : 'Enter a Vimeo or YouTube URL.'
+            return value ? validateVideoURL(value) : 'Enter a Vimeo URL.'
           },
           admin: {
             condition: (_, siblingData) => siblingData?.type === 'video',
-            description: 'Paste a normal Vimeo or YouTube share URL',
+            description: 'Paste a normal Vimeo share URL',
           },
         },
         {
@@ -139,11 +139,11 @@ export const Projects: CollectionConfig = {
           fields: [
             {
               name: 'url',
-              label: 'Vimeo or YouTube URL',
+              label: 'Vimeo URL',
               type: 'text',
               required: true,
               validate: validateVideoURL,
-              admin: { description: 'Paste a normal Vimeo or YouTube share URL' },
+              admin: { description: 'Paste a normal Vimeo share URL' },
             },
             {
               name: 'poster',

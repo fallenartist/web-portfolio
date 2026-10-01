@@ -194,7 +194,7 @@ export interface Project {
     type: 'image' | 'video';
     image?: (number | null) | Media;
     /**
-     * Paste a normal Vimeo or YouTube share URL
+     * Paste a normal Vimeo share URL
      */
     videoURL?: string | null;
     /**
@@ -227,7 +227,7 @@ export interface Project {
           }
         | {
             /**
-             * Paste a normal Vimeo or YouTube share URL
+             * Paste a normal Vimeo share URL
              */
             url: string;
             /**

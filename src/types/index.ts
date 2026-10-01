@@ -16,7 +16,7 @@ export type ProjectStoryBlock =
       id: string
       blockType: 'video'
       url: string
-      provider: 'vimeo' | 'youtube'
+      provider: 'vimeo'
       autoplay: boolean
       controls: boolean
       loop: boolean
@@ -47,7 +47,7 @@ export type ProjectHero =
   | {
       type: 'video'
       url: string
-      provider: 'vimeo' | 'youtube'
+      provider: 'vimeo'
       fit: 'cover' | 'contain'
       autoplay: boolean
       controls: boolean

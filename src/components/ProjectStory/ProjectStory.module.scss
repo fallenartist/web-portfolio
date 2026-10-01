@@ -46,13 +46,14 @@
   }
 
   &[data-video-fit='contain'] > iframe {
-    width: 100%;
-    height: 100%;
+    width: calc(100% + 2px);
+    height: calc(100% + 2px);
   }
 
   &[data-video-fit='contain'] {
     height: auto;
     aspect-ratio: var(--hero-ratio, 1.7778);
+    background: #fff;
   }
 }
 

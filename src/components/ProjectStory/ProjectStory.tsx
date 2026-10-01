@@ -42,13 +42,11 @@ function HeroVideo({ hero, title }: { hero: Extract<ProjectHero, { type: 'video'
     hero.coverWidth && hero.coverHeight
       ? hero.coverWidth / hero.coverHeight
       : cover.width / cover.height
-  const [videoRatio, setVideoRatio] = useState(
-    hero.provider === 'youtube' ? 16 / 9 : coverRatio,
-  )
+  const [videoRatio, setVideoRatio] = useState(coverRatio)
   const heroStyle = { '--hero-ratio': videoRatio } as CSSProperties
 
   useEffect(() => {
-    if (!started || hero.provider !== 'vimeo' || !iframeRef.current) return
+    if (!started || !iframeRef.current) return
 
     let active = true
     const iframe = iframeRef.current
@@ -74,7 +72,7 @@ function HeroVideo({ hero, title }: { hero: Extract<ProjectHero, { type: 'video'
     return () => {
       active = false
     }
-  }, [hero.provider, started])
+  }, [started])
 
   return (
     <figure className={styles.hero} data-video-fit={fit} style={heroStyle}>
@@ -95,12 +93,9 @@ function HeroVideo({ hero, title }: { hero: Extract<ProjectHero, { type: 'video'
           ref={iframeRef}
           className={loaded ? styles.videoLoaded : undefined}
           src={hero.url}
-          title={`${title} ${hero.provider === 'vimeo' ? 'Vimeo' : 'YouTube'} video`}
+          title={`${title} Vimeo video`}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen
-          onLoad={() => {
-            if (hero.provider === 'youtube') setLoaded(true)
-          }}
           referrerPolicy="strict-origin-when-cross-origin"
         />
       )}
@@ -154,7 +149,7 @@ function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 
         {started ? (
           <iframe
             src={block.url}
-            title={block.caption || `${block.provider === 'vimeo' ? 'Vimeo' : 'YouTube'} video`}
+            title={block.caption || 'Vimeo video'}
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowFullScreen
             loading="lazy"

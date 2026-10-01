@@ -151,6 +151,14 @@
   );
   line-height: 1.38;
 
+  p {
+    margin-block: 0;
+  }
+
+  p + p {
+    margin-top: 0.6em;
+  }
+
   > :first-child {
     margin-top: 0;
   }

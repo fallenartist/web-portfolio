@@ -147,13 +147,11 @@ function HeroVideo({
       <button
         className={styles.fitButton}
         type="button"
-        onClick={() =>
-          setFit((value) => {
-            const next = value === 'cover' ? 'contain' : 'cover'
-            onFitChange(next)
-            return next
-          })
-        }
+        onClick={() => {
+          const next = fit === 'cover' ? 'contain' : 'cover'
+          setFit(next)
+          onFitChange(next)
+        }}
         aria-label={fit === 'cover' ? 'Show the whole video' : 'Fill the hero with the video'}
         title={fit === 'cover' ? 'Show whole video' : 'Fill hero'}
       >

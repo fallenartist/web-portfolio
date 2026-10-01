@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
 import styles from './ProjectStory.module.scss'
 
@@ -31,13 +31,50 @@ function HeroVideo({ hero, title }: { hero: Extract<ProjectHero, { type: 'video'
   const [started, setStarted] = useState(hero.autoplay)
   const [loaded, setLoaded] = useState(false)
   const [fit, setFit] = useState(hero.fit)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
   const cover = imageSource({
     image: hero.cover,
     width: hero.coverWidth,
     height: hero.coverHeight,
     sizes: hero.coverSizes,
   })
-  const heroStyle = { '--hero-ratio': cover.width / cover.height } as CSSProperties
+  const coverRatio =
+    hero.coverWidth && hero.coverHeight
+      ? hero.coverWidth / hero.coverHeight
+      : cover.width / cover.height
+  const [videoRatio, setVideoRatio] = useState(
+    hero.provider === 'youtube' ? 16 / 9 : coverRatio,
+  )
+  const heroStyle = { '--hero-ratio': videoRatio } as CSSProperties
+
+  useEffect(() => {
+    if (!started || hero.provider !== 'vimeo' || !iframeRef.current) return
+
+    let active = true
+    const iframe = iframeRef.current
+
+    void import('@vimeo/player').then(async ({ default: Player }) => {
+      const player = new Player(iframe)
+      try {
+        await player.ready()
+        const [width, height] = await Promise.all([
+          player.getVideoWidth(),
+          player.getVideoHeight(),
+        ])
+        if (active && width > 0 && height > 0) setVideoRatio(width / height)
+      } catch {
+        // Retain the original cover ratio when Vimeo metadata is unavailable.
+      } finally {
+        if (active) setLoaded(true)
+      }
+    }).catch(() => {
+      if (active) setLoaded(true)
+    })
+
+    return () => {
+      active = false
+    }
+  }, [hero.provider, started])
 
   return (
     <figure className={styles.hero} data-video-fit={fit} style={heroStyle}>
@@ -55,12 +92,15 @@ function HeroVideo({ hero, title }: { hero: Extract<ProjectHero, { type: 'video'
       )}
       {started && (
         <iframe
+          ref={iframeRef}
           className={loaded ? styles.videoLoaded : undefined}
           src={hero.url}
           title={`${title} ${hero.provider === 'vimeo' ? 'Vimeo' : 'YouTube'} video`}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen
-          onLoad={() => setLoaded(true)}
+          onLoad={() => {
+            if (hero.provider === 'youtube') setLoaded(true)
+          }}
           referrerPolicy="strict-origin-when-cross-origin"
         />
       )}

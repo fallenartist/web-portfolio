@@ -76,7 +76,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
     })
     let current = root
     let projectMode = false
-    let storyTimer: ReturnType<typeof setTimeout> | undefined
     let disposed = false
     const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600
     const timers = new Set<ReturnType<typeof setTimeout>>()
@@ -184,7 +183,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
       if (disposed) return
       const isProject = node.data.kind === 'project'
       projectMode = isProject
-      clearTimer(storyTimer)
       if (isProject) {
         const projectIndex = projectNodes.indexOf(node)
         setStoryNeighbors({
@@ -194,10 +192,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
         if (!preserveStory) {
           setStoryVisible(false)
           setStoryProject(node.data)
-          storyTimer = schedule(() => {
-            container!.scrollTop = 0
-            setStoryVisible(true)
-          }, duration)
         }
       } else {
         setStoryVisible(false)
@@ -230,10 +224,12 @@ export default function Treemap({ data }: { data: TreemapData }) {
       const innerW = (d: TreemapNode) => Math.max(0, w(d) - gap)
       const innerH = (d: TreemapNode) => Math.max(0, h(d) - gap)
       const transition = d3.transition().duration(transitionDuration).ease(d3.easeExpInOut)
-      cells.transition(transition).attr('transform', (d) => `translate(${x(d.x0)},${y(d.y0)})`)
+      const cellTransition = cells
+        .transition(transition)
+        .attr('transform', (d) => `translate(${x(d.x0)},${y(d.y0)})`)
       cells.select('rect').transition(transition).attr('width', innerW).attr('height', innerH)
-      cells
-        .select<SVGRectElement>(`.${styles.heroOverlay}`)
+      const heroOverlays = cells.select<SVGRectElement>(`.${styles.heroOverlay}`)
+      const heroOverlayTransition = heroOverlays
         .transition(transition)
         .attr('width', innerW)
         .attr('height', innerH)
@@ -262,6 +258,18 @@ export default function Treemap({ data }: { data: TreemapData }) {
             ? imageFor(d.data, innerW(d), innerH(d))
             : d.data.sizes?.thumbnail?.url || d.data.image || null,
         )
+      if (isProject && !preserveStory) {
+        const revealStory = () => {
+          container!.scrollTop = 0
+          setStoryVisible(true)
+        }
+        const targetHeroOverlay = heroOverlays.filter((d) => d.parent === node)
+        if (targetHeroOverlay.empty()) {
+          cellTransition.filter((d) => d === node).on('end.story', revealStory)
+        } else {
+          heroOverlayTransition.filter((d) => d.parent === node).on('end.story', revealStory)
+        }
+      }
     }
     function goToPath(path: string) {
       const target = root.descendants().find((d) => d.data.kind !== 'image' && pathFor(d) === path)
@@ -272,7 +280,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
       const target = projectNodes.find((node) => node.data.id === project.id)
       if (!target || target === current) return
 
-      clearTimer(storyTimer)
       setStoryVisible(false)
       container!.scrollTop = 0
 

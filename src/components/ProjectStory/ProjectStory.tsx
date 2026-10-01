@@ -15,6 +15,11 @@ type ResponsiveImage = {
 
 type ProjectTitleSettings = NonNullable<TreemapData['settings']>['projectTitle']
 type StoryTextSettings = NonNullable<TreemapData['settings']>['storyText']
+type StoryImageBlock = Extract<ProjectStoryBlock, { blockType: 'image' }>
+
+type StoryLayoutItem =
+  | { kind: 'block'; block: ProjectStoryBlock }
+  | { kind: 'portraitPair'; blocks: [StoryImageBlock, StoryImageBlock] }
 
 function HeroTitle({ title, settings }: { title: string; settings: ProjectTitleSettings }) {
   const color = /^#[0-9a-f]{6}$/i.test(settings.dimColor) ? settings.dimColor : '#000000'
@@ -49,6 +54,61 @@ function imageSource(image: ResponsiveImage) {
     }
   }
   return { src: image.image, width: image.width || 1600, height: image.height || 1200 }
+}
+
+function isPortraitImage(block: ProjectStoryBlock): block is StoryImageBlock {
+  if (block.blockType !== 'image') return false
+  const source = imageSource({
+    image: block.image,
+    width: block.imageWidth,
+    height: block.imageHeight,
+    sizes: block.sizes,
+  })
+  const width = block.imageWidth || source.width
+  const height = block.imageHeight || source.height
+  return height > width
+}
+
+function arrangeStory(story: ProjectStoryBlock[]): StoryLayoutItem[] {
+  const items: StoryLayoutItem[] = []
+  for (let index = 0; index < story.length; index += 1) {
+    const block = story[index]
+    const next = story[index + 1]
+    if (isPortraitImage(block) && next && isPortraitImage(next)) {
+      items.push({ kind: 'portraitPair', blocks: [block, next] })
+      index += 1
+    } else {
+      items.push({ kind: 'block', block })
+    }
+  }
+  return items
+}
+
+function StoryImage({ block, paired = false }: { block: StoryImageBlock; paired?: boolean }) {
+  const source = imageSource({
+    image: block.image,
+    width: block.imageWidth,
+    height: block.imageHeight,
+    sizes: block.sizes,
+  })
+  const portrait = isPortraitImage(block)
+
+  return (
+    <figure
+      className={paired ? styles.imageBlock : `${styles.contentBlock} ${styles.imageBlock}`}
+      data-portrait={portrait}
+    >
+      <Image
+        src={source.src}
+        width={source.width}
+        height={source.height}
+        sizes={portrait ? '(max-width: 720px) 100vw, 50vw' : '100vw'}
+        alt={block.alt}
+        unoptimized
+      />
+      {block.caption && <figcaption>{block.caption}</figcaption>}
+    </figure>
+  )
 }
 
 function HeroVideo({
@@ -258,6 +318,7 @@ export default function ProjectStory({
 }) {
   const hero = project.projectHero
   const story = project.story || []
+  const storyLayout = arrangeStory(story)
   const settings = titleSettings || {
     placement: 'below',
     fontSize: 112,
@@ -327,7 +388,20 @@ export default function ProjectStory({
       )}
 
       <div className={styles.content}>
-        {story.map((block) => {
+        {storyLayout.map((item) => {
+          if (item.kind === 'portraitPair') {
+            return (
+              <div
+                className={`${styles.contentBlock} ${styles.portraitPair}`}
+                key={`${item.blocks[0].id}-${item.blocks[1].id}`}
+              >
+                {item.blocks.map((block) => (
+                  <StoryImage block={block} paired key={block.id} />
+                ))}
+              </div>
+            )
+          }
+          const block = item.block
           if (block.blockType === 'text') {
             return (
               <section
@@ -339,26 +413,7 @@ export default function ProjectStory({
             )
           }
           if (block.blockType === 'video') return <StoryVideo block={block} key={block.id} />
-          const source = imageSource({
-            image: block.image,
-            width: block.imageWidth,
-            height: block.imageHeight,
-            sizes: block.sizes,
-          })
-          const portrait = source.height > source.width
-          return (
-            <figure className={`${styles.contentBlock} ${styles.imageBlock}`} data-portrait={portrait} key={block.id}>
-              <Image
-                src={source.src}
-                width={source.width}
-                height={source.height}
-                sizes={portrait ? '(max-width: 720px) 100vw, 50vw' : '100vw'}
-                alt={block.alt}
-                unoptimized
-              />
-              {block.caption && <figcaption>{block.caption}</figcaption>}
-            </figure>
-          )
+          return <StoryImage block={block} key={block.id} />
         })}
       </div>
 

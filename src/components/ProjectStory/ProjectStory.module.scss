@@ -173,6 +173,22 @@
   margin: 0;
 }
 
+.portraitPair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 32px);
+
+  > .imageBlock {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+
+  > .imageBlock img {
+    margin-inline: auto;
+  }
+}
+
 .imageBlock,
 .videoBlock {
   width: 100%;
@@ -432,6 +448,11 @@
   }
 
   .content { gap: 48px; }
+
+  .portraitPair {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
 
   .imageBlock[data-portrait='true'],
   .videoBlock[data-portrait='true'],

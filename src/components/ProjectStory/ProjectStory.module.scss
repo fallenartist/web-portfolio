@@ -373,13 +373,13 @@
 
 .previewThumbnail {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
-  width: 28%;
-  height: 28%;
-  padding: 4px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
   object-fit: contain;
-  background: rgb(255 255 255 / 90%);
+  background: transparent;
+  opacity: 0.9;
 }
 
 .projectLinkLabel {

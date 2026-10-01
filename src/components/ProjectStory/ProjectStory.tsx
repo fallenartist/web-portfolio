@@ -15,6 +15,7 @@ type ResponsiveImage = {
 
 type ProjectTitleSettings = NonNullable<TreemapData['settings']>['projectTitle']
 type StoryTextSettings = NonNullable<TreemapData['settings']>['storyText']
+type ProjectDescriptionSettings = NonNullable<TreemapData['settings']>['projectDescription']
 type StoryImageBlock = Extract<ProjectStoryBlock, { blockType: 'image' }>
 
 type StoryLayoutItem =
@@ -305,6 +306,7 @@ export default function ProjectStory({
   project,
   titleSettings,
   storyTextSettings,
+  descriptionSettings,
   previousProject,
   nextProject,
   onNavigateProject,
@@ -312,6 +314,7 @@ export default function ProjectStory({
   project: TreemapData
   titleSettings?: ProjectTitleSettings
   storyTextSettings?: StoryTextSettings
+  descriptionSettings?: ProjectDescriptionSettings
   previousProject?: TreemapData | null
   nextProject?: TreemapData | null
   onNavigateProject: (project: TreemapData) => void
@@ -331,11 +334,20 @@ export default function ProjectStory({
     quoteFontSize: 60,
     textColor: '#222222',
   }
+  const description = descriptionSettings || {
+    fontFamily: 'October Condensed',
+    fontSize: 30,
+    textColor: '#222222',
+  }
   const textColor = /^#[0-9a-f]{6}$/i.test(textSettings.textColor)
     ? textSettings.textColor
     : '#222222'
   const textSize = Math.min(72, Math.max(16, textSettings.fontSize))
   const quoteSize = Math.min(140, Math.max(24, textSettings.quoteFontSize))
+  const descriptionSize = Math.min(72, Math.max(16, description.fontSize))
+  const descriptionColor = /^#[0-9a-f]{6}$/i.test(description.textColor)
+    ? description.textColor
+    : '#222222'
   const storyStyle = {
     '--story-text-width': `${Math.min(100, Math.max(30, textSettings.width))}%`,
     '--story-text-min-size': `${(textSize * 19) / 30}px`,
@@ -345,6 +357,11 @@ export default function ProjectStory({
     '--story-quote-fluid-size': `${(quoteSize * 3.25) / 60}vw`,
     '--story-quote-size': `${quoteSize}px`,
     '--story-text-color': textColor,
+    '--project-description-font': description.fontFamily.trim() || 'October Condensed',
+    '--project-description-min-size': `${(descriptionSize * 19) / 30}px`,
+    '--project-description-fluid-size': `${(descriptionSize * 1.75) / 30}vw`,
+    '--project-description-size': `${descriptionSize}px`,
+    '--project-description-color': descriptionColor,
   } as CSSProperties
   const [videoContained, setVideoContained] = useState(
     hero?.type === 'video' && hero.fit === 'contain',

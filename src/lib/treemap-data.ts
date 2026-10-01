@@ -205,6 +205,11 @@ export function transformDataForTreemap(
         quoteFontSize: settings?.storyText?.quoteFontSize ?? 60,
         textColor: settings?.storyText?.textColor || '#222222',
       },
+      projectDescription: {
+        fontFamily: settings?.projectDescription?.fontFamily || 'October Condensed',
+        fontSize: settings?.projectDescription?.fontSize ?? 30,
+        textColor: settings?.projectDescription?.textColor || '#222222',
+      },
     },
   }
 }

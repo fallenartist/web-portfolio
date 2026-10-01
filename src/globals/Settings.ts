@@ -170,6 +170,42 @@ export const Settings: GlobalConfig = {
       ],
     },
     {
+      name: 'projectDescription',
+      label: 'Project description presentation',
+      type: 'group',
+      fields: [
+        {
+          name: 'fontFamily',
+          label: 'Font family',
+          type: 'text',
+          required: true,
+          defaultValue: 'October Condensed',
+          admin: {
+            description: 'Enter a CSS font family name, e.g. October Condensed.',
+          },
+        },
+        {
+          name: 'fontSize',
+          label: 'Font size (px)',
+          type: 'number',
+          required: true,
+          defaultValue: 30,
+          min: 16,
+          max: 72,
+        },
+        {
+          name: 'textColor',
+          label: 'Text colour',
+          type: 'text',
+          required: true,
+          defaultValue: '#222222',
+          validate: (value: null | string | undefined) =>
+            Boolean(value && /^#[0-9a-f]{6}$/i.test(value)) ||
+            'Enter a six-digit hex colour, e.g. #222222.',
+        },
+      ],
+    },
+    {
       name: 'enableAutoplay',
       type: 'checkbox',
       defaultValue: true,

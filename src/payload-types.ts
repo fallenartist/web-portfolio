@@ -821,6 +821,14 @@ export interface Setting {
     quoteFontSize: number;
     textColor: string;
   };
+  projectDescription: {
+    /**
+     * Enter a CSS font family name, e.g. October Condensed.
+     */
+    fontFamily: string;
+    fontSize: number;
+    textColor: string;
+  };
   enableAutoplay?: boolean | null;
   autoplayDelay?: number | null;
   autoplayInterval?: number | null;
@@ -852,6 +860,13 @@ export interface SettingsSelect<T extends boolean = true> {
         width?: T;
         fontSize?: T;
         quoteFontSize?: T;
+        textColor?: T;
+      };
+  projectDescription?:
+    | T
+    | {
+        fontFamily?: T;
+        fontSize?: T;
         textColor?: T;
       };
   enableAutoplay?: T;

@@ -98,6 +98,11 @@ export interface TreemapData {
       quoteFontSize: number
       textColor: string
     }
+    projectDescription: {
+      fontFamily: string
+      fontSize: number
+      textColor: string
+    }
   }
 }
 export type TreemapNode = HierarchyRectangularNode<TreemapData>

@@ -10,6 +10,7 @@ import * as migration_20260928_094158_project_story_video from './20260928_09415
 import * as migration_20260929_070501_project_content_model from './20260929_070501_project_content_model'
 import * as migration_20261001_144525_global_project_title_presentation from './20261001_144525_global_project_title_presentation'
 import * as migration_20261001_151326_global_story_text_presentation from './20261001_151326_global_story_text_presentation'
+import * as migration_20261001_195846_global_project_description_presentation from './20261001_195846_global_project_description_presentation'
 
 export const migrations = [
   {
@@ -71,5 +72,10 @@ export const migrations = [
     up: migration_20261001_151326_global_story_text_presentation.up,
     down: migration_20261001_151326_global_story_text_presentation.down,
     name: '20261001_151326_global_story_text_presentation',
+  },
+  {
+    up: migration_20261001_195846_global_project_description_presentation.up,
+    down: migration_20261001_195846_global_project_description_presentation.down,
+    name: '20261001_195846_global_project_description_presentation',
   },
 ]

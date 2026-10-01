@@ -157,6 +157,21 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .attr('width', '100%')
       .attr('height', '100%')
       .attr('preserveAspectRatio', 'xMidYMid slice')
+    const titlePresentation = data.settings?.projectTitle
+    const heroDimColor = /^#[0-9a-f]{6}$/i.test(titlePresentation?.dimColor || '')
+      ? titlePresentation!.dimColor
+      : '#000000'
+    const heroDimOpacity =
+      titlePresentation?.placement === 'overlay'
+        ? Math.min(90, Math.max(0, titlePresentation.dimIntensity)) / 100
+        : 0
+    cells
+      .filter((d) => d.data.kind === 'image' && d.data.hero === true)
+      .append('rect')
+      .attr('class', styles.heroOverlay)
+      .attr('clip-path', (d) => `url(#clip-${d.data.id})`)
+      .style('fill', heroDimColor)
+      .style('fill-opacity', heroDimOpacity)
     // Preserve overlay stacking: category labels above projects above gallery images.
     cells.sort((a, b) => b.depth - a.depth)
 
@@ -217,6 +232,11 @@ export default function Treemap({ data }: { data: TreemapData }) {
       const transition = d3.transition().duration(transitionDuration).ease(d3.easeExpInOut)
       cells.transition(transition).attr('transform', (d) => `translate(${x(d.x0)},${y(d.y0)})`)
       cells.select('rect').transition(transition).attr('width', innerW).attr('height', innerH)
+      cells
+        .select<SVGRectElement>(`.${styles.heroOverlay}`)
+        .transition(transition)
+        .attr('width', innerW)
+        .attr('height', innerH)
       cells
         .select('text')
         .transition(transition)

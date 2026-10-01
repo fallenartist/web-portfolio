@@ -163,3 +163,7 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
     font-size: 2vmin;
   }
 }
+
+.heroOverlay {
+  pointer-events: none;
+}

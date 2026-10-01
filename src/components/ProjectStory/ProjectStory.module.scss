@@ -125,7 +125,7 @@
   gap: clamp(32px, 5vw, 96px);
   align-items: start;
   width: 100%;
-  padding: clamp(48px, 8vw, 128px) clamp(20px, 4vw, 72px);
+  padding: clamp(48px, 8vw, 128px) var(--page-gutter);
 
   h1 {
     max-width: 12ch;
@@ -161,7 +161,7 @@
   flex-direction: column;
   gap: clamp(48px, 8vw, 128px);
   width: 100%;
-  padding-inline: clamp(20px, 4vw, 72px);
+  padding-inline: var(--page-gutter);
 }
 
 .hero + .content {
@@ -324,7 +324,7 @@
   gap: clamp(16px, 3vw, 48px);
   max-width: 1600px;
   margin: clamp(72px, 12vw, 192px) auto 0;
-  padding: 0 clamp(16px, 3vw, 48px);
+  padding: 0 var(--page-gutter);
 }
 
 .projectLink {
@@ -425,7 +425,7 @@
 
   .introduction {
     grid-template-columns: 1fr;
-    padding: 40px 20px 64px;
+    padding-block: 40px 64px;
   }
 
 
@@ -447,9 +447,7 @@
     max-height: calc(100svh - 72px);
   }
 
-  .content { padding-inline: 20px; }
-
-  .projectNavigation { gap: 24px; padding-inline: 12px; }
+  .projectNavigation { gap: 24px; }
 
   .projectLink,
   .nextProject {

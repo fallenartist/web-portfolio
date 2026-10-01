@@ -72,8 +72,8 @@
   position: absolute;
   z-index: 3;
   bottom: clamp(24px, 5vw, 80px);
-  left: clamp(20px, 5vw, 80px);
-  max-width: min(80vw, 14ch);
+  left: var(--page-gutter);
+  max-width: min(calc(100% - (2 * var(--page-gutter))), 14ch);
   margin: 0;
   color: #fff;
   font-weight: 300;

@@ -171,7 +171,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .attr('class', styles.heroOverlay)
       .attr('clip-path', (d) => `url(#clip-${d.data.id})`)
       .style('fill', heroDimColor)
-      .style('fill-opacity', heroDimOpacity)
+      .style('fill-opacity', 0)
     // Preserve overlay stacking: category labels above projects above gallery images.
     cells.sort((a, b) => b.depth - a.depth)
 
@@ -237,6 +237,9 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .transition(transition)
         .attr('width', innerW)
         .attr('height', innerH)
+        .style('fill-opacity', (d) =>
+          isProject && d.parent === node ? heroDimOpacity : 0,
+        )
       cells
         .select('text')
         .transition(transition)

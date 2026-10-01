@@ -41,16 +41,18 @@ function HeroVideo({ hero, title }: { hero: Extract<ProjectHero, { type: 'video'
 
   return (
     <figure className={styles.hero} data-video-fit={fit} style={heroStyle}>
-      <Image
-        className={styles.heroCover}
-        src={cover.src}
-        width={cover.width}
-        height={cover.height}
-        sizes="100vw"
-        alt={hero.coverAlt}
-        priority
-        unoptimized
-      />
+      {!loaded && (
+        <Image
+          className={styles.heroCover}
+          src={cover.src}
+          width={cover.width}
+          height={cover.height}
+          sizes="100vw"
+          alt={hero.coverAlt}
+          priority
+          unoptimized
+        />
+      )}
       {started && (
         <iframe
           className={loaded ? styles.videoLoaded : undefined}
@@ -186,7 +188,7 @@ export default function ProjectStory({
           </figure>
         )
       })()}
-      {hero?.type === 'video' && <HeroVideo hero={hero} title={project.title} />}
+      {hero?.type === 'video' && <HeroVideo hero={hero} key={hero.url} title={project.title} />}
 
       <header className={styles.introduction}>
         <h1>{project.title}</h1>

@@ -8,7 +8,7 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
 .treemapContainer {
   position: relative;
   width: 100%;
-  height: calc(100vh - #{$headerHeight});
+  height: calc(100dvh - #{$headerHeight});
   margin-top: $headerHeight; // Add margin-top to offset the fixed header
   overflow: hidden;
 
@@ -164,6 +164,7 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   }
 }
 
-.heroOverlay {
+.node .heroOverlay {
   pointer-events: none;
+  transition: none;
 }

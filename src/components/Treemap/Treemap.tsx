@@ -255,7 +255,9 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .select('image')
         .attr('href', (d) =>
           d.parent === node
-            ? imageFor(d.data, innerW(d), innerH(d))
+            ? d.data.hero
+              ? d.data.sizes?.large?.url || d.data.image || null
+              : imageFor(d.data, innerW(d), innerH(d))
             : d.data.sizes?.thumbnail?.url || d.data.image || null,
         )
       if (isProject && !preserveStory) {

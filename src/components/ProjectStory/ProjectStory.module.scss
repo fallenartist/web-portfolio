@@ -9,7 +9,7 @@
 .hero {
   position: relative;
   width: 100%;
-  height: calc(100svh - 64px);
+  height: calc(100dvh - 64px);
   margin: 0;
   overflow: hidden;
   background: #111;
@@ -41,7 +41,7 @@
   }
 
   &[data-video-fit='cover'] > iframe {
-    width: max(100%, calc((100svh - 64px) * var(--hero-ratio, 1.7778)));
+    width: max(100%, calc((100dvh - 64px) * var(--hero-ratio, 1.7778)));
     height: max(100%, calc(100vw / var(--hero-ratio, 1.7778)));
   }
 
@@ -414,10 +414,8 @@
 }
 
 @media (max-width: 720px) {
-  .hero { height: calc(100svh - 56px); }
-
   .hero[data-video-fit='cover'] > iframe {
-    width: max(100%, calc((100svh - 56px) * var(--hero-ratio, 1.7778)));
+    width: max(100%, calc((100dvh - 64px) * var(--hero-ratio, 1.7778)));
     height: max(100%, calc(100vw / var(--hero-ratio, 1.7778)));
   }
 

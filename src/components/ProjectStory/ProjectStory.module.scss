@@ -195,14 +195,6 @@
     min-width: 0;
     margin: 0;
   }
-
-  > .imageBlock img {
-    width: 100%;
-    height: min(66.667vw, calc(100dvh - 96px));
-    max-height: none;
-    margin-inline: auto;
-    object-fit: cover;
-  }
 }
 
 .imageBlock,
@@ -338,7 +330,7 @@
     var(--story-quote-fluid-size, 3.25vw),
     var(--story-quote-size, 60px)
   );
-  line-height: 1.2;
+  line-height: 1.3;
   letter-spacing: -0.025em;
 
   &::before {
@@ -463,14 +455,6 @@
   .portraitPair {
     grid-template-columns: 1fr;
     gap: 48px;
-  }
-
-  .portraitPair > .imageBlock[data-portrait='true'] img {
-    width: auto;
-    max-width: 100%;
-    height: auto;
-    max-height: calc(100svh - 72px);
-    object-fit: contain;
   }
 
   .imageBlock[data-portrait='true'],

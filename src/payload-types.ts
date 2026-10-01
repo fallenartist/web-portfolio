@@ -806,6 +806,12 @@ export interface Setting {
    * Logo shown below the root; clicking it moves up one level
    */
   upLogo?: (number | null) | Media;
+  projectTitle: {
+    placement: 'below' | 'overlay';
+    fontSize?: number | null;
+    dimColor?: string | null;
+    dimIntensity?: number | null;
+  };
   enableAutoplay?: boolean | null;
   autoplayDelay?: number | null;
   autoplayInterval?: number | null;
@@ -823,6 +829,14 @@ export interface SettingsSelect<T extends boolean = true> {
   rootCategorySlug?: T;
   rootLogo?: T;
   upLogo?: T;
+  projectTitle?:
+    | T
+    | {
+        placement?: T;
+        fontSize?: T;
+        dimColor?: T;
+        dimIntensity?: T;
+      };
   enableAutoplay?: T;
   autoplayDelay?: T;
   autoplayInterval?: T;

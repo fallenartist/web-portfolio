@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { getAdminThumbnail } from '../src/collections/Media'
-import type { Category, Industry, Project, Media } from '../src/payload-types'
+import type { Category, Industry, Project, Media, Setting } from '../src/payload-types'
 import { getInternalLinkHref } from '../src/lib/menu-links'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
 import { fetchTreemapData } from '../src/lib/transformers'
@@ -57,6 +57,21 @@ test('nested categories work and cyclic parents cannot create a circular tree', 
   )
   assert.doesNotThrow(() => JSON.stringify(cycle))
   assert.equal(cycle.children?.length, 2)
+})
+
+test('global project title presentation is included in the front-end settings', () => {
+  const settings: Setting = {
+    id: 1,
+    siteTitle: 'Portfolio',
+    projectTitle: {
+      placement: 'overlay',
+      fontSize: 128,
+      dimColor: '#123456',
+      dimIntensity: 45,
+    },
+  }
+  const tree = transformDataForTreemap([category(1)], [project()], settings)
+  assert.deepEqual(tree.settings?.projectTitle, settings.projectTitle)
 })
 
 test('missing and populated hero uploads are handled safely', () => {

@@ -86,6 +86,12 @@ export interface TreemapData {
     autoplayDelay: number
     autoplayInterval: number
     siteTitle: string
+    projectTitle: {
+      placement: 'below' | 'overlay'
+      fontSize: number
+      dimColor: string
+      dimIntensity: number
+    }
   }
 }
 export type TreemapNode = HierarchyRectangularNode<TreemapData>

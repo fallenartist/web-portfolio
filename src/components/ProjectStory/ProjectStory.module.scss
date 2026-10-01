@@ -61,9 +61,31 @@
   z-index: 0;
 }
 
-.heroPlay {
+.heroDim {
   position: absolute;
   z-index: 2;
+  inset: 0;
+  pointer-events: none;
+}
+
+.heroTitle {
+  position: absolute;
+  z-index: 3;
+  bottom: clamp(24px, 5vw, 80px);
+  left: clamp(20px, 5vw, 80px);
+  max-width: min(80vw, 14ch);
+  margin: 0;
+  color: #fff;
+  font-weight: 300;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  pointer-events: none;
+}
+
+.heroPlay {
+  position: absolute;
+  z-index: 4;
   inset: 0;
   padding: 0;
   border: 0;
@@ -73,7 +95,7 @@
 
 .fitButton {
   position: absolute;
-  z-index: 3;
+  z-index: 5;
   top: 20px;
   right: 20px;
   display: grid;
@@ -113,6 +135,10 @@
     line-height: 0.94;
     letter-spacing: -0.04em;
     text-wrap: balance;
+  }
+
+  &[data-title-overlay='true'] .description {
+    grid-column: 2;
   }
 }
 
@@ -369,6 +395,11 @@
   .introduction {
     grid-template-columns: 1fr;
     padding: 40px 20px 64px;
+  }
+
+
+  .introduction[data-title-overlay='true'] .description {
+    grid-column: 1;
   }
 
   .content { gap: 48px; }

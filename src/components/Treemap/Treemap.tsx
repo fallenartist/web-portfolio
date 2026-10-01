@@ -383,7 +383,9 @@ export default function Treemap({ data }: { data: TreemapData }) {
       {storyProject && (
         <div className={styles.storyStage} aria-hidden={!storyVisible} inert={!storyVisible}>
           <ProjectStory
+            key={storyProject.id}
             project={storyProject}
+            titleSettings={data.settings?.projectTitle}
             previousProject={storyNeighbors.previous}
             nextProject={storyNeighbors.next}
             onNavigateProject={(project) => navigateProjectRef.current(project)}

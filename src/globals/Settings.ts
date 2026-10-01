@@ -68,6 +68,61 @@ export const Settings: GlobalConfig = {
       },
     },
     {
+      name: 'projectTitle',
+      label: 'Project title presentation',
+      type: 'group',
+      fields: [
+        {
+          name: 'placement',
+          type: 'radio',
+          required: true,
+          defaultValue: 'below',
+          options: [
+            { label: 'Below the hero', value: 'below' },
+            { label: 'Over the hero', value: 'overlay' },
+          ],
+        },
+        {
+          name: 'fontSize',
+          label: 'Overlay font size (px)',
+          type: 'number',
+          required: true,
+          defaultValue: 112,
+          min: 32,
+          max: 240,
+          admin: {
+            condition: (_, siblingData) => siblingData?.placement === 'overlay',
+          },
+        },
+        {
+          name: 'dimColor',
+          label: 'Dim colour',
+          type: 'text',
+          required: true,
+          defaultValue: '#000000',
+          validate: (value: null | string | undefined) =>
+            Boolean(value && /^#[0-9a-f]{6}$/i.test(value)) ||
+            'Enter a six-digit hex colour, e.g. #000000.',
+          admin: {
+            condition: (_, siblingData) => siblingData?.placement === 'overlay',
+          },
+        },
+        {
+          name: 'dimIntensity',
+          label: 'Dim intensity (%)',
+          type: 'number',
+          required: true,
+          defaultValue: 35,
+          min: 0,
+          max: 90,
+          admin: {
+            condition: (_, siblingData) => siblingData?.placement === 'overlay',
+            step: 5,
+          },
+        },
+      ],
+    },
+    {
       name: 'enableAutoplay',
       type: 'checkbox',
       defaultValue: true,

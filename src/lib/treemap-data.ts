@@ -192,6 +192,12 @@ export function transformDataForTreemap(
       enableAutoplay: settings?.enableAutoplay !== false,
       autoplayDelay: settings?.autoplayDelay ?? 5000,
       autoplayInterval: settings?.autoplayInterval ?? 3000,
+      projectTitle: {
+        placement: settings?.projectTitle?.placement || 'below',
+        fontSize: settings?.projectTitle?.fontSize ?? 112,
+        dimColor: settings?.projectTitle?.dimColor || '#000000',
+        dimIntensity: settings?.projectTitle?.dimIntensity ?? 35,
+      },
     },
   }
 }

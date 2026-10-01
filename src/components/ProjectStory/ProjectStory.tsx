@@ -13,6 +13,29 @@ type ResponsiveImage = {
   sizes?: TreemapData['sizes']
 }
 
+type ProjectTitleSettings = NonNullable<TreemapData['settings']>['projectTitle']
+
+function HeroTitle({ title, settings }: { title: string; settings: ProjectTitleSettings }) {
+  const color = /^#[0-9a-f]{6}$/i.test(settings.dimColor) ? settings.dimColor : '#000000'
+  const intensity = Math.min(90, Math.max(0, settings.dimIntensity)) / 100
+  const titleStyle = {
+    fontSize: `clamp(32px, 8vw, ${Math.min(240, Math.max(32, settings.fontSize))}px)`,
+  }
+
+  return (
+    <>
+      <span
+        className={styles.heroDim}
+        style={{ backgroundColor: color, opacity: intensity }}
+        aria-hidden="true"
+      />
+      <h1 className={styles.heroTitle} style={titleStyle}>
+        {title}
+      </h1>
+    </>
+  )
+}
+
 function imageSource(image: ResponsiveImage) {
   for (const name of ['large', 'medium', 'small'] as const) {
     const size = image.sizes?.[name]
@@ -27,7 +50,17 @@ function imageSource(image: ResponsiveImage) {
   return { src: image.image, width: image.width || 1600, height: image.height || 1200 }
 }
 
-function HeroVideo({ hero, title }: { hero: Extract<ProjectHero, { type: 'video' }>; title: string }) {
+function HeroVideo({
+  hero,
+  title,
+  titleSettings,
+  onFitChange,
+}: {
+  hero: Extract<ProjectHero, { type: 'video' }>
+  title: string
+  titleSettings?: ProjectTitleSettings
+  onFitChange: (fit: 'cover' | 'contain') => void
+}) {
   const [started, setStarted] = useState(hero.autoplay)
   const [loaded, setLoaded] = useState(false)
   const [fit, setFit] = useState(hero.fit)
@@ -109,10 +142,17 @@ function HeroVideo({ hero, title }: { hero: Extract<ProjectHero, { type: 'video'
           <span className={styles.playButton} aria-hidden="true" />
         </button>
       )}
+      {titleSettings && fit === 'cover' && <HeroTitle title={title} settings={titleSettings} />}
       <button
         className={styles.fitButton}
         type="button"
-        onClick={() => setFit((value) => (value === 'cover' ? 'contain' : 'cover'))}
+        onClick={() =>
+          setFit((value) => {
+            const next = value === 'cover' ? 'contain' : 'cover'
+            onFitChange(next)
+            return next
+          })
+        }
         aria-label={fit === 'cover' ? 'Show the whole video' : 'Fill the hero with the video'}
         title={fit === 'cover' ? 'Show whole video' : 'Fill hero'}
       >
@@ -201,17 +241,33 @@ function ProjectPreview({ project }: { project: TreemapData }) {
 
 export default function ProjectStory({
   project,
+  titleSettings,
   previousProject,
   nextProject,
   onNavigateProject,
 }: {
   project: TreemapData
+  titleSettings?: ProjectTitleSettings
   previousProject?: TreemapData | null
   nextProject?: TreemapData | null
   onNavigateProject: (project: TreemapData) => void
 }) {
   const hero = project.projectHero
   const story = project.story || []
+  const settings = titleSettings || {
+    placement: 'below',
+    fontSize: 112,
+    dimColor: '#000000',
+    dimIntensity: 35,
+  }
+  const [videoContained, setVideoContained] = useState(
+    hero?.type === 'video' && hero.fit === 'contain',
+  )
+
+  const titleOverHero =
+    settings.placement === 'overlay' &&
+    Boolean(hero) &&
+    !(hero?.type === 'video' && videoContained)
 
   return (
     <article className={styles.story} aria-label={project.title}>
@@ -220,19 +276,30 @@ export default function ProjectStory({
         return (
           <figure className={styles.hero}>
             <Image src={source.src} width={source.width} height={source.height} sizes="100vw" alt={hero.alt} priority unoptimized />
+            {titleOverHero && <HeroTitle title={project.title} settings={settings} />}
           </figure>
         )
       })()}
-      {hero?.type === 'video' && <HeroVideo hero={hero} key={hero.url} title={project.title} />}
+      {hero?.type === 'video' && (
+        <HeroVideo
+          hero={hero}
+          key={hero.url}
+          title={project.title}
+          titleSettings={settings.placement === 'overlay' ? settings : undefined}
+          onFitChange={(fit) => setVideoContained(fit === 'contain')}
+        />
+      )}
 
-      <header className={styles.introduction}>
-        <h1>{project.title}</h1>
-        {project.desc && (
-          <div className={styles.description}>
-            <RichText data={project.desc} />
-          </div>
-        )}
-      </header>
+      {(!titleOverHero || project.desc) && (
+        <header className={styles.introduction} data-title-overlay={titleOverHero}>
+          {!titleOverHero && <h1>{project.title}</h1>}
+          {project.desc && (
+            <div className={styles.description}>
+              <RichText data={project.desc} />
+            </div>
+          )}
+        </header>
+      )}
 
       <div className={styles.content}>
         {story.map((block) => {

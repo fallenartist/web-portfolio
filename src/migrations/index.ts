@@ -8,6 +8,7 @@ import * as migration_20260926_122547_admin_content_groups_industries from './20
 import * as migration_20260926_154205_project_clients_single_industry from './20260926_154205_project_clients_single_industry'
 import * as migration_20260928_094158_project_story_video from './20260928_094158_project_story_video'
 import * as migration_20260929_070501_project_content_model from './20260929_070501_project_content_model'
+import * as migration_20261001_144525_global_project_title_presentation from './20261001_144525_global_project_title_presentation'
 
 export const migrations = [
   {
@@ -59,5 +60,10 @@ export const migrations = [
     up: migration_20260929_070501_project_content_model.up,
     down: migration_20260929_070501_project_content_model.down,
     name: '20260929_070501_project_content_model',
+  },
+  {
+    up: migration_20261001_144525_global_project_title_presentation.up,
+    down: migration_20261001_144525_global_project_title_presentation.down,
+    name: '20261001_144525_global_project_title_presentation',
   },
 ]

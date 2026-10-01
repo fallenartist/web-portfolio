@@ -178,7 +178,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(12px, 2vw, 32px);
 
-  > .imageBlock {
+  > .imageBlock[data-portrait='true'] {
     width: 100%;
     min-width: 0;
     margin: 0;

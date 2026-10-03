@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { getAdminThumbnail } from '../src/collections/Media'
+import { proportionalMediaSize } from '../src/lib/media-image'
 import type { Category, Industry, Project, Media, Setting } from '../src/payload-types'
 import { getInternalLinkHref } from '../src/lib/menu-links'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
@@ -92,7 +93,10 @@ test('global project title presentation is included in the front-end settings', 
 test('missing and populated hero uploads are handled safely', () => {
   const tree = transformDataForTreemap(
     [category(1)],
-    [project({ hero: { type: 'image', image: 9 } }), project({ id: 3, hero: { type: 'image', image } })],
+    [
+      project({ hero: { type: 'image', image: 9 } }),
+      project({ id: 3, hero: { type: 'image', image } }),
+    ],
   )
   assert.equal(tree.children![0].children![0].children?.length, 0)
   assert.equal(tree.children![0].children![1].children?.[0].hero, true)
@@ -201,7 +205,10 @@ test('project content keeps its order and derives presentation from media', () =
     ],
   )
   const projectNode = tree.children![0].children![0]
-  assert.deepEqual(projectNode.story?.map((block) => block.blockType), ['image', 'text', 'video'])
+  assert.deepEqual(
+    projectNode.story?.map((block) => block.blockType),
+    ['image', 'text', 'video'],
+  )
   assert.equal(projectNode.story?.[1].blockType === 'text' && projectNode.story[1].quote, true)
   const video = projectNode.story?.[2]
   assert.equal(video?.blockType, 'video')
@@ -242,6 +249,36 @@ test('media admin thumbnail falls back to the original SVG', () => {
       },
     }),
     '/api/media/file/photo-400x400.jpg',
+  )
+})
+
+test('project images reject cropped responsive sizes with a different aspect ratio', () => {
+  const sizes: Media['sizes'] = {
+    thumbnail: {
+      url: '/api/media/file/AL-elewacja-400x400.jpg',
+      width: 400,
+      height: 400,
+    },
+    small: {
+      url: '/api/media/file/AL-elewacja-800x800.jpg',
+      width: 800,
+      height: 800,
+    },
+    medium: {
+      url: '/api/media/file/AL-elewacja-1600x1600.jpg',
+      width: 1600,
+      height: 1600,
+    },
+  }
+
+  assert.equal(proportionalMediaSize(sizes, 1402, 1860), undefined)
+  assert.equal(
+    proportionalMediaSize(
+      { medium: { url: '/api/media/file/AL-elewacja-1206x1600.jpg', width: 1206, height: 1600 } },
+      1402,
+      1860,
+    )?.url,
+    '/api/media/file/AL-elewacja-1206x1600.jpg',
   )
 })
 

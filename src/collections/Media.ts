@@ -49,20 +49,17 @@ export const Media: CollectionConfig = {
       {
         name: 'small',
         width: 800,
-        height: 800,
-        position: 'centre',
+        withoutEnlargement: true,
       },
       {
         name: 'medium',
         width: 1600,
-        height: 1600,
-        position: 'centre',
+        withoutEnlargement: true,
       },
       {
         name: 'large',
         width: 2400,
-        height: 2400,
-        position: 'centre',
+        withoutEnlargement: true,
       },
     ],
     adminThumbnail: getAdminThumbnail,

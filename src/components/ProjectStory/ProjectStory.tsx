@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
+import { proportionalMediaSize } from '@/lib/media-image'
 import styles from './ProjectStory.module.scss'
 
 type ResponsiveImage = {
@@ -44,14 +45,12 @@ function HeroTitle({ title, settings }: { title: string; settings: ProjectTitleS
 }
 
 function imageSource(image: ResponsiveImage) {
-  for (const name of ['large', 'medium', 'small'] as const) {
-    const size = image.sizes?.[name]
-    if (size?.url) {
-      return {
-        src: size.url,
-        width: size.width || image.width || 1600,
-        height: size.height || image.height || 1200,
-      }
+  const size = proportionalMediaSize(image.sizes, image.width, image.height)
+  if (size?.url) {
+    return {
+      src: size.url,
+      width: size.width || image.width || 1600,
+      height: size.height || image.height || 1200,
     }
   }
   return { src: image.image, width: image.width || 1600, height: image.height || 1200 }

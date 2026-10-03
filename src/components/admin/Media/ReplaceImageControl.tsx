@@ -17,7 +17,17 @@ export const ReplaceImageControl = () => {
   const stageReplacement = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
 
-    if (file) setUploadControlFile(file)
+    if (file) {
+      // Payload exposes replacement files through UploadControls, but its Upload
+      // component only switches from the saved preview to the staged preview after
+      // the current file has been cleared. Trigger the existing internal removal
+      // action first so replacement remains a single user action.
+      const fileDetails = inputRef.current?.closest('.file-details')
+      const removeButton = fileDetails?.querySelector<HTMLButtonElement>('.file-details__remove')
+
+      removeButton?.click()
+      setUploadControlFile(file)
+    }
 
     // Allow selecting the same file again if the user changes their mind before saving.
     event.target.value = ''
@@ -46,3 +56,5 @@ export const ReplaceImageControl = () => {
     </>
   )
 }
+
+export default ReplaceImageControl

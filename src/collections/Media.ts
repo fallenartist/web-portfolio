@@ -31,6 +31,11 @@ export const getAdminThumbnail: GetAdminThumbnail = ({ doc }) => {
 export const Media: CollectionConfig = {
   slug: 'media',
   admin: {
+    components: {
+      edit: {
+        Upload: '/components/admin/Media/MediaUpload#MediaUpload',
+      },
+    },
     group: 'Content',
     useAsTitle: 'filename',
   },
@@ -38,11 +43,6 @@ export const Media: CollectionConfig = {
     read: () => true,
   },
   upload: {
-    admin: {
-      components: {
-        controls: ['/components/admin/Media/ReplaceImageControl#ReplaceImageControl'],
-      },
-    },
     staticDir: path.resolve(__dirname, '../../public/media'),
     imageSizes: [
       {

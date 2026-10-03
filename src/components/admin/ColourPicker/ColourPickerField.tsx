@@ -131,11 +131,13 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
   const applyColour = () => {
     const colour = rgbToHex(rgb)
     if (editorMode === 'edit' && selectedPaletteColour) {
+      const wasAssigned = assignedColour === selectedPaletteColour
       saveRecents(
         uniqueColours(
           recentColours.map((recent) => (recent === selectedPaletteColour ? colour : recent)),
         ),
       )
+      if (wasAssigned) setValue(colour)
     } else {
       saveRecents(uniqueColours([colour, ...recentColours]))
     }

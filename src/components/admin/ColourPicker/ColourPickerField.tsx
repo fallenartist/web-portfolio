@@ -25,7 +25,6 @@ import {
 
 const PREFERENCE_KEY = 'portfolio-colour-picker-recents-v1'
 const DEFAULT_COLOURS = ['#FAC800', '#3200FA', '#FA0032']
-const MAX_RECENT_COLOURS = 8
 const REMOVE_MODAL_SLUG = 'remove-colour-from-palette'
 
 type Channel = keyof HSB | keyof RGB
@@ -34,8 +33,9 @@ type EditorMode = 'add' | 'edit'
 type ColourDocument = { color?: null | string; title?: string }
 type CollectionResponse = { docs?: ColourDocument[] }
 
-const uniqueColours = (values: string[]) =>
-  [...new Set(values.map((value) => value.toUpperCase()))].slice(0, MAX_RECENT_COLOURS)
+const uniqueColours = (values: string[]) => [...new Set(values.map((value) => value.toUpperCase()))]
+
+const hexInputToRgb = (value: string) => (value.length === 6 ? hexToRgb(`#${value}`) : null)
 
 const sliderBackground = (type: 'b' | 'blue' | 'g' | 'h' | 'r' | 's', rgb: RGB, hsb: HSB) => {
   switch (type) {
@@ -65,10 +65,10 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
   const [editorMode, setEditorMode] = useState<EditorMode>('add')
   const [recentColours, setRecentColours] = useState(DEFAULT_COLOURS)
   const [selectedPaletteColour, setSelectedPaletteColour] = useState<null | string>(null)
-  const initialRgb = current ?? { b: 0, g: 0, r: 0 }
+  const initialRgb = current ?? { b: 0, g: 0, r: 255 }
   const [rgb, setRgb] = useState<RGB>(initialRgb)
   const [hsb, setHsb] = useState<HSB>(rgbToHsb(initialRgb))
-  const [hexInput, setHexInput] = useState(rgbToHex(initialRgb))
+  const [hexInput, setHexInput] = useState(rgbToHex(initialRgb).slice(1))
   const [isCheckingUsage, setIsCheckingUsage] = useState(false)
   const [removeWarning, setRemoveWarning] = useState('')
   const assignedColour = current ? rgbToHex(current) : null
@@ -82,8 +82,8 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
       const savedColours = Array.isArray(stored)
         ? stored.filter((colour) => parseColour(colour))
         : null
-      const initial = current ? [rgbToHex(current), ...DEFAULT_COLOURS] : DEFAULT_COLOURS
-      setRecentColours(uniqueColours(savedColours ?? initial))
+      const assigned = current ? [rgbToHex(current)] : []
+      setRecentColours(uniqueColours([...assigned, ...(savedColours ?? DEFAULT_COLOURS)]))
     })
     // Preferences only need to load when this field mounts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,18 +97,18 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
       if (converted.s === 0 || converted.b === 0) converted.h = hsb.h
       setRgb(next)
       setHsb(converted)
-      setHexInput(rgbToHex(next))
+      setHexInput(rgbToHex(next).slice(1))
     },
     [hsb.h],
   )
 
   const openEditor = (mode: EditorMode) => {
     const parsed = mode === 'edit' ? parseColour(selectedPaletteColour) : null
-    const next = parsed ?? { b: 0, g: 0, r: 0 }
+    const next = parsed ?? { b: 0, g: 0, r: 255 }
     setEditorMode(mode)
     setHsb(rgbToHsb(next))
     setRgb(next)
-    setHexInput(rgbToHex(next))
+    setHexInput(rgbToHex(next).slice(1))
     setIsOpen(true)
   }
 
@@ -117,7 +117,7 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
     const nextRgb = hsbToRgb(next)
     setHsb(next)
     setRgb(nextRgb)
-    setHexInput(rgbToHex(nextRgb))
+    setHexInput(rgbToHex(nextRgb).slice(1))
   }
 
   const updateRgbChannel = (channel: Channel, nextValue: number) =>
@@ -198,8 +198,13 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
   }
 
   const handleHex = (next: string) => {
-    setHexInput(next)
-    const parsed = hexToRgb(next)
+    const cleaned = next
+      .replace(/#/g, '')
+      .replace(/[^\da-f]/gi, '')
+      .slice(0, 6)
+      .toUpperCase()
+    setHexInput(cleaned)
+    const parsed = hexInputToRgb(cleaned)
     if (parsed) updateRgb(parsed)
   }
 
@@ -296,13 +301,17 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
           <div className={styles.footer}>
             <label className={styles.hexField}>
               <span>Hex</span>
-              <input
-                aria-invalid={!hexToRgb(hexInput)}
-                maxLength={7}
-                onChange={(event) => handleHex(event.target.value)}
-                spellCheck={false}
-                value={hexInput}
-              />
+              <span className={styles.hexInputWrap}>
+                <span aria-hidden="true">#</span>
+                <input
+                  aria-invalid={!hexInputToRgb(hexInput)}
+                  aria-label="Hex colour"
+                  maxLength={7}
+                  onChange={(event) => handleHex(event.target.value)}
+                  spellCheck={false}
+                  value={hexInput}
+                />
+              </span>
             </label>
             <div className={styles.actions}>
               <Button
@@ -314,7 +323,7 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
                 Cancel
               </Button>
               <Button
-                disabled={!hexToRgb(hexInput)}
+                disabled={!hexInputToRgb(hexInput)}
                 onClick={applyColour}
                 size="small"
                 type="button"

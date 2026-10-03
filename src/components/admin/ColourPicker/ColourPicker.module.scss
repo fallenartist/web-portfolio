@@ -35,7 +35,12 @@
   outline-offset: 2px;
 }
 
-.selected {
+.swatchSelected {
+  outline: 2px solid var(--theme-elevation-800);
+  outline-offset: 2px;
+}
+
+.assigned {
   display: grid;
   width: 16px;
   height: 16px;

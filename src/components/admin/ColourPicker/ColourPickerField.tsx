@@ -64,14 +64,17 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
   const [isOpen, setIsOpen] = useState(false)
   const [editorMode, setEditorMode] = useState<EditorMode>('add')
   const [recentColours, setRecentColours] = useState(DEFAULT_COLOURS)
+  const [selectedPaletteColour, setSelectedPaletteColour] = useState<null | string>(null)
   const initialRgb = current ?? { b: 0, g: 0, r: 0 }
   const [rgb, setRgb] = useState<RGB>(initialRgb)
   const [hsb, setHsb] = useState<HSB>(rgbToHsb(initialRgb))
   const [hexInput, setHexInput] = useState(rgbToHex(initialRgb))
   const [isCheckingUsage, setIsCheckingUsage] = useState(false)
   const [removeWarning, setRemoveWarning] = useState('')
-  const selectedColour = current ? rgbToHex(current) : null
-  const hasSelectedSwatch = Boolean(selectedColour && recentColours.includes(selectedColour))
+  const assignedColour = current ? rgbToHex(current) : null
+  const hasSelectedSwatch = Boolean(
+    selectedPaletteColour && recentColours.includes(selectedPaletteColour),
+  )
 
   useEffect(() => {
     void getPreference<ColourPreferences | string[] | null>(PREFERENCE_KEY).then((saved) => {
@@ -100,7 +103,7 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
   )
 
   const openEditor = (mode: EditorMode) => {
-    const parsed = mode === 'edit' ? parseColour(selectedColour) : null
+    const parsed = mode === 'edit' ? parseColour(selectedPaletteColour) : null
     const next = parsed ?? { b: 0, g: 0, r: 0 }
     setEditorMode(mode)
     setHsb(rgbToHsb(next))
@@ -127,31 +130,33 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
 
   const applyColour = () => {
     const colour = rgbToHex(rgb)
-    setValue(colour)
-    if (editorMode === 'edit' && selectedColour) {
+    if (editorMode === 'edit' && selectedPaletteColour) {
       saveRecents(
-        uniqueColours(recentColours.map((recent) => (recent === selectedColour ? colour : recent))),
+        uniqueColours(
+          recentColours.map((recent) => (recent === selectedPaletteColour ? colour : recent)),
+        ),
       )
     } else {
       saveRecents(uniqueColours([colour, ...recentColours]))
     }
+    setSelectedPaletteColour(colour)
     setIsOpen(false)
   }
 
-  const selectRecent = (colour: string) => {
-    setValue(colour)
+  const assignSelected = () => {
+    if (selectedPaletteColour) setValue(selectedPaletteColour)
   }
 
   const removeSelected = () => {
-    if (!selectedColour) return
-    saveRecents(recentColours.filter((recent) => recent !== selectedColour))
-    setValue(null)
+    if (!selectedPaletteColour) return
+    saveRecents(recentColours.filter((recent) => recent !== selectedPaletteColour))
+    setSelectedPaletteColour(null)
     setIsOpen(false)
     closeModal(REMOVE_MODAL_SLUG)
   }
 
   const checkUsageAndRemove = async () => {
-    if (!selectedColour) return
+    if (!selectedPaletteColour) return
     setIsCheckingUsage(true)
 
     try {
@@ -168,7 +173,7 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
         (response.docs ?? [])
           .filter((document) => {
             const parsed = parseColour(document.color)
-            return parsed && rgbToHex(parsed) === selectedColour
+            return parsed && rgbToHex(parsed) === selectedPaletteColour
           })
           .map((document) => `${document.title ?? 'Untitled'} (${collection})`),
       )
@@ -220,20 +225,23 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
       <div className={styles.recents}>
         {recentColours.map((colour) => (
           <button
-            aria-label={`Use ${colour}`}
-            className={styles.swatch}
+            aria-label={`Choose ${colour} for palette actions`}
+            aria-pressed={selectedPaletteColour === colour}
+            className={[styles.swatch, selectedPaletteColour === colour && styles.swatchSelected]
+              .filter(Boolean)
+              .join(' ')}
             key={colour}
-            onClick={() => selectRecent(colour)}
+            onClick={() => setSelectedPaletteColour(colour)}
             style={{ backgroundColor: colour }}
             type="button"
           >
-            {selectedColour === colour && <span className={styles.selected}>✓</span>}
+            {assignedColour === colour && <span className={styles.assigned}>✓</span>}
           </button>
         ))}
       </div>
       <div className={styles.paletteActions}>
-        <Button onClick={() => openEditor('add')} size="small" type="button">
-          Add
+        <Button disabled={!hasSelectedSwatch} onClick={assignSelected} size="small" type="button">
+          Select
         </Button>
         <Button
           buttonStyle="secondary"
@@ -252,6 +260,9 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
           type="button"
         >
           {isCheckingUsage ? 'Checking…' : 'Remove'}
+        </Button>
+        <Button onClick={() => openEditor('add')} size="small" type="button">
+          Add
         </Button>
       </div>
 

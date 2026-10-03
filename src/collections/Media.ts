@@ -38,6 +38,11 @@ export const Media: CollectionConfig = {
     read: () => true,
   },
   upload: {
+    admin: {
+      components: {
+        controls: ['/components/admin/Media/ReplaceImageControl#ReplaceImageControl'],
+      },
+    },
     staticDir: path.resolve(__dirname, '../../public/media'),
     imageSizes: [
       {

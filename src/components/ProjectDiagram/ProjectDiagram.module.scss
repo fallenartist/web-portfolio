@@ -89,6 +89,7 @@
     fill: none;
     stroke: #222;
     stroke-opacity: 0.42;
+    stroke-width: 1.5px;
     vector-effect: non-scaling-stroke;
   }
 
@@ -104,16 +105,20 @@
 
 .links path {
   fill: none;
-  stroke-opacity: 1;
-  transition: stroke-opacity 180ms ease;
 }
 
-.link {
-  stroke-opacity: 1 !important;
+.flowGroup,
+.flowGroupMuted {
+  isolation: isolate;
+  transition: opacity 180ms ease;
 }
 
-.linkMuted {
-  stroke-opacity: 0.08 !important;
+.flowGroup {
+  opacity: 0.62;
+}
+
+.flowGroupMuted {
+  opacity: 0.08;
 }
 
 .node,

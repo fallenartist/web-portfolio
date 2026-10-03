@@ -40,24 +40,25 @@ type LayoutLink = SankeyLink<DiagramNode, DiagramLink>
 const MIN_CANVAS_WIDTH = 760
 const FLOW_GAP = 5
 const NODE_PADDING = 18
-const NODE_HEIGHT = 11
+const NODE_HEIGHT = 18
 
 const alphabetic = (direction: Direction) => (a: string, b: string) =>
   direction === 'asc' ? a.localeCompare(b) : b.localeCompare(a)
+const precise = (value: number) => Number(value.toFixed(3))
 
 function linkPath(link: LayoutLink) {
   const source = link.source as LayoutNode
   const target = link.target as LayoutNode
-  const x0 = (source.x1 ?? 0) + FLOW_GAP
-  const x1 = (target.x0 ?? 0) - FLOW_GAP
-  const y0 = link.y0 ?? 0
-  const y1 = link.y1 ?? 0
-  const middle = (x0 + x1) / 2
+  const x0 = precise((source.x1 ?? 0) + FLOW_GAP)
+  const x1 = precise((target.x0 ?? 0) - FLOW_GAP)
+  const y0 = precise(link.y0 ?? 0)
+  const y1 = precise(link.y1 ?? 0)
+  const middle = precise((x0 + x1) / 2)
   return `M${x0},${y0}C${middle},${y0} ${middle},${y1} ${x1},${y1}`
 }
 
 function nodeCenter(node: LayoutNode) {
-  return ((node.y0 ?? 0) + (node.y1 ?? 0)) / 2
+  return precise(((node.y0 ?? 0) + (node.y1 ?? 0)) / 2)
 }
 
 export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
@@ -118,16 +119,12 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     const nodes: DiagramNode[] = [
       ...categories.map((item, order) => ({ ...item, kind: 'category' as const, layer: 0, order })),
       ...projects.map((item, order) => {
-        const categoryColor = categoryMap.get(item.categoryId)?.color || '#777777'
-        const industryColor = item.industryId
-          ? industryMap.get(item.industryId)?.color || '#BBBBBB'
-          : categoryColor
         return {
           id: item.id,
           kind: 'project' as const,
           title: item.title,
           href: item.href,
-          color: interpolateRgb(categoryColor, industryColor)(0.5),
+          color: '#111111',
           layer: 1,
           order,
           clientId: item.clientId,
@@ -201,6 +198,15 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     () => new Map(layout.graph.nodes.map((node) => [node.id, node])),
     [layout.graph.nodes],
   )
+  const flowGroups = useMemo(() => {
+    const grouped = new Map<string, LayoutLink[]>()
+    for (const link of layout.graph.links) {
+      const group = grouped.get(link.projectId) || []
+      group.push(link)
+      grouped.set(link.projectId, group)
+    }
+    return [...grouped.entries()]
+  }, [layout.graph.links])
   const clientGroups = useMemo(() => {
     const grouped = new Map<string, LayoutNode[]>()
     for (const node of layout.graph.nodes) {
@@ -213,18 +219,18 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
       .filter(([, nodes]) => nodes.length > 1)
       .map(([id, nodes]) => {
         const first = nodes[0]
-        const x = (first.x0 ?? 0) - 18
-        const y = Math.min(...nodes.map((node) => node.y0 ?? 0))
-        const maxY = Math.max(...nodes.map((node) => node.y1 ?? 0))
-        const middle = (y + maxY) / 2
-        const span = maxY - y
+        const x = precise((first.x0 ?? 0) - 12)
+        const y = precise(Math.min(...nodes.map((node) => node.y0 ?? 0)))
+        const maxY = precise(Math.max(...nodes.map((node) => node.y1 ?? 0)))
+        const middle = precise((y + maxY) / 2)
+        const span = precise(maxY - y)
         return {
           id,
           title: first.clientTitle || 'Unassigned client',
           x,
           y,
           middle,
-          path: `M${x + 8},${y}C${x + 1},${y} ${x + 1},${y + span * 0.2} ${x + 1},${middle - 6}C${x + 1},${middle - 2} ${x - 2},${middle} ${x - 7},${middle}C${x - 2},${middle} ${x + 1},${middle + 2} ${x + 1},${middle + 6}C${x + 1},${y + span * 0.8} ${x + 1},${maxY} ${x + 8},${maxY}`,
+          path: `M${x + 5},${y}C${x},${y} ${x},${y + span * 0.2} ${x},${middle - 5}C${x},${middle - 2} ${x - 1},${middle} ${x - 4},${middle}C${x - 1},${middle} ${x},${middle + 2} ${x},${middle + 5}C${x},${y + span * 0.8} ${x},${maxY} ${x + 5},${maxY}`,
         }
       })
   }, [layout.graph.nodes])
@@ -248,9 +254,11 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
 
   const isRelated = (link: LayoutLink) => {
     if (!hoveredNode) return true
-    const source = link.source as LayoutNode
-    const target = link.target as LayoutNode
-    return source.id === hoveredNode || target.id === hoveredNode || link.projectId === hoveredNode
+    return (
+      link.categoryId === hoveredNode ||
+      link.projectId === hoveredNode ||
+      link.industryId === hoveredNode
+    )
   }
 
   const navigate = (node: LayoutNode) => {
@@ -312,15 +320,15 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                   gradientUnits="userSpaceOnUse"
                   id={`flow-${project.id}`}
                   key={project.id}
-                  x1={(category.x1 ?? 0) + FLOW_GAP}
-                  x2={(industry?.x0 ?? projectNode.x0 ?? 0) - FLOW_GAP}
+                  x1={precise((category.x1 ?? 0) + FLOW_GAP)}
+                  x2={precise((industry?.x0 ?? projectNode.x0 ?? 0) - FLOW_GAP)}
                   y1="0"
                   y2="0"
                 >
-                  <stop offset="0" stopColor={interpolateRgb(category.color, '#ffffff')(0.68)} />
+                  <stop offset="0" stopColor={interpolateRgb(category.color, '#ffffff')(0.48)} />
                   <stop
                     offset="1"
-                    stopColor={interpolateRgb(industry?.color || category.color, '#ffffff')(0.68)}
+                    stopColor={interpolateRgb(industry?.color || category.color, '#ffffff')(0.48)}
                   />
                 </linearGradient>
               )
@@ -328,14 +336,20 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
           </defs>
 
           <g className={styles.links}>
-            {layout.graph.links.map((link) => (
-              <path
-                className={isRelated(link) ? styles.link : styles.linkMuted}
-                d={linkPath(link)}
-                key={link.id}
-                stroke={`url(#flow-${link.projectId})`}
-                strokeWidth={Math.max(1, link.width ?? 1)}
-              />
+            {flowGroups.map(([projectId, links]) => (
+              <g
+                className={links.some(isRelated) ? styles.flowGroup : styles.flowGroupMuted}
+                key={projectId}
+              >
+                {links.map((link) => (
+                  <path
+                    d={linkPath(link)}
+                    key={link.id}
+                    stroke={`url(#flow-${link.projectId})`}
+                    strokeWidth={precise(Math.max(1, link.width ?? 1))}
+                  />
+                ))}
+              </g>
             ))}
           </g>
 
@@ -353,10 +367,10 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
           <g className={styles.nodes}>
             {layout.graph.nodes.map((node) => {
               const clickable = Boolean(node.href)
-              const x0 = node.x0 ?? 0
-              const x1 = node.x1 ?? x0
-              const y0 = node.y0 ?? 0
-              const y1 = node.y1 ?? y0
+              const x0 = precise(node.x0 ?? 0)
+              const x1 = precise(node.x1 ?? x0)
+              const y0 = precise(node.y0 ?? 0)
+              const y1 = precise(node.y1 ?? y0)
               const industry = node.kind === 'industry'
               return (
                 <g

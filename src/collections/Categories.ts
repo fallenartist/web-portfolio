@@ -1,8 +1,11 @@
 import type { CollectionConfig } from 'payload'
 
+import { colourPickerField } from '@/fields/colourPicker'
+
 export const Categories: CollectionConfig = {
   slug: 'categories',
   admin: {
+    defaultColumns: ['title', 'color', 'parent', 'updatedAt'],
     group: 'Content',
     useAsTitle: 'title',
   },
@@ -36,14 +39,9 @@ export const Categories: CollectionConfig = {
         ],
       },
     },
-    {
-      name: 'color',
-      type: 'text',
-      admin: {
-        description:
-          'Category color in any valid CSS format: hex (#FF0000), RGB (rgb(255,0,0)), HSL (hsl(0,100%,50%)), OKLCH (oklch(0.554 0.046 257.417)), etc.',
-      },
-    },
+    colourPickerField({
+      description: 'Colour used for this category in the treemap and project navigation.',
+    }),
     {
       name: 'parent',
       type: 'relationship',

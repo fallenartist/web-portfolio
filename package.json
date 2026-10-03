@@ -20,6 +20,7 @@
     "@payloadcms/db-postgres": "3.90.1",
     "@payloadcms/next": "3.90.1",
     "@payloadcms/richtext-lexical": "3.90.1",
+    "@payloadcms/ui": "3.90.1",
     "@tailwindcss/postcss": "4.3.3",
     "@vimeo/player": "2.30.4",
     "cross-env": "10.1.0",

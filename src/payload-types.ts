@@ -372,7 +372,7 @@ export interface Category {
   title: string;
   slug: string;
   /**
-   * Category color in any valid CSS format: hex (#FF0000), RGB (rgb(255,0,0)), HSL (hsl(0,100%,50%)), OKLCH (oklch(0.554 0.046 257.417)), etc.
+   * Colour used for this category in the treemap and project navigation.
    */
   color?: string | null;
   /**
@@ -398,6 +398,10 @@ export interface Industry {
   id: number;
   title: string;
   slug: string;
+  /**
+   * Colour assigned to this industry for menus and future visual grouping.
+   */
+  color?: string | null;
   /**
    * Optional parent industry for hierarchical organisation
    */
@@ -646,6 +650,7 @@ export interface CategoriesSelect<T extends boolean = true> {
 export interface IndustriesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  color?: T;
   parent?: T;
   updatedAt?: T;
   createdAt?: T;

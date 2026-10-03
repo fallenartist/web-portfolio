@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { colourPickerField } from '@/fields/colourPicker'
+
 export const Industries: CollectionConfig = {
   slug: 'industries',
   labels: {
@@ -7,9 +9,9 @@ export const Industries: CollectionConfig = {
     plural: 'Industries',
   },
   admin: {
+    defaultColumns: ['title', 'color', 'parent', 'updatedAt'],
     group: 'Content',
     useAsTitle: 'title',
-    defaultColumns: ['title', 'parent', 'updatedAt'],
   },
   access: {
     read: () => true,
@@ -44,6 +46,9 @@ export const Industries: CollectionConfig = {
         ],
       },
     },
+    colourPickerField({
+      description: 'Colour assigned to this industry for menus and future visual grouping.',
+    }),
     {
       name: 'parent',
       type: 'relationship',

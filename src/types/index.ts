@@ -89,6 +89,7 @@ export interface TreemapData {
     projectTitle: {
       placement: 'below' | 'overlay'
       fontSize: number
+      mobileFontSize: number
       dimColor: string
       dimIntensity: number
     }

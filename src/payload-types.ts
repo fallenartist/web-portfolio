@@ -814,6 +814,7 @@ export interface Setting {
   projectTitle: {
     placement: 'below' | 'overlay';
     fontSize?: number | null;
+    mobileFontSize?: number | null;
     dimColor?: string | null;
     dimIntensity?: number | null;
   };
@@ -856,6 +857,7 @@ export interface SettingsSelect<T extends boolean = true> {
     | {
         placement?: T;
         fontSize?: T;
+        mobileFontSize?: T;
         dimColor?: T;
         dimIntensity?: T;
       };

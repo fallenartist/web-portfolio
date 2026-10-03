@@ -196,6 +196,7 @@ export function transformDataForTreemap(
       projectTitle: {
         placement: settings?.projectTitle?.placement || 'below',
         fontSize: settings?.projectTitle?.fontSize ?? 112,
+        mobileFontSize: settings?.projectTitle?.mobileFontSize ?? 48,
         dimColor: settings?.projectTitle?.dimColor || '#000000',
         dimIntensity: settings?.projectTitle?.dimIntensity ?? 35,
       },

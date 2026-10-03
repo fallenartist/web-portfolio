@@ -26,9 +26,12 @@ type StoryLayoutItem =
 function HeroTitle({ title, settings }: { title: string; settings: ProjectTitleSettings }) {
   const color = /^#[0-9a-f]{6}$/i.test(settings.dimColor) ? settings.dimColor : '#000000'
   const intensity = Math.min(90, Math.max(0, settings.dimIntensity)) / 100
+  const desktopSize = Math.min(240, Math.max(32, settings.fontSize))
+  const mobileSize = Math.min(120, Math.max(24, settings.mobileFontSize ?? 48))
   const titleStyle = {
-    fontSize: `clamp(32px, 8vw, ${Math.min(240, Math.max(32, settings.fontSize))}px)`,
-  }
+    '--hero-title-desktop-size': `${desktopSize}px`,
+    '--hero-title-mobile-size': `${Math.min(desktopSize, mobileSize)}px`,
+  } as CSSProperties
 
   return (
     <>
@@ -324,6 +327,7 @@ export default function ProjectStory({
   const settings = titleSettings || {
     placement: 'below',
     fontSize: 112,
+    mobileFontSize: 48,
     dimColor: '#000000',
     dimIntensity: 35,
   }

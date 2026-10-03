@@ -84,12 +84,24 @@ export const Settings: GlobalConfig = {
         },
         {
           name: 'fontSize',
-          label: 'Overlay font size (px)',
+          label: 'Desktop overlay font size (px)',
           type: 'number',
           required: true,
           defaultValue: 112,
           min: 32,
           max: 240,
+          admin: {
+            condition: (_, siblingData) => siblingData?.placement === 'overlay',
+          },
+        },
+        {
+          name: 'mobileFontSize',
+          label: 'Mobile overlay font size (px)',
+          type: 'number',
+          required: true,
+          defaultValue: 48,
+          min: 24,
+          max: 120,
           admin: {
             condition: (_, siblingData) => siblingData?.placement === 'overlay',
           },

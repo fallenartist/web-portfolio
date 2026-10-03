@@ -69,6 +69,7 @@ test('global project title presentation is included in the front-end settings', 
     projectTitle: {
       placement: 'overlay',
       fontSize: 128,
+      mobileFontSize: 52,
       dimColor: '#123456',
       dimIntensity: 45,
     },

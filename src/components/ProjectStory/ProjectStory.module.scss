@@ -361,6 +361,13 @@
   }
 }
 
+@media (min-width: 721px) {
+  .quoteBlock::before {
+    top: 0.03em;
+    font-size: 2.75em;
+  }
+}
+
 .projectNavigation {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

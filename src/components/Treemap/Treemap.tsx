@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import * as d3 from 'd3'
 import { createD3Lightbox } from '@/lib/lightbox'
+import { hasOriginalAspectRatio } from '@/lib/media-image'
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import ProjectStory from '@/components/ProjectStory/ProjectStory'
 import type { LightboxImage, TreemapData, TreemapNode } from '@/types'
@@ -22,12 +23,23 @@ function pathFor(node: TreemapNode): string {
   )
 }
 
-function imageFor(node: TreemapData, width: number, height: number): string | null {
+function imageFor(
+  node: TreemapData,
+  width: number,
+  height: number,
+  preserveAspectRatio = false,
+): string | null {
   const target = Math.max(width, height) * window.devicePixelRatio
   const sizes = node.sizes
   for (const name of ['thumbnail', 'small', 'medium', 'large'] as const) {
     const image = sizes?.[name]
-    if (image?.url && Math.max(image.width || 0, image.height || 0) >= target) return image.url
+    if (
+      image?.url &&
+      (!preserveAspectRatio || hasOriginalAspectRatio(image, node.width, node.height)) &&
+      Math.max(image.width || 0, image.height || 0) >= target
+    ) {
+      return image.url
+    }
   }
   return node.image || null
 }
@@ -151,7 +163,11 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .append('svg')
       .attr('overflow', 'hidden')
       .append('image')
-      .attr('href', (d) => d.data.sizes?.thumbnail?.url || d.data.image || null)
+      .attr('href', (d) =>
+        d.data.hero
+          ? imageFor(d.data, d.x1 - d.x0, d.y1 - d.y0, true)
+          : d.data.sizes?.thumbnail?.url || d.data.image || null,
+      )
       .attr('class', styles.lores)
       .attr('width', '100%')
       .attr('height', '100%')
@@ -256,7 +272,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .attr('href', (d) =>
           d.parent === node
             ? d.data.hero
-              ? d.data.sizes?.large?.url || d.data.image || null
+              ? imageFor(d.data, innerW(d), innerH(d), true)
               : imageFor(d.data, innerW(d), innerH(d))
             : d.data.sizes?.thumbnail?.url || d.data.image || null,
         )

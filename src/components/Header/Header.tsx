@@ -38,6 +38,9 @@ export default function Header({
   const menuOpen = openPath === pathname
   const atRoot = breadcrumb.length <= 1
   const logo = atRoot ? rootLogo : upLogo
+  const hasProjectsLink = menu?.items?.some(
+    (item) => item.type === 'external' && item.externalLink === '/projects',
+  )
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -194,10 +197,22 @@ export default function Header({
                 )}
               </li>
             ))}
+            {!hasProjectsLink && (
+              <li>
+                <Link href="/projects" onClick={() => setOpenPath(null)}>
+                  Projects
+                </Link>
+              </li>
+            )}
           </ul>
         ) : (
-          // If no menu items, show empty nav
-          <ul></ul>
+          <ul>
+            <li>
+              <Link href="/projects" onClick={() => setOpenPath(null)}>
+                Projects
+              </Link>
+            </li>
+          </ul>
         )}
       </nav>
     </header>

@@ -1,4 +1,7 @@
 .story {
+  --story-block-gap: clamp(48px, 8vw, 128px);
+  --story-paragraph-gap: clamp(12px, 1.2vw, 20px);
+
   width: 100%;
   min-height: 100%;
   padding: 0 0 clamp(64px, 10vw, 160px);
@@ -122,10 +125,11 @@
 .introduction {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(32px, 5vw, 96px);
+  column-gap: var(--story-block-gap);
+  row-gap: var(--story-block-gap);
   align-items: start;
   width: 100%;
-  padding: clamp(48px, 8vw, 128px) var(--page-gutter);
+  padding: var(--story-block-gap) var(--page-gutter);
 
   h1 {
     max-width: 12ch;
@@ -156,7 +160,7 @@
   }
 
   p + p {
-    margin-top: 0.6em;
+    margin-top: var(--story-paragraph-gap);
   }
 
   > :first-child {
@@ -171,13 +175,13 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: clamp(48px, 8vw, 128px);
+  gap: var(--story-block-gap);
   width: 100%;
   padding-inline: var(--page-gutter);
 }
 
 .hero + .content {
-  margin-top: clamp(48px, 8vw, 128px);
+  margin-top: var(--story-block-gap);
 }
 
 .contentBlock {
@@ -315,7 +319,7 @@
   }
 
   p + p {
-    margin-top: 0.6em;
+    margin-top: var(--story-paragraph-gap);
   }
 
   > :first-child {
@@ -330,7 +334,6 @@
 .quoteBlock {
   position: relative;
   margin-left: auto;
-  padding-top: clamp(30px, 4vw, 64px);
   font-size: clamp(
     var(--story-quote-min-size, 30px),
     var(--story-quote-fluid-size, 3.25vw),
@@ -341,11 +344,15 @@
 
   &::before {
     position: absolute;
-    top: 0;
-    left: 0;
+    top: -0.08em;
+    left: -0.58em;
     content: '“';
-    font-size: 1.5em;
-    line-height: 1;
+    color: currentcolor;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2.15em;
+    line-height: 0.8;
+    opacity: 0.18;
+    pointer-events: none;
   }
 }
 
@@ -445,6 +452,10 @@
 }
 
 @media (max-width: 720px) {
+  .story {
+    --story-block-gap: 48px;
+  }
+
   .hero[data-video-fit='cover'] > iframe {
     width: max(100%, calc((100dvh - 64px) * var(--hero-ratio, 1.7778)));
     height: max(100%, calc(100vw / var(--hero-ratio, 1.7778)));
@@ -454,9 +465,8 @@
 
   .introduction {
     grid-template-columns: 1fr;
-    padding-block: 40px 64px;
+    padding-block: var(--story-block-gap);
   }
-  .content { gap: 48px; }
 
   .portraitPair {
     grid-template-columns: 1fr;

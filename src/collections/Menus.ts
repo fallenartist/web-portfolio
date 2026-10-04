@@ -62,11 +62,33 @@ export const Menus: CollectionConfig = {
           required: true,
         },
         {
+          name: 'internalDestination',
+          label: 'Destination',
+          type: 'select',
+          defaultValue: 'content',
+          required: true,
+          options: [
+            {
+              label: 'Content item',
+              value: 'content',
+            },
+            {
+              label: 'Projects overview',
+              value: 'projects',
+            },
+          ],
+          admin: {
+            condition: (data, siblingData) => siblingData.type === 'internal',
+          },
+        },
+        {
           name: 'internalLink',
           type: 'relationship',
           relationTo: ['disciplines', 'projects', 'industries'],
           admin: {
-            condition: (data, siblingData) => siblingData.type === 'internal',
+            condition: (data, siblingData) =>
+              siblingData.type === 'internal' &&
+              (!siblingData.internalDestination || siblingData.internalDestination === 'content'),
           },
         },
         {

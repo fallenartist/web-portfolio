@@ -7,7 +7,7 @@ import styles from './Header.module.scss'
 import { usePathname } from 'next/navigation'
 import type { Menu } from '@/payload-types'
 import type { BreadcrumbItem } from '@/types'
-import { getInternalLinkHref } from '@/lib/menu-links'
+import { getMenuItemHref } from '@/lib/menu-links'
 
 interface HeaderProps {
   legacyRootSlug?: string
@@ -39,7 +39,7 @@ export default function Header({
   const atRoot = breadcrumb.length <= 1
   const logo = atRoot ? rootLogo : upLogo
   const hasProjectsLink = menu?.items?.some(
-    (item) => item.type === 'external' && item.externalLink === '/projects',
+    (item) => getMenuItemHref(item, legacyRootSlug) === '/projects',
   )
 
   // Close menu when clicking outside
@@ -178,9 +178,9 @@ export default function Header({
           <ul>
             {menu.items.map((item, index: number) => (
               <li key={`menu-item-${index}`}>
-                {item.type === 'internal' && item.internalLink ? (
+                {item.type === 'internal' ? (
                   <Link
-                    href={getInternalLinkHref(item.internalLink, legacyRootSlug)}
+                    href={getMenuItemHref(item, legacyRootSlug)}
                     onClick={() => setOpenPath(null)}
                   >
                     {item.title}

@@ -421,6 +421,7 @@ export interface Menu {
     | {
         title: string;
         type: 'internal' | 'external';
+        internalDestination?: ('content' | 'projects') | null;
         internalLink?:
           | ({
               relationTo: 'disciplines';
@@ -739,6 +740,7 @@ export interface MenusSelect<T extends boolean = true> {
     | {
         title?: T;
         type?: T;
+        internalDestination?: T;
         internalLink?: T;
         externalLink?: T;
         openInNewTab?: T;

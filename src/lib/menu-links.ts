@@ -1,5 +1,7 @@
 import type { Discipline, Menu } from '@/payload-types'
 
+type MenuItem = NonNullable<Menu['items']>[number]
+
 function disciplinePath(discipline: number | Discipline | null | undefined): string[] {
   const result: string[] = []
   const seen = new Set<number>()
@@ -25,4 +27,10 @@ export function getInternalLinkHref(
       : [...disciplinePath(link.value.discipline), encodeURIComponent(link.value.slug)]
   if (legacyRootSlug && segments[0] === encodeURIComponent(legacyRootSlug)) segments.shift()
   return '/' + segments.join('/')
+}
+
+export function getMenuItemHref(item: MenuItem, legacyRootSlug?: string): string {
+  if (item.type === 'external') return item.externalLink || '#'
+  if (item.internalDestination === 'projects') return '/projects'
+  return item.internalLink ? getInternalLinkHref(item.internalLink, legacyRootSlug) : '#'
 }

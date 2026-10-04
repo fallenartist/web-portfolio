@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { getAdminThumbnail } from '../src/collections/Media'
 import { proportionalMediaSize } from '../src/lib/media-image'
 import type { Discipline, Industry, Project, Media, Setting } from '../src/payload-types'
-import { getInternalLinkHref } from '../src/lib/menu-links'
+import { getInternalLinkHref, getMenuItemHref } from '../src/lib/menu-links'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
 import { fetchTreemapData } from '../src/lib/transformers'
 import { selectMainMenu } from '../src/lib/site-data'
@@ -347,6 +347,17 @@ test('industry menu links open the industry-filtered portfolio', () => {
   assert.equal(
     getInternalLinkHref({ relationTo: 'industries', value: industry }),
     '/?industry=financial-services',
+  )
+})
+
+test('the projects overview can be selected as an internal menu destination', () => {
+  assert.equal(
+    getMenuItemHref({
+      title: 'Selected work',
+      type: 'internal',
+      internalDestination: 'projects',
+    }),
+    '/projects',
   )
 })
 

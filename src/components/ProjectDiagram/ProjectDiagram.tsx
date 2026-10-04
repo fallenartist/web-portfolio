@@ -700,11 +700,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                       >
                         <div
                           className={styles.mobileNodeLabelInner}
-                          data-client-grouped={
-                            node.kind === 'project' && sorts.project.mode === 'count'
-                              ? 'true'
-                              : undefined
-                          }
+                          data-client-grouped={sorts.project.mode === 'count' ? 'true' : undefined}
                           data-column={node.kind}
                         >
                           {node.title}

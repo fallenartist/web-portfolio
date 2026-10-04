@@ -5,6 +5,7 @@ import { sankey, type SankeyLink, type SankeyNode } from 'd3-sankey'
 import { useRouter } from 'next/navigation'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
+import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import type { ProjectDiagramData } from '@/lib/project-diagram'
 import styles from './ProjectDiagram.module.scss'
 
@@ -65,6 +66,7 @@ function nodeCenter(node: LayoutNode) {
 
 export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
   const router = useRouter()
+  const { updateBreadcrumb } = useBreadcrumb()
   const containerRef = useRef<HTMLDivElement>(null)
   const linksRef = useRef<SVGGElement>(null)
   const nodesRef = useRef<SVGGElement>(null)
@@ -73,6 +75,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
   const entranceCompleteRef = useRef(false)
   const [width, setWidth] = useState(MIN_CANVAS_WIDTH)
   const [isMobile, setIsMobile] = useState(false)
+  const [measured, setMeasured] = useState(false)
   const [sorts, setSorts] = useState<Record<Column, SortState>>({
     category: { mode: 'alphabetic', direction: 'asc' },
     project: { mode: 'alphabetic', direction: 'asc' },
@@ -87,19 +90,32 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
 
     const measure = () => {
       setWidth(Math.max(MIN_CANVAS_WIDTH, element.clientWidth))
+      setMeasured(true)
     }
     const observer = new ResizeObserver(measure)
     const mobileQuery = window.matchMedia('(max-width: 767px)')
     const updateMobile = () => setIsMobile(mobileQuery.matches)
     observer.observe(element)
     mobileQuery.addEventListener('change', updateMobile)
-    measure()
     updateMobile()
+    measure()
     return () => {
       observer.disconnect()
       mobileQuery.removeEventListener('change', updateMobile)
     }
   }, [])
+
+  useEffect(() => {
+    updateBreadcrumb([
+      { data: { title: 'WORK' }, path: '/' },
+      { data: { title: 'Projects' }, path: '/projects' },
+    ])
+    const onBreadcrumb = (event: Event) => {
+      router.push((event as CustomEvent<string>).detail)
+    }
+    window.addEventListener('breadcrumb-click', onBreadcrumb)
+    return () => window.removeEventListener('breadcrumb-click', onBreadcrumb)
+  }, [router, updateBreadcrumb])
 
   const layout = useMemo(() => {
     const categoryCounts = new Map<string, number>()
@@ -277,6 +293,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
   }, [layout.graph.nodes, sorts.project.mode])
 
   useLayoutEffect(() => {
+    if (!measured) return
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const nextPaths = new Map<string, string>()
     const nextNodePositions = new Map<string, number>()
@@ -320,9 +337,10 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
 
     previousPathsRef.current = nextPaths
     previousNodePositionsRef.current = nextNodePositions
-  }, [layout.graph.links, layout.graph.nodes, nodeMap])
+  }, [layout.graph.links, layout.graph.nodes, measured, nodeMap])
 
   useEffect(() => {
+    if (!measured) return
     if (entranceCompleteRef.current) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       entranceCompleteRef.current = true
@@ -378,7 +396,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
         path.removeAttribute('stroke-dashoffset')
       })
     }
-  }, [layout.graph.links])
+  }, [layout.graph.links, measured])
 
   const selectSort = (column: Column, mode: SortMode) => {
     setSorts((current) => ({
@@ -459,126 +477,134 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
             </div>
           ))}
         </div>
-        <svg
-          className={styles.canvas}
-          height={layout.height}
-          viewBox={`0 0 ${width} ${layout.height}`}
-          width={width}
-          role="img"
-          aria-label="Connections from project categories through projects to client industries"
-          onClick={() => setSelectedNode(null)}
-        >
-          <defs>
-            {data.projects.map((project) => {
-              const category = nodeMap.get(project.categoryId)
-              const industry = project.industryId ? nodeMap.get(project.industryId) : undefined
-              const projectNode = nodeMap.get(project.id)
-              if (!category || !projectNode) return null
-              return (
-                <linearGradient
-                  gradientUnits="userSpaceOnUse"
-                  id={`flow-${project.id}`}
-                  key={project.id}
-                  x1={precise((category.x1 ?? 0) + FLOW_GAP)}
-                  x2={precise((industry?.x0 ?? projectNode.x0 ?? 0) - FLOW_GAP)}
-                  y1="0"
-                  y2="0"
-                >
-                  <stop offset="0" stopColor={interpolateRgb(category.color, '#ffffff')(0.48)} />
-                  <stop
-                    offset="1"
-                    stopColor={interpolateRgb(industry?.color || category.color, '#ffffff')(0.48)}
-                  />
-                </linearGradient>
-              )
-            })}
-          </defs>
-
-          <g className={styles.links} ref={linksRef}>
-            {flowGroups.map(([projectId, links], groupIndex) => (
-              <g
-                className={links.some(isRelated) ? styles.flowGroup : styles.flowGroupMuted}
-                key={projectId}
-              >
-                {links.map((link) => {
-                  const source = link.source as LayoutNode
-                  const fromIndustry = source.kind === 'project'
-                  return (
-                    <path
-                      data-direction={fromIndustry ? 'reverse' : 'forward'}
-                      data-group-index={groupIndex}
-                      data-link-id={link.id}
-                      d={linkPath(link)}
-                      key={link.id}
-                      stroke={`url(#flow-${link.projectId})`}
-                      strokeWidth={precise(Math.max(1, link.width ?? 1))}
-                    />
-                  )
-                })}
-              </g>
-            ))}
-          </g>
-
-          <g className={styles.clientGroups} aria-hidden="true">
-            {clientGroups.map((group) => (
-              <g key={group.id}>
-                <path d={group.path} />
-                <text x={group.x - 12} y={group.middle} textAnchor="end">
-                  {group.title}
-                </text>
-              </g>
-            ))}
-          </g>
-
-          <g className={styles.nodes} ref={nodesRef}>
-            {layout.graph.nodes.map((node) => {
-              const clickable = Boolean(node.href)
-              const x0 = precise(node.x0 ?? 0)
-              const x1 = precise(node.x1 ?? x0)
-              const y0 = precise(node.y0 ?? 0)
-              const y1 = precise(node.y1 ?? y0)
-              const height = precise(Math.max(1, y1 - y0))
-              const industry = node.kind === 'industry'
-              return (
-                <g
-                  className={`${clickable ? styles.clickableNode : styles.node} ${styles.nodeEntrance}`}
-                  data-node-id={node.id}
-                  key={node.id}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    navigate(node, true)
-                  }}
-                  onKeyDown={(event) => {
-                    if (clickable && (event.key === 'Enter' || event.key === ' ')) {
-                      event.preventDefault()
-                      navigate(node)
-                    }
-                  }}
-                  onMouseEnter={() => setHoveredNode(node.id)}
-                  onMouseLeave={() => setHoveredNode(null)}
-                  role={clickable ? 'link' : undefined}
-                  tabIndex={clickable ? 0 : undefined}
-                  transform={`translate(0 ${nodeCenter(node)})`}
-                  style={{
-                    animationDelay: `${node.kind === 'project' ? 0 : node.kind === 'category' ? 60 : 120}ms`,
-                  }}
-                >
-                  <rect x={x0} y={-height / 2} width={x1 - x0} height={height} fill={node.color} />
-                  <text
-                    x={industry ? x0 - FLOW_GAP - 8 : x1 + FLOW_GAP + 8}
-                    y={0}
-                    textAnchor={industry ? 'end' : 'start'}
+        {measured && (
+          <svg
+            className={styles.canvas}
+            height={layout.height}
+            viewBox={`0 0 ${width} ${layout.height}`}
+            width={width}
+            role="img"
+            aria-label="Connections from project categories through projects to client industries"
+            onClick={() => setSelectedNode(null)}
+          >
+            <defs>
+              {data.projects.map((project) => {
+                const category = nodeMap.get(project.categoryId)
+                const industry = project.industryId ? nodeMap.get(project.industryId) : undefined
+                const projectNode = nodeMap.get(project.id)
+                if (!category || !projectNode) return null
+                return (
+                  <linearGradient
+                    gradientUnits="userSpaceOnUse"
+                    id={`flow-${project.id}`}
+                    key={project.id}
+                    x1={precise((category.x1 ?? 0) + FLOW_GAP)}
+                    x2={precise((industry?.x0 ?? projectNode.x0 ?? 0) - FLOW_GAP)}
+                    y1="0"
+                    y2="0"
                   >
-                    {node.title}
-                  </text>
-                  <title>
-                    {node.kind === 'industry' ? `${node.title} (industry)` : `Open ${node.title}`}
-                  </title>
+                    <stop offset="0" stopColor={interpolateRgb(category.color, '#ffffff')(0.48)} />
+                    <stop
+                      offset="1"
+                      stopColor={interpolateRgb(industry?.color || category.color, '#ffffff')(0.48)}
+                    />
+                  </linearGradient>
+                )
+              })}
+            </defs>
+
+            <g className={styles.links} ref={linksRef}>
+              {flowGroups.map(([projectId, links], groupIndex) => (
+                <g
+                  className={links.some(isRelated) ? styles.flowGroup : styles.flowGroupMuted}
+                  key={projectId}
+                >
+                  {links.map((link) => {
+                    const source = link.source as LayoutNode
+                    const fromIndustry = source.kind === 'project'
+                    return (
+                      <path
+                        data-direction={fromIndustry ? 'reverse' : 'forward'}
+                        data-group-index={groupIndex}
+                        data-link-id={link.id}
+                        d={linkPath(link)}
+                        key={link.id}
+                        stroke={`url(#flow-${link.projectId})`}
+                        strokeWidth={precise(Math.max(1, link.width ?? 1))}
+                      />
+                    )
+                  })}
                 </g>
-              )
-            })}
-          </g>
-        </svg>
+              ))}
+            </g>
+
+            <g className={styles.clientGroups} aria-hidden="true">
+              {clientGroups.map((group) => (
+                <g key={group.id}>
+                  <path d={group.path} />
+                  <text x={group.x - 12} y={group.middle} textAnchor="end">
+                    {group.title}
+                  </text>
+                </g>
+              ))}
+            </g>
+
+            <g className={styles.nodes} ref={nodesRef}>
+              {layout.graph.nodes.map((node) => {
+                const clickable = Boolean(node.href)
+                const x0 = precise(node.x0 ?? 0)
+                const x1 = precise(node.x1 ?? x0)
+                const y0 = precise(node.y0 ?? 0)
+                const y1 = precise(node.y1 ?? y0)
+                const height = precise(Math.max(1, y1 - y0))
+                const industry = node.kind === 'industry'
+                return (
+                  <g
+                    className={`${clickable ? styles.clickableNode : styles.node} ${styles.nodeEntrance}`}
+                    data-node-id={node.id}
+                    key={node.id}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      navigate(node, true)
+                    }}
+                    onKeyDown={(event) => {
+                      if (clickable && (event.key === 'Enter' || event.key === ' ')) {
+                        event.preventDefault()
+                        navigate(node)
+                      }
+                    }}
+                    onMouseEnter={() => setHoveredNode(node.id)}
+                    onMouseLeave={() => setHoveredNode(null)}
+                    role={clickable ? 'link' : undefined}
+                    tabIndex={clickable ? 0 : undefined}
+                    transform={`translate(0 ${nodeCenter(node)})`}
+                    style={{
+                      animationDelay: `${node.kind === 'project' ? 0 : node.kind === 'category' ? 60 : 120}ms`,
+                    }}
+                  >
+                    <rect
+                      x={x0}
+                      y={-height / 2}
+                      width={x1 - x0}
+                      height={height}
+                      fill={node.color}
+                    />
+                    <text
+                      x={industry ? x0 - FLOW_GAP - 8 : x1 + FLOW_GAP + 8}
+                      y={0}
+                      textAnchor={industry ? 'end' : 'start'}
+                    >
+                      {node.title}
+                    </text>
+                    <title>
+                      {node.kind === 'industry' ? `${node.title} (industry)` : `Open ${node.title}`}
+                    </title>
+                  </g>
+                )
+              })}
+            </g>
+          </svg>
+        )}
       </div>
     </section>
   )

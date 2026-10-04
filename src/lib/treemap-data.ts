@@ -1,4 +1,4 @@
-import type { Category, Media, Project, Setting } from '@/payload-types'
+import type { Discipline, Media, Project, Setting } from '@/payload-types'
 import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
 import { getVideoEmbed } from '@/lib/video-embed'
 
@@ -7,28 +7,29 @@ function media(value: number | Media | null | undefined): Media | undefined {
 }
 
 export function transformDataForTreemap(
-  categories: Category[],
+  disciplines: Discipline[],
   projects: Project[],
   settings: Setting | null = null,
 ): TreemapData {
   const map = new Map<number, TreemapData>()
-  for (const category of categories) {
-    const thumbnail = media(category.thumbnail)
-    map.set(category.id, {
-      id: `category-${category.id}`,
-      kind: 'category',
-      slug: category.slug,
-      title: category.title,
-      priority: category.priority ?? 100,
-      color: category.color,
+  for (const discipline of disciplines) {
+    const thumbnail = media(discipline.thumbnail)
+    map.set(discipline.id, {
+      id: `discipline-${discipline.id}`,
+      kind: 'discipline',
+      slug: discipline.slug,
+      title: discipline.title,
+      priority: discipline.priority ?? 100,
+      color: discipline.color,
       thumb: thumbnail?.sizes?.thumbnail?.url || thumbnail?.url,
       children: [],
     })
   }
   for (const project of projects) {
-    const categoryID = typeof project.category === 'object' ? project.category.id : project.category
-    const category = map.get(categoryID)
-    if (!category) continue
+    const disciplineID =
+      typeof project.discipline === 'object' ? project.discipline.id : project.discipline
+    const discipline = map.get(disciplineID)
+    if (!discipline) continue
     const children: TreemapData[] = []
     let projectHero: ProjectHero | undefined
     if (project.hero.type === 'video' && project.hero.videoURL) {
@@ -139,13 +140,13 @@ export function transformDataForTreemap(
         sizes: image.sizes,
       })
     }
-    category.children!.push({
+    discipline.children!.push({
       id: `project-${project.id}`,
       kind: 'project',
       slug: project.slug,
       title: project.title,
       priority: project.priority ?? 100,
-      color: category.color,
+      color: discipline.color,
       desc: project.description,
       excerpt: project.excerpt || '',
       thumb: media(project.thumbnail)?.url,
@@ -157,13 +158,16 @@ export function transformDataForTreemap(
   // Relationships can be numeric IDs or populated documents. Ignore broken/cyclic
   // parents rather than producing a cyclic object that cannot be serialized.
   const parents = new Map(
-    categories.map((c) => [c.id, typeof c.parent === 'object' ? c.parent?.id : c.parent]),
+    disciplines.map((item) => [
+      item.id,
+      typeof item.parent === 'object' ? item.parent?.id : item.parent,
+    ]),
   )
   const roots: TreemapData[] = []
-  for (const category of categories) {
-    const node = map.get(category.id)!
-    const parentID = parents.get(category.id)
-    const seen = new Set([category.id])
+  for (const discipline of disciplines) {
+    const node = map.get(discipline.id)!
+    const parentID = parents.get(discipline.id)
+    const seen = new Set([discipline.id])
     let cursor = parentID
     let cycle = false
     while (cursor != null && map.has(cursor)) {
@@ -177,16 +181,16 @@ export function transformDataForTreemap(
     if (!cycle && parentID != null && map.has(parentID)) map.get(parentID)!.children!.push(node)
     else roots.push(node)
   }
-  // Imported content may already contain the portfolio's root category.
-  const rootSlug = settings?.rootCategorySlug || 'work'
+  // Imported content may already contain the portfolio's root discipline.
+  const rootSlug = settings?.rootDisciplineSlug || 'work'
   const wrapper =
     roots.length === 1 && ['root', rootSlug].includes(roots[0].slug) ? roots[0] : undefined
   return {
     id: 'root',
     legacyRootSlug: wrapper?.slug,
     kind: 'root',
-    slug: settings?.rootCategorySlug || 'work',
-    title: settings?.rootCategoryTitle || 'WORK',
+    slug: settings?.rootDisciplineSlug || 'work',
+    title: settings?.rootDisciplineTitle || 'WORK',
     children: wrapper?.children ?? roots,
     settings: {
       siteTitle: settings?.siteTitle || 'Design Portfolio',

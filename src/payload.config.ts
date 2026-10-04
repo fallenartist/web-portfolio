@@ -6,7 +6,7 @@ import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
 import { Projects } from '@/collections/Projects'
-import { Categories } from '@/collections/Categories'
+import { Disciplines } from '@/collections/Disciplines'
 import { Media } from '@/collections/Media'
 import { Industries } from '@/collections/Industries'
 import { Clients } from '@/collections/Clients'
@@ -24,7 +24,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Projects, Categories, Industries, Clients, Media, Menus],
+  collections: [Users, Projects, Disciplines, Industries, Clients, Media, Menus],
   globals: [Settings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

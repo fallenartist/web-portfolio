@@ -5,7 +5,7 @@ import { getPortfolio } from '@/lib/site-data'
 export default async function ProjectsOverviewPage() {
   const portfolio = await getPortfolio()
   const data = buildProjectDiagramData(
-    portfolio.categories,
+    portfolio.disciplines,
     portfolio.projects,
     portfolio.industries,
     portfolio.treemapData.legacyRootSlug,

@@ -64,7 +64,7 @@ export const Menus: CollectionConfig = {
         {
           name: 'internalLink',
           type: 'relationship',
-          relationTo: ['categories', 'projects', 'industries'],
+          relationTo: ['disciplines', 'projects', 'industries'],
           admin: {
             condition: (data, siblingData) => siblingData.type === 'internal',
           },

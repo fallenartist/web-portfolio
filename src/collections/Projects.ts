@@ -20,7 +20,7 @@ export const Projects: CollectionConfig = {
   admin: {
     group: 'Content',
     useAsTitle: 'title',
-    defaultColumns: ['title', 'client', 'category', 'industry', 'priority', 'updatedAt'],
+    defaultColumns: ['title', 'client', 'discipline', 'industry', 'priority', 'updatedAt'],
   },
   access: { read: () => true },
   fields: [
@@ -110,7 +110,8 @@ export const Projects: CollectionConfig = {
           ...field,
           admin: {
             ...field.admin,
-            condition: (_: unknown, siblingData: { type?: string }) => siblingData?.type === 'video',
+            condition: (_: unknown, siblingData: { type?: string }) =>
+              siblingData?.type === 'video',
           },
         })),
       ],
@@ -210,9 +211,9 @@ export const Projects: CollectionConfig = {
       admin: { position: 'sidebar' },
     },
     {
-      name: 'category',
+      name: 'discipline',
       type: 'relationship',
-      relationTo: 'categories',
+      relationTo: 'disciplines',
       required: true,
       admin: { position: 'sidebar' },
     },

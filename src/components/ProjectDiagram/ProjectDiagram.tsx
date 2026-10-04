@@ -9,7 +9,7 @@ import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import type { ProjectDiagramData } from '@/lib/project-diagram'
 import styles from './ProjectDiagram.module.scss'
 
-type Column = 'category' | 'project' | 'industry'
+type Column = 'discipline' | 'project' | 'industry'
 type Direction = 'asc' | 'desc'
 type SortMode = 'alphabetic' | 'count'
 type SortState = { mode: SortMode; direction: Direction }
@@ -29,9 +29,9 @@ type DiagramNode = {
 type DiagramLink = {
   id: string
   projectId: string
-  categoryId: string
+  disciplineId: string
   industryId?: string
-  categoryColor: string
+  disciplineColor: string
   industryColor: string
 }
 
@@ -83,7 +83,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
   const [isMobile, setIsMobile] = useState(false)
   const [measured, setMeasured] = useState(false)
   const [sorts, setSorts] = useState<Record<Column, SortState>>({
-    category: { mode: 'alphabetic', direction: 'asc' },
+    discipline: { mode: 'alphabetic', direction: 'asc' },
     project: { mode: 'alphabetic', direction: 'asc' },
     industry: { mode: 'alphabetic', direction: 'asc' },
   })
@@ -147,10 +147,13 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
   }, [router, updateBreadcrumb])
 
   const layout = useMemo(() => {
-    const categoryCounts = new Map<string, number>()
+    const disciplineCounts = new Map<string, number>()
     const industryCounts = new Map<string, number>()
     for (const project of data.projects) {
-      categoryCounts.set(project.categoryId, (categoryCounts.get(project.categoryId) || 0) + 1)
+      disciplineCounts.set(
+        project.disciplineId,
+        (disciplineCounts.get(project.disciplineId) || 0) + 1,
+      )
       if (project.industryId) {
         industryCounts.set(project.industryId, (industryCounts.get(project.industryId) || 0) + 1)
       }
@@ -169,7 +172,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
         return byTitle(a.title, b.title)
       })
     }
-    const categories = sortItems(data.categories, sorts.category, categoryCounts)
+    const disciplines = sortItems(data.disciplines, sorts.discipline, disciplineCounts)
     const industries = sortItems(data.industries, sorts.industry, industryCounts)
     const sortProject = alphabetic(sorts.project.direction)
     const projects = [...data.projects].sort((a, b) =>
@@ -177,10 +180,15 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
         ? sortProject(a.clientTitle, b.clientTitle) || sortProject(a.title, b.title)
         : sortProject(a.title, b.title),
     )
-    const categoryMap = new Map(categories.map((item) => [item.id, item]))
+    const disciplineMap = new Map(disciplines.map((item) => [item.id, item]))
     const industryMap = new Map(industries.map((item) => [item.id, item]))
     const nodes: DiagramNode[] = [
-      ...categories.map((item, order) => ({ ...item, kind: 'category' as const, layer: 0, order })),
+      ...disciplines.map((item, order) => ({
+        ...item,
+        kind: 'discipline' as const,
+        layer: 0,
+        order,
+      })),
       ...projects.map((item, order) => {
         return {
           id: item.id,
@@ -198,21 +206,21 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     ]
     const links: Array<DiagramLink & { source: string; target: string; value: number }> = []
     for (const project of projects) {
-      const categoryColor = categoryMap.get(project.categoryId)?.color || '#777777'
+      const disciplineColor = disciplineMap.get(project.disciplineId)?.color || '#777777'
       const industryColor = project.industryId
         ? industryMap.get(project.industryId)?.color || '#BBBBBB'
-        : categoryColor
+        : disciplineColor
       const shared = {
         projectId: project.id,
-        categoryId: project.categoryId,
+        disciplineId: project.disciplineId,
         industryId: project.industryId,
-        categoryColor,
+        disciplineColor,
         industryColor,
       }
       links.push({
         ...shared,
-        id: `${project.categoryId}-${project.id}`,
-        source: project.categoryId,
+        id: `${project.disciplineId}-${project.id}`,
+        source: project.disciplineId,
         target: project.id,
         value: 1,
       })
@@ -450,7 +458,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     const activeNode = hoveredNode || selectedNode
     if (!activeNode) return true
     return (
-      link.categoryId === activeNode ||
+      link.disciplineId === activeNode ||
       link.projectId === activeNode ||
       link.industryId === activeNode
     )
@@ -476,7 +484,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     <section className={styles.page} aria-label="Project relationship overview">
       <div className={styles.diagram} ref={containerRef}>
         <div className={styles.headers}>
-          {(['category', 'project', 'industry'] as const).map((column) => (
+          {(['discipline', 'project', 'industry'] as const).map((column) => (
             <div className={styles.columnHeader} data-column={column} key={column}>
               <span className={styles.columnTitle}>{column}</span>
               <span className={styles.sortControls}>
@@ -513,29 +521,35 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
             viewBox={`0 0 ${width} ${layout.height}`}
             width={width}
             role="img"
-            aria-label="Connections from project categories through projects to client industries"
+            aria-label="Connections from design disciplines through projects to client industries"
             onClick={() => setSelectedNode(null)}
           >
             <defs>
               {data.projects.map((project) => {
-                const category = nodeMap.get(project.categoryId)
+                const discipline = nodeMap.get(project.disciplineId)
                 const industry = project.industryId ? nodeMap.get(project.industryId) : undefined
                 const projectNode = nodeMap.get(project.id)
-                if (!category || !projectNode) return null
+                if (!discipline || !projectNode) return null
                 return (
                   <linearGradient
                     gradientUnits="userSpaceOnUse"
                     id={`flow-${project.id}`}
                     key={project.id}
-                    x1={precise((category.x1 ?? 0) + FLOW_GAP)}
+                    x1={precise((discipline.x1 ?? 0) + FLOW_GAP)}
                     x2={precise((industry?.x0 ?? projectNode.x0 ?? 0) - FLOW_GAP)}
                     y1="0"
                     y2="0"
                   >
-                    <stop offset="0" stopColor={interpolateRgb(category.color, '#ffffff')(0.48)} />
+                    <stop
+                      offset="0"
+                      stopColor={interpolateRgb(discipline.color, '#ffffff')(0.48)}
+                    />
                     <stop
                       offset="1"
-                      stopColor={interpolateRgb(industry?.color || category.color, '#ffffff')(0.48)}
+                      stopColor={interpolateRgb(
+                        industry?.color || discipline.color,
+                        '#ffffff',
+                      )(0.48)}
                     />
                   </linearGradient>
                 )
@@ -587,7 +601,8 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                 const y1 = precise(node.y1 ?? y0)
                 const height = precise(Math.max(1, y1 - y0))
                 const industry = node.kind === 'industry'
-                const mobileColumn = node.kind === 'category' ? 0 : node.kind === 'project' ? 1 : 2
+                const mobileColumn =
+                  node.kind === 'discipline' ? 0 : node.kind === 'project' ? 1 : 2
                 const mobileLabelWidth = width / 3 - 8
                 return (
                   <g
@@ -610,7 +625,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                     tabIndex={clickable ? 0 : undefined}
                     transform={`translate(0 ${nodeCenter(node)})`}
                     style={{
-                      animationDelay: `${node.kind === 'project' ? 0 : node.kind === 'category' ? 60 : 120}ms`,
+                      animationDelay: `${node.kind === 'project' ? 0 : node.kind === 'discipline' ? 60 : 120}ms`,
                     }}
                   >
                     <rect

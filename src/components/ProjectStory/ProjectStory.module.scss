@@ -408,7 +408,7 @@
   display: block;
   overflow: hidden;
   aspect-ratio: 16 / 10;
-  background: var(--preview-category-color, #eee);
+  background: var(--preview-discipline-color, #eee);
 
   .previewHero,
   .previewPlaceholder {
@@ -423,7 +423,7 @@
     position: absolute;
     z-index: 1;
     inset: 0;
-    background: var(--preview-category-color, transparent);
+    background: var(--preview-discipline-color, transparent);
     content: '';
     opacity: 0.9;
     pointer-events: none;

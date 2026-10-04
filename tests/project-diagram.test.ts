@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import type { Category, Client, Industry, Project } from '../src/payload-types'
+import type { Client, Discipline, Industry, Project } from '../src/payload-types'
 import { buildProjectDiagramData } from '../src/lib/project-diagram'
 
 const now = new Date().toISOString()
@@ -12,8 +12,8 @@ const root = {
   color: '#000000',
   updatedAt: now,
   createdAt: now,
-} as Category
-const category = {
+} as Discipline
+const discipline = {
   id: 2,
   title: 'Branding',
   slug: 'branding',
@@ -21,7 +21,7 @@ const category = {
   parent: root,
   updatedAt: now,
   createdAt: now,
-} as Category
+} as Discipline
 const industry = {
   id: 3,
   title: 'Technology',
@@ -43,17 +43,17 @@ test('project diagram retains colours, client groups, and portfolio links', () =
     id: 5,
     title: 'Identity',
     slug: 'identity',
-    category,
+    discipline,
     industry,
     client,
     hero: { type: 'image' },
     updatedAt: now,
     createdAt: now,
   } as Project
-  const data = buildProjectDiagramData([root, category], [project], [industry], 'work')
+  const data = buildProjectDiagramData([root, discipline], [project], [industry], 'work')
 
-  assert.deepEqual(data.categories[0], {
-    id: 'category-2',
+  assert.deepEqual(data.disciplines[0], {
+    id: 'discipline-2',
     title: 'Branding',
     color: '#FF0000',
     href: '/branding',
@@ -67,7 +67,7 @@ test('project diagram retains colours, client groups, and portfolio links', () =
     id: 'project-5',
     title: 'Identity',
     href: '/branding/identity',
-    categoryId: 'category-2',
+    disciplineId: 'discipline-2',
     industryId: 'industry-3',
     clientId: 'client-4',
     clientTitle: 'Acme',

@@ -69,7 +69,7 @@ export interface Config {
   collections: {
     users: User;
     projects: Project;
-    categories: Category;
+    disciplines: Discipline;
     industries: Industry;
     clients: Client;
     media: Media;
@@ -83,7 +83,7 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
-    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    disciplines: DisciplinesSelect<false> | DisciplinesSelect<true>;
     industries: IndustriesSelect<false> | IndustriesSelect<true>;
     clients: ClientsSelect<false> | ClientsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -278,7 +278,7 @@ export interface Project {
    */
   excerpt?: string | null;
   client?: (number | null) | Client;
-  category: number | Category;
+  discipline: number | Discipline;
   /**
    * Client industry; used for portfolio filtering and menu links
    */
@@ -365,26 +365,26 @@ export interface Client {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories".
+ * via the `definition` "disciplines".
  */
-export interface Category {
+export interface Discipline {
   id: number;
   title: string;
   slug: string;
   /**
-   * Colour used for this category in the treemap and project navigation.
+   * Colour used for this discipline in the treemap and project navigation.
    */
   color?: string | null;
   /**
-   * Optional parent category for hierarchical organization
+   * Optional parent discipline for hierarchical organization
    */
-  parent?: (number | null) | Category;
+  parent?: (number | null) | Discipline;
   /**
    * Higher values appear larger in the treemap (default: 100)
    */
   priority?: number | null;
   /**
-   * Thumbnail image for the category
+   * Thumbnail image for the discipline
    */
   thumbnail?: (number | null) | Media;
   updatedAt: string;
@@ -423,8 +423,8 @@ export interface Menu {
         type: 'internal' | 'external';
         internalLink?:
           | ({
-              relationTo: 'categories';
-              value: number | Category;
+              relationTo: 'disciplines';
+              value: number | Discipline;
             } | null)
           | ({
               relationTo: 'projects';
@@ -475,8 +475,8 @@ export interface PayloadLockedDocument {
         value: number | Project;
       } | null)
     | ({
-        relationTo: 'categories';
-        value: number | Category;
+        relationTo: 'disciplines';
+        value: number | Discipline;
       } | null)
     | ({
         relationTo: 'industries';
@@ -617,7 +617,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   slug?: T;
   excerpt?: T;
   client?: T;
-  category?: T;
+  discipline?: T;
   industry?: T;
   priority?: T;
   tags?:
@@ -631,9 +631,9 @@ export interface ProjectsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories_select".
+ * via the `definition` "disciplines_select".
  */
-export interface CategoriesSelect<T extends boolean = true> {
+export interface DisciplinesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   color?: T;
@@ -798,11 +798,11 @@ export interface Setting {
   /**
    * Title for the root level displayed in breadcrumb
    */
-  rootCategoryTitle?: string | null;
+  rootDisciplineTitle?: string | null;
   /**
    * URL slug for the root level (use lowercase letters, no spaces or special characters)
    */
-  rootCategorySlug?: string | null;
+  rootDisciplineSlug?: string | null;
   /**
    * Logo shown at the root of the portfolio
    */
@@ -848,8 +848,8 @@ export interface Setting {
 export interface SettingsSelect<T extends boolean = true> {
   siteTitle?: T;
   metaDescription?: T;
-  rootCategoryTitle?: T;
-  rootCategorySlug?: T;
+  rootDisciplineTitle?: T;
+  rootDisciplineSlug?: T;
   rootLogo?: T;
   upLogo?: T;
   projectTitle?:

@@ -13,6 +13,7 @@ import * as migration_20261001_151326_global_story_text_presentation from './202
 import * as migration_20261001_195846_global_project_description_presentation from './20261001_195846_global_project_description_presentation'
 import * as migration_20261003_093438_industry_colour from './20261003_093438_industry_colour'
 import * as migration_20261003_150000_mobile_project_title_size from './20261003_150000_mobile_project_title_size'
+import * as migration_20261004_124136_discipline_rename from './20261004_124136_discipline_rename'
 
 export const migrations = [
   {
@@ -89,5 +90,10 @@ export const migrations = [
     up: migration_20261003_150000_mobile_project_title_size.up,
     down: migration_20261003_150000_mobile_project_title_size.down,
     name: '20261003_150000_mobile_project_title_size',
+  },
+  {
+    up: migration_20261004_124136_discipline_rename.up,
+    down: migration_20261004_124136_discipline_rename.down,
+    name: '20261004_124136_discipline_rename',
   },
 ]

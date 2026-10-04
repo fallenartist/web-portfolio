@@ -119,10 +119,11 @@ export default function Treemap({ data }: { data: TreemapData }) {
     const color = d3
       .scaleOrdinal<string, string>()
       .range(['rgb(250, 200, 0)', 'rgb(50, 0, 250)', 'rgb(250, 0, 50)'])
-    const level = (d: TreemapNode) => ({ root: 0, category: 1, project: 2, image: 3 })[d.data.kind]
+    const level = (d: TreemapNode) =>
+      ({ root: 0, discipline: 1, project: 2, image: 3 })[d.data.kind]
     const fill = (d: TreemapNode) => {
       let ancestor: TreemapNode | null = d
-      while (ancestor && ancestor.data.kind !== 'category') ancestor = ancestor.parent
+      while (ancestor && ancestor.data.kind !== 'discipline') ancestor = ancestor.parent
       const slug = ancestor?.data.slug || d.data.slug
       return ancestor?.data.color || livePalette.get(slug) || color(slug)
     }
@@ -187,7 +188,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .attr('clip-path', (d) => `url(#clip-${d.data.id})`)
       .style('fill', heroDimColor)
       .style('fill-opacity', 0)
-    // Preserve overlay stacking: category labels above projects above gallery images.
+    // Preserve overlay stacking: discipline labels above projects above gallery images.
     cells.sort((a, b) => b.depth - a.depth)
 
     function zoom(
@@ -249,9 +250,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .transition(transition)
         .attr('width', innerW)
         .attr('height', innerH)
-        .style('fill-opacity', (d) =>
-          isProject && d.parent === node ? heroDimOpacity : 0,
-        )
+        .style('fill-opacity', (d) => (isProject && d.parent === node ? heroDimOpacity : 0))
       cells
         .select('text')
         .transition(transition)
@@ -310,10 +309,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       const stepDuration = duration || 0
 
       steps.forEach((step, index) => {
-        schedule(
-          () => zoom(step, step === target, false, stepDuration),
-          index * stepDuration,
-        )
+        schedule(() => zoom(step, step === target, false, stepDuration), index * stepDuration)
       })
     }
     navigateProjectRef.current = animateToProject

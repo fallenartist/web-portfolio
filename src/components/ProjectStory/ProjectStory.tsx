@@ -287,7 +287,7 @@ function ProjectPreview({ project }: { project: TreemapData }) {
   const hero = project.children?.find((item) => item.kind === 'image' && item.hero)
   const heroPreview = hero?.sizes?.thumbnail?.url || hero?.sizes?.small?.url || hero?.image
   const previewStyle = {
-    '--preview-category-color': project.color || 'transparent',
+    '--preview-discipline-color': project.color || 'transparent',
   } as CSSProperties
 
   return (

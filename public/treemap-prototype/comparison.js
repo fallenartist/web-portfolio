@@ -31,9 +31,9 @@ function createHTMLCells(chart, nodes, color, lightbox, navigate) {
   // Match the original ordinal colour registration, including the hidden root.
   const colors = new Map();
   for (const node of nodes.descendants()) {
-    let category = node;
-    while (category.depth > 1) category = category.parent;
-    colors.set(node, color(category.data.slug));
+    let discipline = node;
+    while (discipline.depth > 1) discipline = discipline.parent;
+    colors.set(node, color(discipline.data.slug));
   }
   const cells = chart.selectAll('.html-node').data(nodes.descendants().reverse()).join('div')
     .attr('class', d => `node html-node level-${d.depth}`)

@@ -33,7 +33,7 @@ export const Settings: GlobalConfig = {
       defaultValue: 'A portfolio of design work',
     },
     {
-      name: 'rootCategoryTitle',
+      name: 'rootDisciplineTitle',
       type: 'text',
       defaultValue: 'WORK',
       admin: {
@@ -41,7 +41,7 @@ export const Settings: GlobalConfig = {
       },
     },
     {
-      name: 'rootCategorySlug',
+      name: 'rootDisciplineSlug',
       type: 'text',
       defaultValue: 'work',
       admin: {

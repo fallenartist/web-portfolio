@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { getAdminThumbnail } from '../src/collections/Media'
 import { proportionalMediaSize } from '../src/lib/media-image'
-import type { Category, Industry, Project, Media, Setting } from '../src/payload-types'
+import type { Discipline, Industry, Project, Media, Setting } from '../src/payload-types'
 import { getInternalLinkHref } from '../src/lib/menu-links'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
 import { fetchTreemapData } from '../src/lib/transformers'
@@ -11,10 +11,10 @@ import { getVideoEmbed, validateVideoURL } from '../src/lib/video-embed'
 import { GET } from '../src/app/my-route/route'
 import type { Payload } from 'payload'
 
-const category = (id: number, extra: Partial<Category> = {}): Category => ({
+const discipline = (id: number, extra: Partial<Discipline> = {}): Discipline => ({
   id,
-  title: `Category ${id}`,
-  slug: `category-${id}`,
+  title: `Discipline ${id}`,
+  slug: `discipline-${id}`,
   createdAt: '',
   updatedAt: '',
   ...extra,
@@ -24,38 +24,38 @@ const project = (extra: Partial<Project> = {}): Project => ({
   id: 2,
   slug: 'project',
   title: 'Project',
-  category: 1,
+  discipline: 1,
   createdAt: '',
   updatedAt: '',
   hero: { type: 'image', image },
   ...extra,
 })
 
-test('numeric and populated category relationships produce the same project tree', () => {
-  const categories = [category(1, { color: '#123456' })]
-  const numeric = transformDataForTreemap(categories, [project()])
-  const populated = transformDataForTreemap(categories, [project({ category: categories[0] })])
+test('numeric and populated discipline relationships produce the same project tree', () => {
+  const disciplines = [discipline(1, { color: '#123456' })]
+  const numeric = transformDataForTreemap(disciplines, [project()])
+  const populated = transformDataForTreemap(disciplines, [project({ discipline: disciplines[0] })])
   assert.deepEqual(numeric, populated)
-  const projectNode = findTreemapNode(numeric, ['category-1', 'project'])
+  const projectNode = findTreemapNode(numeric, ['discipline-1', 'project'])
   assert.equal(projectNode?.children?.[0].image, image.url)
   assert.equal(projectNode?.color, '#123456')
 })
 
-test('full paths are validated; projects cannot be addressed beneath an unrelated category', () => {
-  const tree = transformDataForTreemap([category(1), category(3)], [project()])
-  assert.equal(findTreemapNode(tree, ['category-3', 'project']), undefined)
+test('full paths are validated; projects cannot be addressed beneath an unrelated discipline', () => {
+  const tree = transformDataForTreemap([discipline(1), discipline(3)], [project()])
+  assert.equal(findTreemapNode(tree, ['discipline-3', 'project']), undefined)
   assert.equal(findTreemapNode(tree, ['garbage', 'project']), undefined)
-  assert.equal(findTreemapNode(tree, ['category-1', 'project', 'image-0']), undefined)
+  assert.equal(findTreemapNode(tree, ['discipline-1', 'project', 'image-0']), undefined)
 })
 
-test('nested categories work and cyclic parents cannot create a circular tree', () => {
+test('nested disciplines work and cyclic parents cannot create a circular tree', () => {
   const tree = transformDataForTreemap(
-    [category(1), category(3, { parent: 1 })],
-    [project({ category: 3 })],
+    [discipline(1), discipline(3, { parent: 1 })],
+    [project({ discipline: 3 })],
   )
-  assert.equal(findTreemapNode(tree, ['category-1', 'category-3', 'project'])?.title, 'Project')
+  assert.equal(findTreemapNode(tree, ['discipline-1', 'discipline-3', 'project'])?.title, 'Project')
   const cycle = transformDataForTreemap(
-    [category(1, { parent: 3 }), category(3, { parent: 1 })],
+    [discipline(1, { parent: 3 }), discipline(3, { parent: 1 })],
     [],
   )
   assert.doesNotThrow(() => JSON.stringify(cycle))
@@ -85,7 +85,7 @@ test('global project title presentation is included in the front-end settings', 
       textColor: '#654321',
     },
   }
-  const tree = transformDataForTreemap([category(1)], [project()], settings)
+  const tree = transformDataForTreemap([discipline(1)], [project()], settings)
   assert.deepEqual(tree.settings?.projectTitle, settings.projectTitle)
   assert.deepEqual(tree.settings?.storyText, settings.storyText)
   assert.deepEqual(tree.settings?.projectDescription, settings.projectDescription)
@@ -93,7 +93,7 @@ test('global project title presentation is included in the front-end settings', 
 
 test('missing and populated hero uploads are handled safely', () => {
   const tree = transformDataForTreemap(
-    [category(1)],
+    [discipline(1)],
     [
       project({ hero: { type: 'image', image: 9 } }),
       project({ id: 3, hero: { type: 'image', image } }),
@@ -116,7 +116,7 @@ test('project thumbnail and hero image remain independent', () => {
     sizes: { thumbnail: { url: '/api/media/file/hero-400.jpg', width: 400, height: 400 } },
   }
   const tree = transformDataForTreemap(
-    [category(1)],
+    [discipline(1)],
     [
       project({
         thumbnail,
@@ -132,7 +132,7 @@ test('project thumbnail and hero image remain independent', () => {
 
 test('Vimeo heroes use their cover for the treemap transition and preserve playback options', () => {
   const tree = transformDataForTreemap(
-    [category(1)],
+    [discipline(1)],
     [
       project({
         hero: {
@@ -178,7 +178,7 @@ test('project content keeps its order and derives presentation from media', () =
     },
   }
   const tree = transformDataForTreemap(
-    [category(1)],
+    [discipline(1)],
     [
       project({
         story: [
@@ -300,7 +300,7 @@ test('Lexical content stays structured rather than being assigned to innerHTML',
       ],
     },
   }
-  const tree = transformDataForTreemap([category(1)], [project({ description })])
+  const tree = transformDataForTreemap([discipline(1)], [project({ description })])
   assert.deepEqual(tree.children![0].children![0].desc, description)
 })
 
@@ -317,7 +317,7 @@ test('CMS queries disable default pagination and enforce public read access', as
   assert.deepEqual(
     calls.map((c) => [c.collection, c.pagination, c.overrideAccess]),
     [
-      ['categories', false, false],
+      ['disciplines', false, false],
       ['projects', false, false],
       ['industries', false, false],
     ],
@@ -356,13 +356,13 @@ test('sample endpoint no longer exposes users', async () => {
   assert.deepEqual(await response.json(), { error: 'Not found' })
 })
 
-test('imported WORK root opens directly on categories and preserves nested projects', () => {
+test('imported WORK root opens directly on disciplines and preserves nested projects', () => {
   const tree = transformDataForTreemap(
-    [category(10, { slug: 'root', title: 'WORK' }), category(1, { parent: 10 })],
+    [discipline(10, { slug: 'root', title: 'WORK' }), discipline(1, { parent: 10 })],
     [project()],
   )
   assert.equal(tree.legacyRootSlug, 'root')
-  assert.equal(tree.children?.[0].slug, 'category-1')
-  assert.equal(findTreemapNode(tree, ['category-1', 'project'])?.title, 'Project')
+  assert.equal(tree.children?.[0].slug, 'discipline-1')
+  assert.equal(findTreemapNode(tree, ['discipline-1', 'project'])?.title, 'Project')
   assert.equal(findTreemapNode(tree, ['root']), undefined)
 })

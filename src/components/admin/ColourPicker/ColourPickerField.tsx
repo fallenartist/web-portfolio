@@ -162,7 +162,7 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
     setIsCheckingUsage(true)
 
     try {
-      const endpoints = ['categories', 'industries'].map((collection) =>
+      const endpoints = ['disciplines', 'industries'].map((collection) =>
         fetch(`/api/${collection}?limit=1000&depth=0&select[color]=true&select[title]=true`).then(
           async (response) => {
             if (!response.ok) throw new Error(`Could not check ${collection}`)
@@ -190,7 +190,7 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
       )
     } catch {
       setRemoveWarning(
-        'Usage could not be checked. Removing this colour from the palette will not change any saved categories or industries.',
+        'Usage could not be checked. Removing this colour from the palette will not change any saved disciplines or industries.',
       )
     } finally {
       setIsCheckingUsage(false)

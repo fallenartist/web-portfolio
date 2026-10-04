@@ -64,7 +64,7 @@ export interface TreemapData {
   id: string
   slug: string
   title: string
-  kind: 'root' | 'category' | 'project' | 'image'
+  kind: 'root' | 'discipline' | 'project' | 'image'
   legacyRootSlug?: string
   priority?: number
   color?: string | null

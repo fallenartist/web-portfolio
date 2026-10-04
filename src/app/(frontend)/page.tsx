@@ -20,7 +20,7 @@ export default async function Home({
         ? project.industry?.id === selectedIndustry.id
         : project.industry === selectedIndustry.id,
     )
-    treemapData = transformDataForTreemap(portfolio.categories, projects, portfolio.settings)
+    treemapData = transformDataForTreemap(portfolio.disciplines, projects, portfolio.settings)
     treemapData.title = selectedIndustry.title
   }
 

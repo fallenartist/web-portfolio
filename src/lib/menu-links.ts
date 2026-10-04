@@ -1,12 +1,12 @@
-import type { Category, Menu } from '@/payload-types'
+import type { Discipline, Menu } from '@/payload-types'
 
-function categoryPath(category: number | Category | null | undefined): string[] {
+function disciplinePath(discipline: number | Discipline | null | undefined): string[] {
   const result: string[] = []
   const seen = new Set<number>()
-  while (category && typeof category === 'object' && !seen.has(category.id)) {
-    seen.add(category.id)
-    result.unshift(encodeURIComponent(category.slug))
-    category = category.parent
+  while (discipline && typeof discipline === 'object' && !seen.has(discipline.id)) {
+    seen.add(discipline.id)
+    result.unshift(encodeURIComponent(discipline.slug))
+    discipline = discipline.parent
   }
   return result
 }
@@ -20,9 +20,9 @@ export function getInternalLinkHref(
     return `/?industry=${encodeURIComponent(link.value.slug)}`
   }
   const segments =
-    link.relationTo === 'categories'
-      ? categoryPath(link.value)
-      : [...categoryPath(link.value.category), encodeURIComponent(link.value.slug)]
+    link.relationTo === 'disciplines'
+      ? disciplinePath(link.value)
+      : [...disciplinePath(link.value.discipline), encodeURIComponent(link.value.slug)]
   if (legacyRootSlug && segments[0] === encodeURIComponent(legacyRootSlug)) segments.shift()
   return '/' + segments.join('/')
 }

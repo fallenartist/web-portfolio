@@ -698,7 +698,15 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                         width={mobileLabelWidth}
                         height={MOBILE_LABEL_HEIGHT}
                       >
-                        <div className={styles.mobileNodeLabelInner} data-column={node.kind}>
+                        <div
+                          className={styles.mobileNodeLabelInner}
+                          data-client-grouped={
+                            node.kind === 'project' && sorts.project.mode === 'count'
+                              ? 'true'
+                              : undefined
+                          }
+                          data-column={node.kind}
+                        >
                           {node.title}
                         </div>
                       </foreignObject>

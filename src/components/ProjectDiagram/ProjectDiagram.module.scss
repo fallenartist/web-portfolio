@@ -195,6 +195,10 @@
     justify-content: flex-end;
     text-align: right;
   }
+
+  &[data-client-grouped='true'] {
+    align-items: center;
+  }
 }
 
 .hitArea {

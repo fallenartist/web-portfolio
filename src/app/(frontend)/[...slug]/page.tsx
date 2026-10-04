@@ -1,11 +1,27 @@
 import { notFound, redirect } from 'next/navigation'
+import ProjectDiagram from '@/components/ProjectDiagram/ProjectDiagram'
 import Treemap from '@/components/Treemap/Treemap'
+import { buildProjectDiagramData } from '@/lib/project-diagram'
 import { getPortfolio } from '@/lib/site-data'
 import { findTreemapNode } from '@/lib/treemap-data'
 
 export default async function SlugPage({ params }: { params: Promise<{ slug: string[] }> }) {
   const { slug } = await params
-  const { treemapData } = await getPortfolio()
+  const portfolio = await getPortfolio()
+  const { treemapData } = portfolio
+  if (slug.length === 1 && slug[0] === portfolio.settings.projectsOverviewSlug) {
+    const data = buildProjectDiagramData(
+      portfolio.disciplines,
+      portfolio.projects,
+      portfolio.industries,
+      treemapData.legacyRootSlug,
+    )
+    return (
+      <main>
+        <ProjectDiagram data={data} />
+      </main>
+    )
+  }
   if (treemapData.legacyRootSlug === slug[0] && findTreemapNode(treemapData, slug.slice(1))) {
     redirect('/' + slug.slice(1).map(encodeURIComponent).join('/'))
   }

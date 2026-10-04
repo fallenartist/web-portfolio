@@ -420,7 +420,7 @@ export interface Menu {
   items?:
     | {
         title: string;
-        type: 'internal' | 'external';
+        type: 'internal' | 'external' | 'group';
         internalDestination?: ('content' | 'projects') | null;
         internalLink?:
           | ({
@@ -437,6 +437,29 @@ export interface Menu {
             } | null);
         externalLink?: string | null;
         openInNewTab?: boolean | null;
+        subItems?:
+          | {
+              title: string;
+              type: 'internal' | 'external';
+              internalDestination?: ('content' | 'projects') | null;
+              internalLink?:
+                | ({
+                    relationTo: 'disciplines';
+                    value: number | Discipline;
+                  } | null)
+                | ({
+                    relationTo: 'projects';
+                    value: number | Project;
+                  } | null)
+                | ({
+                    relationTo: 'industries';
+                    value: number | Industry;
+                  } | null);
+              externalLink?: string | null;
+              openInNewTab?: boolean | null;
+              id?: string | null;
+            }[]
+          | null;
         id?: string | null;
       }[]
     | null;
@@ -744,6 +767,17 @@ export interface MenusSelect<T extends boolean = true> {
         internalLink?: T;
         externalLink?: T;
         openInNewTab?: T;
+        subItems?:
+          | T
+          | {
+              title?: T;
+              type?: T;
+              internalDestination?: T;
+              internalLink?: T;
+              externalLink?: T;
+              openInNewTab?: T;
+              id?: T;
+            };
         id?: T;
       };
   updatedAt?: T;
@@ -806,6 +840,10 @@ export interface Setting {
    */
   rootDisciplineSlug?: string | null;
   /**
+   * URL segment for the project relationship diagram, without a leading slash
+   */
+  projectsOverviewSlug: string;
+  /**
    * Logo shown at the root of the portfolio
    */
   rootLogo?: (number | null) | Media;
@@ -852,6 +890,7 @@ export interface SettingsSelect<T extends boolean = true> {
   metaDescription?: T;
   rootDisciplineTitle?: T;
   rootDisciplineSlug?: T;
+  projectsOverviewSlug?: T;
   rootLogo?: T;
   upLogo?: T;
   projectTitle?:

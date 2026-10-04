@@ -1,6 +1,13 @@
 import type { Discipline, Menu } from '@/payload-types'
 
-type MenuItem = NonNullable<Menu['items']>[number]
+export type MenuItem = NonNullable<Menu['items']>[number]
+export type MenuSubItem = NonNullable<NonNullable<MenuItem['subItems']>[number]>
+export type MenuEntry = MenuItem | MenuSubItem
+
+export function getProjectsOverviewPath(slug?: null | string): string {
+  const segment = slug?.trim().replace(/^\/+|\/+$/g, '') || 'projects'
+  return `/${encodeURIComponent(segment)}`
+}
 
 function disciplinePath(discipline: number | Discipline | null | undefined): string[] {
   const result: string[] = []
@@ -29,8 +36,15 @@ export function getInternalLinkHref(
   return '/' + segments.join('/')
 }
 
-export function getMenuItemHref(item: MenuItem, legacyRootSlug?: string): string {
+export function getMenuItemHref(
+  item: MenuEntry,
+  legacyRootSlug?: string,
+  projectsOverviewSlug?: null | string,
+): string {
   if (item.type === 'external') return item.externalLink || '#'
-  if (item.internalDestination === 'projects') return '/projects'
+  if (item.type === 'group') return '#'
+  if (item.internalDestination === 'projects') {
+    return getProjectsOverviewPath(projectsOverviewSlug)
+  }
   return item.internalLink ? getInternalLinkHref(item.internalLink, legacyRootSlug) : '#'
 }

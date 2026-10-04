@@ -189,7 +189,7 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
     padding $transitionTime $transitionEase;
   opacity: 0;
 
-  ul {
+  > ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
@@ -203,14 +203,33 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
     font-size: 24px;
     font-weight: 400;
 
-    a {
+    a,
+    .menuLabel {
       color: $textColor;
       text-decoration: none;
+    }
+
+    a {
       transition: color 200ms ease;
 
       &:hover {
         color: $textHoverColor;
       }
+    }
+  }
+
+  .submenu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 10px 0 0;
+    padding: 0 0 0 0.75em;
+    list-style: none;
+
+    li {
+      font-size: inherit;
+      text-align: left;
     }
   }
 
@@ -235,6 +254,23 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
         height: 100%;
         fill: currentColor;
       }
+    }
+  }
+}
+
+@media (min-width: 768px) {
+  .nav {
+    > ul {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      align-items: start;
+      gap: 24px var(--page-gutter);
+      padding-inline: var(--page-gutter);
+    }
+
+    .menuItem {
+      min-width: 0;
+      text-align: left;
     }
   }
 }

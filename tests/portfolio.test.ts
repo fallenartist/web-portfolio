@@ -66,6 +66,7 @@ test('global project title presentation is included in the front-end settings', 
   const settings: Setting = {
     id: 1,
     siteTitle: 'Portfolio',
+    projectsOverviewSlug: 'projects',
     projectTitle: {
       placement: 'overlay',
       fontSize: 128,
@@ -358,6 +359,25 @@ test('the projects overview can be selected as an internal menu destination', ()
       internalDestination: 'projects',
     }),
     '/projects',
+  )
+  assert.equal(
+    getMenuItemHref(
+      {
+        title: 'Diagram',
+        type: 'internal',
+        internalDestination: 'projects',
+      },
+      undefined,
+      'project-map',
+    ),
+    '/project-map',
+  )
+  assert.equal(
+    getMenuItemHref({
+      title: 'Grouped links',
+      type: 'group',
+    }),
+    '#',
   )
 })
 

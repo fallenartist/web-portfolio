@@ -7,10 +7,11 @@ import styles from './Header.module.scss'
 import { usePathname } from 'next/navigation'
 import type { Menu } from '@/payload-types'
 import type { BreadcrumbItem } from '@/types'
-import { getMenuItemHref } from '@/lib/menu-links'
+import { getMenuItemHref, getProjectsOverviewPath, type MenuEntry } from '@/lib/menu-links'
 
 interface HeaderProps {
   legacyRootSlug?: string
+  projectsOverviewSlug?: string
   title?: string
   menu?: Menu | null
   breadcrumb?: BreadcrumbItem[]
@@ -24,6 +25,7 @@ export default function Header({
   title = 'Design Portfolio',
   menu = null,
   legacyRootSlug,
+  projectsOverviewSlug,
   breadcrumb = [],
   rootLogo,
   upLogo,
@@ -38,9 +40,35 @@ export default function Header({
   const menuOpen = openPath === pathname
   const atRoot = breadcrumb.length <= 1
   const logo = atRoot ? rootLogo : upLogo
-  const hasProjectsLink = menu?.items?.some(
-    (item) => getMenuItemHref(item, legacyRootSlug) === '/projects',
+  const projectsOverviewPath = getProjectsOverviewPath(projectsOverviewSlug)
+  const menuEntries = menu?.items?.flatMap((item) => [item, ...(item.subItems || [])]) || []
+  const hasProjectsLink = menuEntries.some(
+    (item) => getMenuItemHref(item, legacyRootSlug, projectsOverviewSlug) === projectsOverviewPath,
   )
+
+  const renderMenuEntry = (item: MenuEntry) => {
+    if (item.type === 'group') return <span className={styles.menuLabel}>{item.title}</span>
+    if (item.type === 'internal') {
+      return (
+        <Link
+          href={getMenuItemHref(item, legacyRootSlug, projectsOverviewSlug)}
+          onClick={() => setOpenPath(null)}
+        >
+          {item.title}
+        </Link>
+      )
+    }
+    return (
+      <a
+        href={item.externalLink || '#'}
+        target={item.openInNewTab ? '_blank' : undefined}
+        rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
+        onClick={() => setOpenPath(null)}
+      >
+        {item.title}
+      </a>
+    )
+  }
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -177,29 +205,22 @@ export default function Header({
         {menu && menu.items && menu.items.length > 0 ? (
           <ul>
             {menu.items.map((item, index: number) => (
-              <li key={`menu-item-${index}`}>
-                {item.type === 'internal' ? (
-                  <Link
-                    href={getMenuItemHref(item, legacyRootSlug)}
-                    onClick={() => setOpenPath(null)}
-                  >
-                    {item.title}
-                  </Link>
-                ) : (
-                  <a
-                    href={item.externalLink || '#'}
-                    target={item.openInNewTab ? '_blank' : undefined}
-                    rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
-                    onClick={() => setOpenPath(null)}
-                  >
-                    {item.title}
-                  </a>
+              <li className={styles.menuItem} key={item.id || `menu-item-${index}`}>
+                {renderMenuEntry(item)}
+                {item.subItems && item.subItems.length > 0 && (
+                  <ul className={styles.submenu}>
+                    {item.subItems.map((subItem, subIndex) => (
+                      <li key={subItem.id || `submenu-item-${index}-${subIndex}`}>
+                        {renderMenuEntry(subItem)}
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </li>
             ))}
             {!hasProjectsLink && (
               <li>
-                <Link href="/projects" onClick={() => setOpenPath(null)}>
+                <Link href={projectsOverviewPath} onClick={() => setOpenPath(null)}>
                   Projects
                 </Link>
               </li>
@@ -208,7 +229,7 @@ export default function Header({
         ) : (
           <ul>
             <li>
-              <Link href="/projects" onClick={() => setOpenPath(null)}>
+              <Link href={projectsOverviewPath} onClick={() => setOpenPath(null)}>
                 Projects
               </Link>
             </li>

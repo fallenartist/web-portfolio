@@ -15,6 +15,7 @@ export default function BreadcrumbProvider({
   title,
   menu,
   legacyRootSlug,
+  projectsOverviewSlug,
   rootLogo,
   upLogo,
 }: {
@@ -22,6 +23,7 @@ export default function BreadcrumbProvider({
   title?: string
   menu?: Menu | null
   legacyRootSlug?: string
+  projectsOverviewSlug?: string
   rootLogo?: string
   upLogo?: string
 }) {
@@ -32,6 +34,7 @@ export default function BreadcrumbProvider({
         title={title}
         menu={menu}
         legacyRootSlug={legacyRootSlug}
+        projectsOverviewSlug={projectsOverviewSlug}
         rootLogo={rootLogo}
         upLogo={upLogo}
         breadcrumb={breadcrumb}

@@ -2,7 +2,7 @@
 
 import { easeCubicInOut, interpolateRgb, select } from 'd3'
 import { sankey, type SankeyLink, type SankeyNode } from 'd3-sankey'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
@@ -74,6 +74,7 @@ function nodeCenter(node: LayoutNode) {
 
 export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
   const router = useRouter()
+  const pathname = usePathname()
   const { updateBreadcrumb } = useBreadcrumb()
   const containerRef = useRef<HTMLDivElement>(null)
   const linksRef = useRef<SVGGElement>(null)
@@ -142,14 +143,14 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
   useEffect(() => {
     updateBreadcrumb([
       { data: { title: 'WORK' }, path: '/' },
-      { data: { title: 'Projects' }, path: '/projects' },
+      { data: { title: 'Projects' }, path: pathname },
     ])
     const onBreadcrumb = (event: Event) => {
       router.push((event as CustomEvent<string>).detail)
     }
     window.addEventListener('breadcrumb-click', onBreadcrumb)
     return () => window.removeEventListener('breadcrumb-click', onBreadcrumb)
-  }, [router, updateBreadcrumb])
+  }, [pathname, router, updateBreadcrumb])
 
   const layout = useMemo(() => {
     const disciplineCounts = new Map<string, number>()

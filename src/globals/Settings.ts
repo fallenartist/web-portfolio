@@ -50,6 +50,19 @@ export const Settings: GlobalConfig = {
       },
     },
     {
+      name: 'projectsOverviewSlug',
+      label: 'Projects overview slug',
+      type: 'text',
+      required: true,
+      defaultValue: 'projects',
+      validate: (value: null | string | undefined) =>
+        Boolean(value && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) ||
+        'Use lowercase letters, numbers and hyphens without slashes.',
+      admin: {
+        description: 'URL segment for the project relationship diagram, without a leading slash',
+      },
+    },
+    {
       name: 'rootLogo',
       label: 'Root-level logo',
       type: 'upload',

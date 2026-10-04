@@ -1,4 +1,51 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Field } from 'payload'
+
+const linkTypeOptions = [
+  { label: 'Internal Link', value: 'internal' },
+  { label: 'External Link', value: 'external' },
+]
+
+const destinationFields = (): Field[] => [
+  {
+    name: 'internalDestination',
+    label: 'Destination',
+    type: 'select',
+    defaultValue: 'content',
+    required: true,
+    options: [
+      { label: 'Content item', value: 'content' },
+      { label: 'Projects overview', value: 'projects' },
+    ],
+    admin: {
+      condition: (_, siblingData) => siblingData.type === 'internal',
+    },
+  },
+  {
+    name: 'internalLink',
+    type: 'relationship',
+    relationTo: ['disciplines', 'projects', 'industries'],
+    admin: {
+      condition: (_, siblingData) =>
+        siblingData.type === 'internal' &&
+        (!siblingData.internalDestination || siblingData.internalDestination === 'content'),
+    },
+  },
+  {
+    name: 'externalLink',
+    type: 'text',
+    admin: {
+      condition: (_, siblingData) => siblingData.type === 'external',
+    },
+  },
+  {
+    name: 'openInNewTab',
+    type: 'checkbox',
+    defaultValue: false,
+    admin: {
+      condition: (_, siblingData) => siblingData.type === 'external',
+    },
+  },
+]
 
 export const Menus: CollectionConfig = {
   slug: 'menus',
@@ -48,63 +95,33 @@ export const Menus: CollectionConfig = {
         {
           name: 'type',
           type: 'select',
-          options: [
-            {
-              label: 'Internal Link',
-              value: 'internal',
-            },
-            {
-              label: 'External Link',
-              value: 'external',
-            },
-          ],
+          options: [...linkTypeOptions, { label: 'Group heading (no link)', value: 'group' }],
           defaultValue: 'internal',
           required: true,
         },
+        ...destinationFields(),
         {
-          name: 'internalDestination',
-          label: 'Destination',
-          type: 'select',
-          defaultValue: 'content',
-          required: true,
-          options: [
+          name: 'subItems',
+          label: 'Submenu items',
+          type: 'array',
+          admin: {
+            initCollapsed: true,
+          },
+          fields: [
             {
-              label: 'Content item',
-              value: 'content',
+              name: 'title',
+              type: 'text',
+              required: true,
             },
             {
-              label: 'Projects overview',
-              value: 'projects',
+              name: 'type',
+              type: 'select',
+              options: linkTypeOptions,
+              defaultValue: 'internal',
+              required: true,
             },
+            ...destinationFields(),
           ],
-          admin: {
-            condition: (data, siblingData) => siblingData.type === 'internal',
-          },
-        },
-        {
-          name: 'internalLink',
-          type: 'relationship',
-          relationTo: ['disciplines', 'projects', 'industries'],
-          admin: {
-            condition: (data, siblingData) =>
-              siblingData.type === 'internal' &&
-              (!siblingData.internalDestination || siblingData.internalDestination === 'content'),
-          },
-        },
-        {
-          name: 'externalLink',
-          type: 'text',
-          admin: {
-            condition: (data, siblingData) => siblingData.type === 'external',
-          },
-        },
-        {
-          name: 'openInNewTab',
-          type: 'checkbox',
-          defaultValue: false,
-          admin: {
-            condition: (data, siblingData) => siblingData.type === 'external',
-          },
         },
       ],
     },

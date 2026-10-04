@@ -47,10 +47,9 @@ const MOBILE_HIT_PADDING = 4
 const MOBILE_LABEL_HEIGHT = 34
 const MOBILE_LABEL_GAP = 6
 const MOBILE_CLIENT_LABEL_HEIGHT = 16
-const MOBILE_CLIENT_LABEL_GAP = 4
+const MOBILE_CLIENT_LABEL_GAP = 1
 const MOBILE_NODE_PADDING = MOBILE_LABEL_HEIGHT + MOBILE_LABEL_GAP + 10
-const MOBILE_CLIENT_NODE_PADDING =
-  MOBILE_NODE_PADDING + MOBILE_CLIENT_LABEL_HEIGHT + MOBILE_CLIENT_LABEL_GAP
+const MOBILE_CLIENT_NODE_PADDING = MOBILE_NODE_PADDING + 28
 const DESKTOP_DIAGRAM_TOP = 18
 const RESIZE_DEBOUNCE = 160
 
@@ -336,9 +335,11 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
       const mobileX = precise((first.x0 ?? 0) - 10)
       const mobileBracketWidth = 7
       const mobileRadius = 4
+      const mobileTop = precise((first.y0 ?? 0) - MOBILE_LABEL_HEIGHT - MOBILE_LABEL_GAP - 4)
+      const mobileBottom = precise((last.y1 ?? lastCenter) + 4)
       const mobilePath = singleNode
-        ? `M${mobileX},${y}H${mobileX + mobileBracketWidth}`
-        : `M${mobileX + mobileBracketWidth},${y}H${mobileX + mobileRadius}Q${mobileX},${y} ${mobileX},${y + mobileRadius}V${maxY - mobileRadius}Q${mobileX},${maxY} ${mobileX + mobileRadius},${maxY}H${mobileX + mobileBracketWidth}`
+        ? undefined
+        : `M${mobileX + mobileBracketWidth},${mobileTop}H${mobileX + mobileRadius}Q${mobileX},${mobileTop} ${mobileX},${mobileTop + mobileRadius}V${mobileBottom - mobileRadius}Q${mobileX},${mobileBottom} ${mobileX + mobileRadius},${mobileBottom}H${mobileX + mobileBracketWidth}`
       return {
         id,
         title: first.clientTitle || 'Unassigned client',
@@ -616,7 +617,9 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
             <g className={styles.clientGroups} aria-hidden="true">
               {clientGroups.map((group) => (
                 <g key={group.id}>
-                  <path d={isMobile ? group.mobilePath : group.path} />
+                  {(!isMobile || group.mobilePath) && (
+                    <path d={isMobile ? group.mobilePath : group.path} />
+                  )}
                   <text
                     className={isMobile ? styles.mobileClientTitle : undefined}
                     x={isMobile ? group.mobileTextX : group.x - 12}

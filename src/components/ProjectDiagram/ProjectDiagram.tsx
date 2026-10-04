@@ -332,14 +332,12 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
       const maxY = precise(lastCenter)
       const middle = precise((y + maxY) / 2)
       const span = precise(maxY - y)
-      const mobileX = precise((first.x0 ?? 0) - 10)
-      const mobileBracketWidth = 7
+      const mobileX = precise(width / 3)
+      const mobileRight = precise((first.x0 ?? 0) - FLOW_GAP)
       const mobileRadius = 4
-      const mobileTop = precise((first.y0 ?? 0) - MOBILE_LABEL_HEIGHT - MOBILE_LABEL_GAP - 4)
-      const mobileBottom = precise((last.y1 ?? lastCenter) + 4)
       const mobilePath = singleNode
         ? undefined
-        : `M${mobileX + mobileBracketWidth},${mobileTop}H${mobileX + mobileRadius}Q${mobileX},${mobileTop} ${mobileX},${mobileTop + mobileRadius}V${mobileBottom - mobileRadius}Q${mobileX},${mobileBottom} ${mobileX + mobileRadius},${mobileBottom}H${mobileX + mobileBracketWidth}`
+        : `M${mobileRight},${y}H${mobileX + mobileRadius}Q${mobileX},${y} ${mobileX},${y + mobileRadius}V${maxY - mobileRadius}Q${mobileX},${maxY} ${mobileX + mobileRadius},${maxY}H${mobileRight}`
       return {
         id,
         title: first.clientTitle || 'Unassigned client',

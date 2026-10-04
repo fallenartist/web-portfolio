@@ -38,12 +38,15 @@ type DiagramLink = {
 type LayoutNode = SankeyNode<DiagramNode, DiagramLink>
 type LayoutLink = SankeyLink<DiagramNode, DiagramLink>
 
-const MIN_CANVAS_WIDTH = 760
+const INITIAL_CANVAS_WIDTH = 760
 const FLOW_GAP = 3
 const DESKTOP_NODE_SIZE = 20
 const DESKTOP_NODE_PADDING = 14
 const MOBILE_NODE_SIZE = 44
-const MOBILE_NODE_PADDING = 10
+const MOBILE_LABEL_HEIGHT = 34
+const MOBILE_LABEL_GAP = 6
+const MOBILE_NODE_PADDING = MOBILE_LABEL_HEIGHT + MOBILE_LABEL_GAP + 10
+const RESIZE_DEBOUNCE = 160
 
 const alphabetic = (direction: Direction) => (a: string, b: string) =>
   direction === 'asc' ? a.localeCompare(b) : b.localeCompare(a)
@@ -70,10 +73,13 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const linksRef = useRef<SVGGElement>(null)
   const nodesRef = useRef<SVGGElement>(null)
+  const resizeTimerRef = useRef<number | undefined>(undefined)
+  const measuredWidthRef = useRef<number | null>(null)
+  const measuredMobileRef = useRef(false)
   const previousPathsRef = useRef(new Map<string, string>())
   const previousNodePositionsRef = useRef(new Map<string, number>())
   const entranceCompleteRef = useRef(false)
-  const [width, setWidth] = useState(MIN_CANVAS_WIDTH)
+  const [width, setWidth] = useState(INITIAL_CANVAS_WIDTH)
   const [isMobile, setIsMobile] = useState(false)
   const [measured, setMeasured] = useState(false)
   const [sorts, setSorts] = useState<Record<Column, SortState>>({
@@ -89,19 +95,42 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     if (!element) return
 
     const measure = () => {
-      setWidth(Math.max(MIN_CANVAS_WIDTH, element.clientWidth))
-      setMeasured(true)
+      const nextWidth = Math.max(1, Math.round(element.getBoundingClientRect().width))
+      const nextMobile = window.matchMedia('(max-width: 767px)').matches
+      if (measuredWidthRef.current === nextWidth && measuredMobileRef.current === nextMobile) {
+        return
+      }
+
+      if (measuredWidthRef.current == null) {
+        measuredWidthRef.current = nextWidth
+        measuredMobileRef.current = nextMobile
+        setWidth(nextWidth)
+        setIsMobile(nextMobile)
+        setMeasured(true)
+        return
+      }
+
+      setMeasured(false)
+      window.clearTimeout(resizeTimerRef.current)
+      resizeTimerRef.current = window.setTimeout(() => {
+        const finalWidth = Math.max(1, Math.round(element.getBoundingClientRect().width))
+        const finalMobile = window.matchMedia('(max-width: 767px)').matches
+        measuredWidthRef.current = finalWidth
+        measuredMobileRef.current = finalMobile
+        previousPathsRef.current.clear()
+        previousNodePositionsRef.current.clear()
+        entranceCompleteRef.current = false
+        setWidth(finalWidth)
+        setIsMobile(finalMobile)
+        setMeasured(true)
+      }, RESIZE_DEBOUNCE)
     }
     const observer = new ResizeObserver(measure)
-    const mobileQuery = window.matchMedia('(max-width: 767px)')
-    const updateMobile = () => setIsMobile(mobileQuery.matches)
     observer.observe(element)
-    mobileQuery.addEventListener('change', updateMobile)
-    updateMobile()
     measure()
     return () => {
       observer.disconnect()
-      mobileQuery.removeEventListener('change', updateMobile)
+      window.clearTimeout(resizeTimerRef.current)
     }
   }, [])
 
@@ -558,6 +587,8 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                 const y1 = precise(node.y1 ?? y0)
                 const height = precise(Math.max(1, y1 - y0))
                 const industry = node.kind === 'industry'
+                const mobileColumn = node.kind === 'category' ? 0 : node.kind === 'project' ? 1 : 2
+                const mobileLabelWidth = width / 3 - 8
                 return (
                   <g
                     className={`${clickable ? styles.clickableNode : styles.node} ${styles.nodeEntrance}`}
@@ -589,13 +620,25 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                       height={height}
                       fill={node.color}
                     />
-                    <text
-                      x={industry ? x0 - FLOW_GAP - 8 : x1 + FLOW_GAP + 8}
-                      y={0}
-                      textAnchor={industry ? 'end' : 'start'}
-                    >
-                      {node.title}
-                    </text>
+                    {isMobile ? (
+                      <foreignObject
+                        className={styles.mobileNodeLabel}
+                        x={mobileColumn * (width / 3) + 4}
+                        y={-height / 2 - MOBILE_LABEL_HEIGHT - MOBILE_LABEL_GAP}
+                        width={mobileLabelWidth}
+                        height={MOBILE_LABEL_HEIGHT}
+                      >
+                        <div className={styles.mobileNodeLabelInner}>{node.title}</div>
+                      </foreignObject>
+                    ) : (
+                      <text
+                        x={industry ? x0 - FLOW_GAP - 8 : x1 + FLOW_GAP + 8}
+                        y={0}
+                        textAnchor={industry ? 'end' : 'start'}
+                      >
+                        {node.title}
+                      </text>
+                    )}
                     <title>
                       {node.kind === 'industry' ? `${node.title} (industry)` : `Open ${node.title}`}
                     </title>

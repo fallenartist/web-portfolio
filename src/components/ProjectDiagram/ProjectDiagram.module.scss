@@ -2,13 +2,13 @@
   width: 100%;
   height: calc(100dvh - 64px);
   margin-top: 64px;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: #fff;
   color: #222;
 }
 
 .diagram {
-  min-width: 760px;
   padding: 0 var(--page-gutter) 24px;
 }
 
@@ -87,7 +87,7 @@
 .canvas {
   display: block;
   width: 100%;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .clientGroups {
@@ -163,6 +163,24 @@
   animation: revealNode 180ms ease-out both;
 }
 
+.mobileNodeLabel {
+  overflow: hidden;
+}
+
+.mobileNodeLabelInner {
+  display: flex;
+  height: 100%;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  color: #222;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 @keyframes revealNode {
   from {
     opacity: 0;
@@ -189,10 +207,6 @@
 }
 
 @media (max-width: 767px) {
-  .page {
-    overflow: auto;
-  }
-
   .diagram {
     padding-inline: 12px;
   }

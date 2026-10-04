@@ -1,9 +1,9 @@
 'use client'
 
-import { interpolateRgb } from 'd3'
+import { easeCubicInOut, interpolateRgb, select } from 'd3'
 import { sankey, type SankeyLink, type SankeyNode } from 'd3-sankey'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import type { ProjectDiagramData } from '@/lib/project-diagram'
 import styles from './ProjectDiagram.module.scss'
@@ -38,9 +38,9 @@ type LayoutNode = SankeyNode<DiagramNode, DiagramLink>
 type LayoutLink = SankeyLink<DiagramNode, DiagramLink>
 
 const MIN_CANVAS_WIDTH = 760
-const FLOW_GAP = 5
-const NODE_PADDING = 18
-const NODE_HEIGHT = 18
+const FLOW_GAP = 3
+const NODE_PADDING = 16
+const NODE_HEIGHT = 20
 
 const alphabetic = (direction: Direction) => (a: string, b: string) =>
   direction === 'asc' ? a.localeCompare(b) : b.localeCompare(a)
@@ -64,6 +64,10 @@ function nodeCenter(node: LayoutNode) {
 export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
+  const linksRef = useRef<SVGGElement>(null)
+  const nodesRef = useRef<SVGGElement>(null)
+  const previousPathsRef = useRef(new Map<string, string>())
+  const previousNodePositionsRef = useRef(new Map<string, number>())
   const [width, setWidth] = useState(MIN_CANVAS_WIDTH)
   const [sorts, setSorts] = useState<Record<Column, SortState>>({
     category: { mode: 'alphabetic', direction: 'asc' },
@@ -71,6 +75,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     industry: { mode: 'alphabetic', direction: 'asc' },
   })
   const [hoveredNode, setHoveredNode] = useState<string | null>(null)
+  const [selectedNode, setSelectedNode] = useState<string | null>(null)
 
   useEffect(() => {
     const element = containerRef.current
@@ -111,8 +116,10 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     const categories = sortItems(data.categories, sorts.category, categoryCounts)
     const industries = sortItems(data.industries, sorts.industry, industryCounts)
     const sortProject = alphabetic(sorts.project.direction)
-    const projects = [...data.projects].sort(
-      (a, b) => sortProject(a.clientTitle, b.clientTitle) || sortProject(a.title, b.title),
+    const projects = [...data.projects].sort((a, b) =>
+      sorts.project.mode === 'count'
+        ? sortProject(a.clientTitle, b.clientTitle) || sortProject(a.title, b.title)
+        : sortProject(a.title, b.title),
     )
     const categoryMap = new Map(categories.map((item) => [item.id, item]))
     const industryMap = new Map(industries.map((item) => [item.id, item]))
@@ -183,6 +190,10 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
       .nodeId((node) => node.id)
       .nodeAlign((node) => node.layer)
       .nodeSort((a, b) => a.order - b.order)
+      .linkSort((a, b) => {
+        const targetDifference = (a.target as DiagramNode).order - (b.target as DiagramNode).order
+        return targetDifference || (a.source as DiagramNode).order - (b.source as DiagramNode).order
+      })
       .nodeWidth(nodeWidth)
       .nodePadding(NODE_PADDING)
       .iterations(32)
@@ -208,6 +219,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     return [...grouped.entries()]
   }, [layout.graph.links])
   const clientGroups = useMemo(() => {
+    if (sorts.project.mode !== 'count') return []
     const grouped = new Map<string, LayoutNode[]>()
     for (const node of layout.graph.nodes) {
       if (node.kind !== 'project' || !node.clientId) continue
@@ -215,25 +227,74 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
       group.push(node)
       grouped.set(node.clientId, group)
     }
-    return [...grouped.entries()]
-      .filter(([, nodes]) => nodes.length > 1)
-      .map(([id, nodes]) => {
-        const first = nodes[0]
-        const x = precise((first.x0 ?? 0) - 12)
-        const y = precise(Math.min(...nodes.map((node) => node.y0 ?? 0)))
-        const maxY = precise(Math.max(...nodes.map((node) => node.y1 ?? 0)))
-        const middle = precise((y + maxY) / 2)
-        const span = precise(maxY - y)
-        return {
-          id,
-          title: first.clientTitle || 'Unassigned client',
-          x,
-          y,
-          middle,
-          path: `M${x + 5},${y}C${x},${y} ${x},${y + span * 0.2} ${x},${middle - 5}C${x},${middle - 2} ${x - 1},${middle} ${x - 4},${middle}C${x - 1},${middle} ${x},${middle + 2} ${x},${middle + 5}C${x},${y + span * 0.8} ${x},${maxY} ${x + 5},${maxY}`,
-        }
-      })
-  }, [layout.graph.nodes])
+    return [...grouped.entries()].map(([id, groupNodes]) => {
+      const nodes = [...groupNodes].sort((a, b) => nodeCenter(a) - nodeCenter(b))
+      const first = nodes[0]
+      const last = nodes[nodes.length - 1]
+      const x = precise((first.x0 ?? 0) - 12)
+      const firstCenter = nodeCenter(first)
+      const lastCenter = nodeCenter(last)
+      const singleNode = first.id === last.id
+      const y = precise(singleNode ? firstCenter - 6 : firstCenter)
+      const maxY = precise(singleNode ? lastCenter + 6 : lastCenter)
+      const middle = precise((y + maxY) / 2)
+      const span = precise(maxY - y)
+      return {
+        id,
+        title: first.clientTitle || 'Unassigned client',
+        x,
+        y,
+        middle,
+        path: `M${x + 5},${y}C${x},${y} ${x},${y + span * 0.2} ${x},${middle - 5}C${x},${middle - 2} ${x - 1},${middle} ${x - 4},${middle}C${x - 1},${middle} ${x},${middle + 2} ${x},${middle + 5}C${x},${y + span * 0.8} ${x},${maxY} ${x + 5},${maxY}`,
+      }
+    })
+  }, [layout.graph.nodes, sorts.project.mode])
+
+  useLayoutEffect(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const nextPaths = new Map<string, string>()
+    const nextNodePositions = new Map<string, number>()
+
+    linksRef.current?.querySelectorAll<SVGPathElement>('path[data-link-id]').forEach((path) => {
+      const id = path.dataset.linkId
+      const nextPath = path.getAttribute('d')
+      if (!id || !nextPath) return
+      nextPaths.set(id, nextPath)
+      if (reduceMotion) return
+
+      const previousPath = previousPathsRef.current.get(id)
+      const pathSelection = select(path).interrupt()
+      if (previousPath && previousPath !== nextPath) {
+        pathSelection
+          .attr('d', previousPath)
+          .transition()
+          .duration(650)
+          .ease(easeCubicInOut)
+          .attr('d', nextPath)
+      }
+    })
+
+    nodesRef.current?.querySelectorAll<SVGGElement>('g[data-node-id]').forEach((node) => {
+      const id = node.dataset.nodeId
+      if (!id) return
+      const layoutNode = nodeMap.get(id)
+      if (!layoutNode) return
+      const nextPosition = nodeCenter(layoutNode)
+      nextNodePositions.set(id, nextPosition)
+      const previousPosition = previousNodePositionsRef.current.get(id)
+      if (reduceMotion || previousPosition == null || previousPosition === nextPosition) return
+      select(node)
+        .interrupt()
+        .attr('transform', `translate(0 ${previousPosition})`)
+        .transition()
+        .duration(650)
+        .ease(easeCubicInOut)
+        .attr('transform', `translate(0 ${nextPosition})`)
+    })
+
+    previousPathsRef.current = nextPaths
+    previousNodePositionsRef.current = nextNodePositions
+  }, [layout.graph.links, layout.graph.nodes, nodeMap])
 
   const selectSort = (column: Column, mode: SortMode) => {
     setSorts((current) => ({
@@ -246,22 +307,33 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
               ? 'desc'
               : 'asc'
             : mode === 'count'
-              ? 'desc'
+              ? column === 'project'
+                ? 'asc'
+                : 'desc'
               : 'asc',
       },
     }))
   }
 
   const isRelated = (link: LayoutLink) => {
-    if (!hoveredNode) return true
+    const activeNode = hoveredNode || selectedNode
+    if (!activeNode) return true
     return (
-      link.categoryId === hoveredNode ||
-      link.projectId === hoveredNode ||
-      link.industryId === hoveredNode
+      link.categoryId === activeNode ||
+      link.projectId === activeNode ||
+      link.industryId === activeNode
     )
   }
 
-  const navigate = (node: LayoutNode) => {
+  const navigate = (node: LayoutNode, confirmOnTouch = false) => {
+    if (
+      confirmOnTouch &&
+      window.matchMedia('(hover: none), (pointer: coarse)').matches &&
+      selectedNode !== node.id
+    ) {
+      setSelectedNode(node.id || null)
+      return
+    }
     if (node.href) router.push(node.href)
   }
 
@@ -287,16 +359,18 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                     ? 'Z–A'
                     : 'A–Z'}
                 </button>
-                {column !== 'project' && (
-                  <button
-                    aria-label={`Sort ${column} by ${sorts[column].mode === 'count' && sorts[column].direction === 'desc' ? 'fewest' : 'most'} entries`}
-                    className={sorts[column].mode === 'count' ? styles.activeSort : undefined}
-                    onClick={() => selectSort(column, 'count')}
-                    type="button"
-                  >
-                    123
-                  </button>
-                )}
+                <button
+                  aria-label={
+                    column === 'project'
+                      ? 'Group projects by client'
+                      : `Sort ${column} by ${sorts[column].mode === 'count' && sorts[column].direction === 'desc' ? 'fewest' : 'most'} entries`
+                  }
+                  className={sorts[column].mode === 'count' ? styles.activeSort : undefined}
+                  onClick={() => selectSort(column, 'count')}
+                  type="button"
+                >
+                  123
+                </button>
               </span>
             </div>
           ))}
@@ -308,8 +382,18 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
           width={width}
           role="img"
           aria-label="Connections from project categories through projects to client industries"
+          onClick={() => setSelectedNode(null)}
         >
           <defs>
+            <clipPath id="flow-reveal">
+              <rect
+                className={styles.flowReveal}
+                height={layout.height}
+                width={width}
+                x="0"
+                y="0"
+              />
+            </clipPath>
             {data.projects.map((project) => {
               const category = nodeMap.get(project.categoryId)
               const industry = project.industryId ? nodeMap.get(project.industryId) : undefined
@@ -335,7 +419,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
             })}
           </defs>
 
-          <g className={styles.links}>
+          <g className={styles.links} clipPath="url(#flow-reveal)" ref={linksRef}>
             {flowGroups.map(([projectId, links]) => (
               <g
                 className={links.some(isRelated) ? styles.flowGroup : styles.flowGroupMuted}
@@ -343,6 +427,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
               >
                 {links.map((link) => (
                   <path
+                    data-link-id={link.id}
                     d={linkPath(link)}
                     key={link.id}
                     stroke={`url(#flow-${link.projectId})`}
@@ -364,19 +449,24 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
             ))}
           </g>
 
-          <g className={styles.nodes}>
+          <g className={styles.nodes} ref={nodesRef}>
             {layout.graph.nodes.map((node) => {
               const clickable = Boolean(node.href)
               const x0 = precise(node.x0 ?? 0)
               const x1 = precise(node.x1 ?? x0)
               const y0 = precise(node.y0 ?? 0)
               const y1 = precise(node.y1 ?? y0)
+              const height = precise(Math.max(1, y1 - y0))
               const industry = node.kind === 'industry'
               return (
                 <g
                   className={clickable ? styles.clickableNode : styles.node}
+                  data-node-id={node.id}
                   key={node.id}
-                  onClick={() => navigate(node)}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    navigate(node, true)
+                  }}
                   onKeyDown={(event) => {
                     if (clickable && (event.key === 'Enter' || event.key === ' ')) {
                       event.preventDefault()
@@ -387,17 +477,12 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                   onMouseLeave={() => setHoveredNode(null)}
                   role={clickable ? 'link' : undefined}
                   tabIndex={clickable ? 0 : undefined}
+                  transform={`translate(0 ${nodeCenter(node)})`}
                 >
-                  <rect
-                    x={x0}
-                    y={y0}
-                    width={x1 - x0}
-                    height={Math.max(1, y1 - y0)}
-                    fill={node.color}
-                  />
+                  <rect x={x0} y={-height / 2} width={x1 - x0} height={height} fill={node.color} />
                   <text
                     x={industry ? x0 - FLOW_GAP - 8 : x1 + FLOW_GAP + 8}
-                    y={nodeCenter(node)}
+                    y={0}
                     textAnchor={industry ? 'end' : 'start'}
                   >
                     {node.title}

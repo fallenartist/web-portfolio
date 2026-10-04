@@ -18,7 +18,7 @@
   top: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  height: 76px;
+  height: 92px;
   margin-inline: calc(-1 * var(--page-gutter));
   padding-inline: var(--page-gutter);
   background: rgb(244 244 244 / 97%);
@@ -29,7 +29,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 0;
   color: inherit;
   font: inherit;
@@ -113,6 +113,11 @@
   }
 }
 
+.clientGroups text.mobileClientTitle {
+  font-size: 13px;
+  letter-spacing: 0.025em;
+}
+
 @keyframes revealClientGroups {
   from {
     opacity: 0;
@@ -174,11 +179,27 @@
   justify-content: center;
   overflow: hidden;
   color: #222;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 400;
   line-height: 1;
   text-align: center;
   overflow-wrap: anywhere;
+
+  &[data-column='discipline'] {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  &[data-column='industry'] {
+    justify-content: flex-end;
+    text-align: right;
+  }
+}
+
+.hitArea {
+  fill: transparent;
+  pointer-events: all;
+  shape-rendering: auto !important;
 }
 
 @keyframes revealNode {
@@ -194,7 +215,7 @@
 .clickableNode {
   cursor: pointer;
 
-  &:focus-visible rect {
+  &:focus-visible .nodeShape {
     stroke: #222;
     stroke-width: 2px;
   }
@@ -212,17 +233,17 @@
   }
 
   .headers {
-    height: 68px;
+    height: 84px;
   }
 
   .columnHeader {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .node,
   .clickableNode {
     text {
-      font-size: 16px;
+      font-size: 17px;
     }
   }
 }

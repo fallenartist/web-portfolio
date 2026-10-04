@@ -42,10 +42,16 @@ const INITIAL_CANVAS_WIDTH = 760
 const FLOW_GAP = 3
 const DESKTOP_NODE_SIZE = 20
 const DESKTOP_NODE_PADDING = 14
-const MOBILE_NODE_SIZE = 44
+const MOBILE_NODE_SIZE = 36
+const MOBILE_HIT_PADDING = 4
 const MOBILE_LABEL_HEIGHT = 34
 const MOBILE_LABEL_GAP = 6
+const MOBILE_CLIENT_LABEL_HEIGHT = 16
+const MOBILE_CLIENT_LABEL_GAP = 4
 const MOBILE_NODE_PADDING = MOBILE_LABEL_HEIGHT + MOBILE_LABEL_GAP + 10
+const MOBILE_CLIENT_NODE_PADDING =
+  MOBILE_NODE_PADDING + MOBILE_CLIENT_LABEL_HEIGHT + MOBILE_CLIENT_LABEL_GAP
+const DESKTOP_DIAGRAM_TOP = 18
 const RESIZE_DEBOUNCE = 160
 
 const alphabetic = (direction: Direction) => (a: string, b: string) =>
@@ -236,11 +242,22 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     }
 
     const nodeWidth = isMobile ? MOBILE_NODE_SIZE : DESKTOP_NODE_SIZE
-    const nodePadding = isMobile ? MOBILE_NODE_PADDING : DESKTOP_NODE_PADDING
+    const groupedByClient = sorts.project.mode === 'count'
+    const nodePadding = isMobile
+      ? groupedByClient
+        ? MOBILE_CLIENT_NODE_PADDING
+        : MOBILE_NODE_PADDING
+      : DESKTOP_NODE_PADDING
+    const diagramTop = isMobile
+      ? MOBILE_LABEL_HEIGHT +
+        MOBILE_LABEL_GAP +
+        (groupedByClient ? MOBILE_CLIENT_LABEL_HEIGHT + MOBILE_CLIENT_LABEL_GAP : 0) +
+        2
+      : DESKTOP_DIAGRAM_TOP
     const contentHeight =
       projects.length * nodeWidth + Math.max(0, projects.length - 1) * nodePadding
-    const height = Math.max(240, 62 + contentHeight)
-    const extentBottom = 44 + contentHeight
+    const height = Math.max(240, diagramTop + contentHeight + 18)
+    const extentBottom = diagramTop + contentHeight
     const generator = sankey<
       { nodes: DiagramNode[]; links: typeof links },
       DiagramNode,
@@ -257,7 +274,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
       .nodePadding(nodePadding)
       .iterations(32)
       .extent([
-        [4, 44],
+        [4, diagramTop],
         [width - 4, extentBottom],
       ])
 
@@ -269,7 +286,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
       const columnHeight =
         column.reduce((total, node) => total + (node.y1! - node.y0!), 0) +
         Math.max(0, column.length - 1) * nodePadding
-      let y = 44 + (contentHeight - columnHeight) / 2
+      let y = diagramTop + (contentHeight - columnHeight) / 2
       for (const node of column) {
         const nodeHeight = node.y1! - node.y0!
         node.y0 = y
@@ -316,6 +333,12 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
       const maxY = precise(lastCenter)
       const middle = precise((y + maxY) / 2)
       const span = precise(maxY - y)
+      const mobileX = precise((first.x0 ?? 0) - 10)
+      const mobileBracketWidth = 7
+      const mobileRadius = 4
+      const mobilePath = singleNode
+        ? `M${mobileX},${y}H${mobileX + mobileBracketWidth}`
+        : `M${mobileX + mobileBracketWidth},${y}H${mobileX + mobileRadius}Q${mobileX},${y} ${mobileX},${y + mobileRadius}V${maxY - mobileRadius}Q${mobileX},${maxY} ${mobileX + mobileRadius},${maxY}H${mobileX + mobileBracketWidth}`
       return {
         id,
         title: first.clientTitle || 'Unassigned client',
@@ -325,9 +348,18 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
         path: singleNode
           ? `M${x - 4},${middle}H${x + 5}`
           : `M${x + 5},${y}C${x},${y} ${x},${y + span * 0.2} ${x},${middle - 5}C${x},${middle - 2} ${x - 1},${middle} ${x - 4},${middle}C${x - 1},${middle} ${x},${middle + 2} ${x},${middle + 5}C${x},${y + span * 0.8} ${x},${maxY} ${x + 5},${maxY}`,
+        mobilePath,
+        mobileTextX: precise(width / 2),
+        mobileTextY: precise(
+          (first.y0 ?? 0) -
+            MOBILE_LABEL_HEIGHT -
+            MOBILE_LABEL_GAP -
+            MOBILE_CLIENT_LABEL_GAP -
+            MOBILE_CLIENT_LABEL_HEIGHT / 2,
+        ),
       }
     })
-  }, [layout.graph.nodes, sorts.project.mode])
+  }, [layout.graph.nodes, sorts.project.mode, width])
 
   useLayoutEffect(() => {
     if (!measured) return
@@ -584,8 +616,13 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
             <g className={styles.clientGroups} aria-hidden="true">
               {clientGroups.map((group) => (
                 <g key={group.id}>
-                  <path d={group.path} />
-                  <text x={group.x - 12} y={group.middle} textAnchor="end">
+                  <path d={isMobile ? group.mobilePath : group.path} />
+                  <text
+                    className={isMobile ? styles.mobileClientTitle : undefined}
+                    x={isMobile ? group.mobileTextX : group.x - 12}
+                    y={isMobile ? group.mobileTextY : group.middle}
+                    textAnchor={isMobile ? 'middle' : 'end'}
+                  >
                     {group.title}
                   </text>
                 </g>
@@ -604,6 +641,12 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                 const mobileColumn =
                   node.kind === 'discipline' ? 0 : node.kind === 'project' ? 1 : 2
                 const mobileLabelWidth = width / 3 - 8
+                const mobileLabelX =
+                  node.kind === 'discipline'
+                    ? x0
+                    : node.kind === 'industry'
+                      ? x1 - mobileLabelWidth
+                      : mobileColumn * (width / 3) + 4
                 return (
                   <g
                     className={`${clickable ? styles.clickableNode : styles.node} ${styles.nodeEntrance}`}
@@ -628,7 +671,17 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                       animationDelay: `${node.kind === 'project' ? 0 : node.kind === 'discipline' ? 60 : 120}ms`,
                     }}
                   >
+                    {isMobile && (
+                      <rect
+                        className={styles.hitArea}
+                        x={x0 - MOBILE_HIT_PADDING}
+                        y={-height / 2 - MOBILE_HIT_PADDING}
+                        width={x1 - x0 + MOBILE_HIT_PADDING * 2}
+                        height={height + MOBILE_HIT_PADDING * 2}
+                      />
+                    )}
                     <rect
+                      className={styles.nodeShape}
                       x={x0}
                       y={-height / 2}
                       width={x1 - x0}
@@ -638,12 +691,15 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                     {isMobile ? (
                       <foreignObject
                         className={styles.mobileNodeLabel}
-                        x={mobileColumn * (width / 3) + 4}
+                        data-column={node.kind}
+                        x={mobileLabelX}
                         y={-height / 2 - MOBILE_LABEL_HEIGHT - MOBILE_LABEL_GAP}
                         width={mobileLabelWidth}
                         height={MOBILE_LABEL_HEIGHT}
                       >
-                        <div className={styles.mobileNodeLabelInner}>{node.title}</div>
+                        <div className={styles.mobileNodeLabelInner} data-column={node.kind}>
+                          {node.title}
+                        </div>
                       </foreignObject>
                     ) : (
                       <text

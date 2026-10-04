@@ -18,7 +18,7 @@
   top: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  height: 52px;
+  height: 60px;
   margin-inline: calc(-1 * var(--page-gutter));
   padding-inline: var(--page-gutter);
   background: rgb(244 244 244 / 97%);
@@ -26,8 +26,10 @@
 
 .columnHeader {
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 0.5em;
+  gap: 4px;
   padding: 0;
   color: inherit;
   font: inherit;
@@ -36,13 +38,17 @@
   text-transform: uppercase;
 
   &:nth-child(2) {
-    justify-content: center;
+    align-items: center;
     text-align: center;
   }
 
   &:last-child {
-    justify-content: flex-end;
+    align-items: flex-end;
     text-align: right;
+  }
+
+  &:first-child {
+    align-items: flex-start;
   }
 
   button {
@@ -121,22 +127,6 @@
   fill: none;
 }
 
-.flowReveal {
-  transform-origin: left center;
-  transform-box: fill-box;
-  animation: revealFlows 850ms cubic-bezier(0.65, 0, 0.35, 1) both;
-}
-
-@keyframes revealFlows {
-  from {
-    transform: scaleX(0);
-  }
-
-  to {
-    transform: scaleX(1);
-  }
-}
-
 .flowGroup,
 .flowGroupMuted {
   isolation: isolate;
@@ -170,6 +160,20 @@
   }
 }
 
+.nodeEntrance {
+  animation: revealNode 180ms ease-out both;
+}
+
+@keyframes revealNode {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 .clickableNode {
   cursor: pointer;
 
@@ -195,7 +199,7 @@
   }
 
   .headers {
-    height: 48px;
+    height: 56px;
   }
 
   .columnHeader {
@@ -211,7 +215,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .flowReveal,
+  .nodeEntrance,
   .clientGroups > g {
     animation: none;
   }

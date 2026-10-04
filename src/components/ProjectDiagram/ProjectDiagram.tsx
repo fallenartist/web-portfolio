@@ -39,8 +39,10 @@ type LayoutLink = SankeyLink<DiagramNode, DiagramLink>
 
 const MIN_CANVAS_WIDTH = 760
 const FLOW_GAP = 3
-const NODE_PADDING = 16
-const NODE_HEIGHT = 20
+const DESKTOP_NODE_SIZE = 20
+const DESKTOP_NODE_PADDING = 14
+const MOBILE_NODE_SIZE = 44
+const MOBILE_NODE_PADDING = 10
 
 const alphabetic = (direction: Direction) => (a: string, b: string) =>
   direction === 'asc' ? a.localeCompare(b) : b.localeCompare(a)
@@ -68,7 +70,9 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
   const nodesRef = useRef<SVGGElement>(null)
   const previousPathsRef = useRef(new Map<string, string>())
   const previousNodePositionsRef = useRef(new Map<string, number>())
+  const entranceCompleteRef = useRef(false)
   const [width, setWidth] = useState(MIN_CANVAS_WIDTH)
+  const [isMobile, setIsMobile] = useState(false)
   const [sorts, setSorts] = useState<Record<Column, SortState>>({
     category: { mode: 'alphabetic', direction: 'asc' },
     project: { mode: 'alphabetic', direction: 'asc' },
@@ -85,9 +89,16 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
       setWidth(Math.max(MIN_CANVAS_WIDTH, element.clientWidth))
     }
     const observer = new ResizeObserver(measure)
+    const mobileQuery = window.matchMedia('(max-width: 767px)')
+    const updateMobile = () => setIsMobile(mobileQuery.matches)
     observer.observe(element)
+    mobileQuery.addEventListener('change', updateMobile)
     measure()
-    return () => observer.disconnect()
+    updateMobile()
+    return () => {
+      observer.disconnect()
+      mobileQuery.removeEventListener('change', updateMobile)
+    }
   }, [])
 
   const layout = useMemo(() => {
@@ -171,17 +182,12 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
       }
     }
 
-    const requiredByProjects =
-      projects.length * NODE_HEIGHT + Math.max(0, projects.length - 1) * NODE_PADDING
-    const requiredByCategories =
-      categories.length * NODE_HEIGHT + Math.max(0, categories.length - 1) * NODE_PADDING
-    const requiredByIndustries =
-      industries.length * NODE_HEIGHT + Math.max(0, industries.length - 1) * NODE_PADDING
-    const height = Math.max(
-      240,
-      76 + Math.max(requiredByProjects, requiredByCategories, requiredByIndustries),
-    )
-    const nodeWidth = Math.max(10, Math.min(20, width * 0.0125))
+    const nodeWidth = isMobile ? MOBILE_NODE_SIZE : DESKTOP_NODE_SIZE
+    const nodePadding = isMobile ? MOBILE_NODE_PADDING : DESKTOP_NODE_PADDING
+    const contentHeight =
+      projects.length * nodeWidth + Math.max(0, projects.length - 1) * nodePadding
+    const height = Math.max(240, 62 + contentHeight)
+    const extentBottom = 44 + contentHeight
     const generator = sankey<
       { nodes: DiagramNode[]; links: typeof links },
       DiagramNode,
@@ -195,15 +201,33 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
         return targetDifference || (a.source as DiagramNode).order - (b.source as DiagramNode).order
       })
       .nodeWidth(nodeWidth)
-      .nodePadding(NODE_PADDING)
+      .nodePadding(nodePadding)
       .iterations(32)
       .extent([
         [4, 44],
-        [width - 4, height - 18],
+        [width - 4, extentBottom],
       ])
 
-    return { graph: generator({ nodes, links }), height, nodeWidth }
-  }, [data, sorts, width])
+    const graph = generator({ nodes, links })
+    for (let layer = 0; layer < 3; layer += 1) {
+      const column = graph.nodes
+        .filter((node) => node.layer === layer)
+        .sort((a, b) => a.order - b.order)
+      const columnHeight =
+        column.reduce((total, node) => total + (node.y1! - node.y0!), 0) +
+        Math.max(0, column.length - 1) * nodePadding
+      let y = 44 + (contentHeight - columnHeight) / 2
+      for (const node of column) {
+        const nodeHeight = node.y1! - node.y0!
+        node.y0 = y
+        node.y1 = y + nodeHeight
+        y = node.y1 + nodePadding
+      }
+    }
+    generator.update(graph)
+
+    return { graph, height, nodeWidth }
+  }, [data, isMobile, sorts, width])
 
   const nodeMap = useMemo(
     () => new Map(layout.graph.nodes.map((node) => [node.id, node])),
@@ -235,8 +259,8 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
       const firstCenter = nodeCenter(first)
       const lastCenter = nodeCenter(last)
       const singleNode = first.id === last.id
-      const y = precise(singleNode ? firstCenter - 6 : firstCenter)
-      const maxY = precise(singleNode ? lastCenter + 6 : lastCenter)
+      const y = precise(firstCenter)
+      const maxY = precise(lastCenter)
       const middle = precise((y + maxY) / 2)
       const span = precise(maxY - y)
       return {
@@ -245,7 +269,9 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
         x,
         y,
         middle,
-        path: `M${x + 5},${y}C${x},${y} ${x},${y + span * 0.2} ${x},${middle - 5}C${x},${middle - 2} ${x - 1},${middle} ${x - 4},${middle}C${x - 1},${middle} ${x},${middle + 2} ${x},${middle + 5}C${x},${y + span * 0.8} ${x},${maxY} ${x + 5},${maxY}`,
+        path: singleNode
+          ? `M${x - 4},${middle}H${x + 5}`
+          : `M${x + 5},${y}C${x},${y} ${x},${y + span * 0.2} ${x},${middle - 5}C${x},${middle - 2} ${x - 1},${middle} ${x - 4},${middle}C${x - 1},${middle} ${x},${middle + 2} ${x},${middle + 5}C${x},${y + span * 0.8} ${x},${maxY} ${x + 5},${maxY}`,
       }
     })
   }, [layout.graph.nodes, sorts.project.mode])
@@ -295,6 +321,64 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     previousPathsRef.current = nextPaths
     previousNodePositionsRef.current = nextNodePositions
   }, [layout.graph.links, layout.graph.nodes, nodeMap])
+
+  useEffect(() => {
+    if (entranceCompleteRef.current) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      entranceCompleteRef.current = true
+      return
+    }
+    const paths = linksRef.current?.querySelectorAll<SVGPathElement>('path[data-link-id]')
+    if (!paths?.length) return
+
+    let finishTimer: number | undefined
+    const timer = window.setTimeout(() => {
+      let remaining = paths.length
+      paths.forEach((path) => {
+        const length = path.getTotalLength()
+        const reverse = path.dataset.direction === 'reverse'
+        const groupIndex = Number(path.dataset.groupIndex || 0)
+        select(path)
+          .interrupt('entrance')
+          .attr('stroke-dasharray', `${length} ${length}`)
+          .attr('stroke-dashoffset', reverse ? -length : length)
+          .transition('entrance')
+          .delay(320 + groupIndex * 65)
+          .duration(520)
+          .ease(easeCubicInOut)
+          .attr('stroke-dashoffset', 0)
+          .on('end', () => {
+            path.removeAttribute('stroke-dasharray')
+            path.removeAttribute('stroke-dashoffset')
+            remaining -= 1
+            if (remaining === 0) entranceCompleteRef.current = true
+          })
+      })
+      const groupCount = Math.ceil(paths.length / 2)
+      finishTimer = window.setTimeout(
+        () => {
+          paths.forEach((path) => {
+            select(path).interrupt('entrance')
+            path.removeAttribute('stroke-dasharray')
+            path.removeAttribute('stroke-dashoffset')
+          })
+          entranceCompleteRef.current = true
+        },
+        320 + Math.max(0, groupCount - 1) * 65 + 620,
+      )
+    }, 100)
+
+    return () => {
+      window.clearTimeout(timer)
+      if (finishTimer != null) window.clearTimeout(finishTimer)
+      if (entranceCompleteRef.current) return
+      paths.forEach((path) => {
+        select(path).interrupt('entrance')
+        path.removeAttribute('stroke-dasharray')
+        path.removeAttribute('stroke-dashoffset')
+      })
+    }
+  }, [layout.graph.links])
 
   const selectSort = (column: Column, mode: SortMode) => {
     setSorts((current) => ({
@@ -385,15 +469,6 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
           onClick={() => setSelectedNode(null)}
         >
           <defs>
-            <clipPath id="flow-reveal">
-              <rect
-                className={styles.flowReveal}
-                height={layout.height}
-                width={width}
-                x="0"
-                y="0"
-              />
-            </clipPath>
             {data.projects.map((project) => {
               const category = nodeMap.get(project.categoryId)
               const industry = project.industryId ? nodeMap.get(project.industryId) : undefined
@@ -419,21 +494,27 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
             })}
           </defs>
 
-          <g className={styles.links} clipPath="url(#flow-reveal)" ref={linksRef}>
-            {flowGroups.map(([projectId, links]) => (
+          <g className={styles.links} ref={linksRef}>
+            {flowGroups.map(([projectId, links], groupIndex) => (
               <g
                 className={links.some(isRelated) ? styles.flowGroup : styles.flowGroupMuted}
                 key={projectId}
               >
-                {links.map((link) => (
-                  <path
-                    data-link-id={link.id}
-                    d={linkPath(link)}
-                    key={link.id}
-                    stroke={`url(#flow-${link.projectId})`}
-                    strokeWidth={precise(Math.max(1, link.width ?? 1))}
-                  />
-                ))}
+                {links.map((link) => {
+                  const source = link.source as LayoutNode
+                  const fromIndustry = source.kind === 'project'
+                  return (
+                    <path
+                      data-direction={fromIndustry ? 'reverse' : 'forward'}
+                      data-group-index={groupIndex}
+                      data-link-id={link.id}
+                      d={linkPath(link)}
+                      key={link.id}
+                      stroke={`url(#flow-${link.projectId})`}
+                      strokeWidth={precise(Math.max(1, link.width ?? 1))}
+                    />
+                  )
+                })}
               </g>
             ))}
           </g>
@@ -460,7 +541,7 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
               const industry = node.kind === 'industry'
               return (
                 <g
-                  className={clickable ? styles.clickableNode : styles.node}
+                  className={`${clickable ? styles.clickableNode : styles.node} ${styles.nodeEntrance}`}
                   data-node-id={node.id}
                   key={node.id}
                   onClick={(event) => {
@@ -478,6 +559,9 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
                   role={clickable ? 'link' : undefined}
                   tabIndex={clickable ? 0 : undefined}
                   transform={`translate(0 ${nodeCenter(node)})`}
+                  style={{
+                    animationDelay: `${node.kind === 'project' ? 0 : node.kind === 'category' ? 60 : 120}ms`,
+                  }}
                 >
                   <rect x={x0} y={-height / 2} width={x1 - x0} height={height} fill={node.color} />
                   <text

@@ -15,7 +15,7 @@ import type {
   Setting,
   Tag,
 } from '../src/payload-types'
-import { getInternalLinkHref, getMenuItemHref } from '../src/lib/menu-links'
+import { getInternalLinkHref, getMenuItemHref, getMenuItemLabel } from '../src/lib/menu-links'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
 import { fetchTreemapData } from '../src/lib/transformers'
 import { selectMainMenu } from '../src/lib/site-data'
@@ -85,6 +85,8 @@ test('global project title presentation is included in the front-end settings', 
   const settings: Setting = {
     id: 1,
     siteTitle: 'Portfolio',
+    projectGuideTitle: 'Project Guide',
+    projectGuideInstruction: 'Choose a relationship.',
     projectsOverviewSlug: 'projects',
     projectTitle: {
       placement: 'overlay',
@@ -482,6 +484,15 @@ test('the projects overview can be selected as an internal menu destination', ()
     }),
     '#',
   )
+})
+
+test('the project guide menu destination uses its name from global settings', () => {
+  const item = {
+    title: 'Old menu label',
+    type: 'internal' as const,
+    internalDestination: 'projects' as const,
+  }
+  assert.equal(getMenuItemLabel(item, 'Project Map'), 'Project Map')
 })
 
 test('sample endpoint no longer exposes users', async () => {

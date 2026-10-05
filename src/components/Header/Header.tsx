@@ -7,11 +7,17 @@ import styles from './Header.module.scss'
 import { usePathname } from 'next/navigation'
 import type { Menu } from '@/payload-types'
 import type { BreadcrumbItem } from '@/types'
-import { getMenuItemHref, getProjectsOverviewPath, type MenuEntry } from '@/lib/menu-links'
+import {
+  getMenuItemHref,
+  getMenuItemLabel,
+  getProjectsOverviewPath,
+  type MenuEntry,
+} from '@/lib/menu-links'
 
 interface HeaderProps {
   legacyRootSlug?: string
   projectsOverviewSlug?: string
+  projectGuideTitle?: string
   title?: string
   menu?: Menu | null
   breadcrumb?: BreadcrumbItem[]
@@ -26,6 +32,7 @@ export default function Header({
   menu = null,
   legacyRootSlug,
   projectsOverviewSlug,
+  projectGuideTitle = 'Projects',
   breadcrumb = [],
   rootLogo,
   upLogo,
@@ -54,7 +61,7 @@ export default function Header({
           href={getMenuItemHref(item, legacyRootSlug, projectsOverviewSlug)}
           onClick={() => setOpenPath(null)}
         >
-          {item.title}
+          {getMenuItemLabel(item, projectGuideTitle)}
         </Link>
       )
     }
@@ -221,7 +228,7 @@ export default function Header({
             {!hasProjectsLink && (
               <li>
                 <Link href={projectsOverviewPath} onClick={() => setOpenPath(null)}>
-                  Projects
+                  {projectGuideTitle}
                 </Link>
               </li>
             )}
@@ -230,7 +237,7 @@ export default function Header({
           <ul>
             <li>
               <Link href={projectsOverviewPath} onClick={() => setOpenPath(null)}>
-                Projects
+                {projectGuideTitle}
               </Link>
             </li>
           </ul>

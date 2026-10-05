@@ -120,10 +120,15 @@ export function constructTangledTreeLayout(
     const index = new Map<string, TangledLayoutBundle>()
     for (const node of level) {
       if (!node.parents.length) continue
-      const id = node.parents
+      const parentKey = node.parents
         .map((parent) => parent.id)
         .sort()
         .join('-X-')
+      // The WORK node needs one visible route per discipline. Treating every
+      // discipline as one shared bundle collapses those links into a single stroke.
+      const id = node.parents.some((parent) => parent.kind === 'root')
+        ? `${parentKey}-X-${node.id}`
+        : parentKey
       let bundle = index.get(id)
       if (bundle) {
         bundle.parents.push(...node.parents)

@@ -16,7 +16,12 @@ export default async function ProjectsOverviewPage() {
 
   return (
     <main>
-      <TangledTree data={data} overviewPath={overviewPath} />
+      <TangledTree
+        data={data}
+        guideInstruction={portfolio.settings.projectGuideInstruction}
+        guideTitle={portfolio.settings.projectGuideTitle}
+        overviewPath={overviewPath}
+      />
     </main>
   )
 }

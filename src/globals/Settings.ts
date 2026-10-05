@@ -50,8 +50,18 @@ export const Settings: GlobalConfig = {
       },
     },
     {
+      name: 'projectGuideTitle',
+      label: 'Project guide name',
+      type: 'text',
+      required: true,
+      defaultValue: 'Projects',
+      admin: {
+        description: 'Used in the main menu and breadcrumb for the project relationship diagram.',
+      },
+    },
+    {
       name: 'projectsOverviewSlug',
-      label: 'Projects overview slug',
+      label: 'Project guide URL slug',
       type: 'text',
       required: true,
       defaultValue: 'projects',
@@ -59,7 +69,17 @@ export const Settings: GlobalConfig = {
         Boolean(value && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) ||
         'Use lowercase letters, numbers and hyphens without slashes.',
       admin: {
-        description: 'URL segment for the project relationship diagram, without a leading slash',
+        description: 'URL segment for the project guide, without a leading slash.',
+      },
+    },
+    {
+      name: 'projectGuideInstruction',
+      label: 'Project guide instruction',
+      type: 'textarea',
+      required: true,
+      defaultValue: 'Select a node or connection to explore related projects.',
+      admin: {
+        description: 'Shown in the light grey area above the diagram.',
       },
     },
     {

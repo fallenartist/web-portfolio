@@ -32,6 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           menu={menu}
           legacyRootSlug={treemapData.legacyRootSlug}
           projectsOverviewSlug={settings?.projectsOverviewSlug || 'projects'}
+          projectGuideTitle={settings?.projectGuideTitle || 'Projects'}
           rootLogo={rootLogo || undefined}
           upLogo={upLogo || undefined}
         >

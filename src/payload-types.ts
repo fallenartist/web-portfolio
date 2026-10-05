@@ -451,6 +451,9 @@ export interface Menu {
   slug: string;
   items?:
     | {
+        /**
+         * For a Project guide destination, the front end uses the guide name from Settings.
+         */
         title: string;
         type: 'internal' | 'external' | 'group';
         internalDestination?: ('content' | 'projects') | null;
@@ -483,6 +486,9 @@ export interface Menu {
         openInNewTab?: boolean | null;
         subItems?:
           | {
+              /**
+               * For a Project guide destination, the front end uses the guide name from Settings.
+               */
               title: string;
               type: 'internal' | 'external';
               internalDestination?: ('content' | 'projects') | null;
@@ -920,9 +926,17 @@ export interface Setting {
    */
   rootDisciplineSlug?: string | null;
   /**
-   * URL segment for the project relationship diagram, without a leading slash
+   * Used in the main menu and breadcrumb for the project relationship diagram.
+   */
+  projectGuideTitle: string;
+  /**
+   * URL segment for the project guide, without a leading slash.
    */
   projectsOverviewSlug: string;
+  /**
+   * Shown in the light grey area above the diagram.
+   */
+  projectGuideInstruction: string;
   /**
    * Logo shown at the root of the portfolio
    */
@@ -970,7 +984,9 @@ export interface SettingsSelect<T extends boolean = true> {
   metaDescription?: T;
   rootDisciplineTitle?: T;
   rootDisciplineSlug?: T;
+  projectGuideTitle?: T;
   projectsOverviewSlug?: T;
+  projectGuideInstruction?: T;
   rootLogo?: T;
   upLogo?: T;
   projectTitle?:

@@ -105,9 +105,11 @@ test('tangled layout reuses shared trunks and produces rounded orthogonal paths'
     nodeMarkerWidth: 14,
   })
   const disciplineLinks = layout.links.filter((link) => link.target.id === 'discipline-2')
+  const rootLinks = layout.links.filter((link) => link.target.kind === 'root')
   const tagLinks = layout.links.filter((link) => link.source.id === 'tag-6')
 
   assert.equal(disciplineLinks.length, 2)
+  assert.equal(rootLinks.length, 1)
   assert.equal(new Set(disciplineLinks.map((link) => link.xb)).size, 1)
   assert.equal(tagLinks.length, 2)
   assert.equal(new Set(tagLinks.map((link) => link.xb)).size, 1)
@@ -140,4 +142,27 @@ test('tangled layout reuses shared trunks and produces rounded orthogonal paths'
   )
   assert.ok(layoutWithUniqueTrunk.nodes.find((node) => node.id === 'project-10')!.height > 0)
   assert.equal(layoutWithUniqueTrunk.nodes.find((node) => node.id === 'project-11')!.height, 0)
+})
+
+test('WORK keeps a distinct visible route for every discipline', () => {
+  const secondDiscipline = {
+    ...discipline,
+    id: 12,
+    title: 'Digital',
+    slug: 'digital',
+  } as Discipline
+  const secondProject = {
+    ...project(13, 'Project C'),
+    discipline: secondDiscipline,
+  } as Project
+  const data = buildTangledTreeData(
+    [root, discipline, secondDiscipline],
+    [project(10, 'Project A'), secondProject],
+    'work',
+  )
+  const layout = constructTangledTreeLayout(data.levels)
+  const rootLinks = layout.links.filter((link) => link.target.kind === 'root')
+
+  assert.equal(rootLinks.length, 2)
+  assert.equal(new Set(rootLinks.map((link) => link.xb)).size, 2)
 })

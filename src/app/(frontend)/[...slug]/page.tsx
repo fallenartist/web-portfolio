@@ -19,7 +19,12 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
     )
     return (
       <main>
-        <TangledTree data={data} overviewPath={overviewPath} />
+        <TangledTree
+          data={data}
+          guideInstruction={portfolio.settings.projectGuideInstruction}
+          guideTitle={portfolio.settings.projectGuideTitle}
+          overviewPath={overviewPath}
+        />
       </main>
     )
   }
@@ -51,7 +56,13 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
     if (!selected) notFound()
     return (
       <main>
-        <TangledTree data={data} initialSelectedId={selected.id} overviewPath={overviewPath} />
+        <TangledTree
+          data={data}
+          guideInstruction={portfolio.settings.projectGuideInstruction}
+          guideTitle={portfolio.settings.projectGuideTitle}
+          initialSelectedId={selected.id}
+          overviewPath={overviewPath}
+        />
       </main>
     )
   }

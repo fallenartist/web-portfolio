@@ -132,12 +132,17 @@ test('missing and populated hero uploads are handled safely', () => {
 test('hero crops use Payload focal points', () => {
   assert.equal(mediaFocalPosition(25, 70), '25% 70%')
   assert.equal(mediaFocalPosition(null, undefined), '50% 50%')
-  assert.deepEqual(coverMediaRect(1000, 500, 1000, 1000, 25, 70), {
+  const crop = coverMediaRect(1000, 500, 1000, 1000, 25, 70)
+  assert.deepEqual(crop, {
     x: 0,
     y: -350,
     width: 1000,
     height: 1000,
   })
+  assert.equal(crop.width / crop.height, 1)
+
+  const portraitCrop = coverMediaRect(1200, 700, 625, 832, 50, 50)
+  assert.ok(Math.abs(portraitCrop.width / portraitCrop.height - 625 / 832) < 0.000001)
 })
 
 test('project thumbnail and hero image remain independent', () => {

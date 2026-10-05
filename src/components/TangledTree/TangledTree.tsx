@@ -72,7 +72,7 @@ function nodePermalink(overviewPath: string, node: TangledTreeNode) {
   return `${overviewPath.replace(/\/$/, '')}/${node.kind}/${encodeURIComponent(node.slug)}`
 }
 
-function minimumDiagramWidth(data: TangledTreeData, nodeSize: number) {
+function minimumDiagramWidth(data: TangledTreeData, nodeSize: number, bundleWidth: number) {
   const allNodes = data.levels.flat()
   const longestLabel = allNodes.reduce((length, node) => Math.max(length, node.title.length), 0)
   const twoLineLabelWidth = Math.ceil(longestLabel / 2) * 7 + nodeSize + 20
@@ -91,7 +91,7 @@ function minimumDiagramWidth(data: TangledTreeData, nodeSize: number) {
     return total + keys.size
   }, 0)
 
-  return Math.ceil(Math.max(640, 64 + columnWidth * 3 + bundleChannels * 2.5 + nodeSize))
+  return Math.ceil(Math.max(640, 64 + columnWidth * 3 + bundleChannels * bundleWidth + nodeSize))
 }
 
 export default function TangledTree({
@@ -165,14 +165,18 @@ export default function TangledTree({
   )
   const selectedNode = selectedNodeId ? nodesById.get(selectedNodeId) : undefined
   const displayColors = useMemo(() => buildDisplayColors(data), [data])
-  const diagramWidth = Math.max(containerSize.width, minimumDiagramWidth(data, nodeSize))
+  const bundleWidth = 10
+  const diagramWidth = Math.max(
+    containerSize.width,
+    minimumDiagramWidth(data, nodeSize, bundleWidth),
+  )
   const layout = useMemo(() => {
     const baseNodeHeight = mobile ? 58 : 30
     const options = {
       targetWidth: diagramWidth,
       minimumNodeWidth: mobile ? 70 : 150,
       nodeHeight: baseNodeHeight,
-      bundleWidth: mobile ? 2.5 : 10,
+      bundleWidth,
       levelPadding: mobile ? 2 : 6,
       curveRadius: mobile ? 8 : 14,
       metroDistance: 5,
@@ -190,7 +194,7 @@ export default function TangledTree({
       levelPadding: options.levelPadding * scale,
       bandGap: options.bandGap * scale,
     })
-  }, [containerSize.height, data.levels, diagramWidth, mobile, nodeSize])
+  }, [bundleWidth, containerSize.height, data.levels, diagramWidth, mobile, nodeSize])
   const diagramTop = useMemo(() => {
     const root = layout.nodes.find((node) => node.kind === 'root')
     if (!root) return 0
@@ -482,10 +486,8 @@ export default function TangledTree({
                 ? Math.max(44, nodeHeight + 8)
                 : Math.max(28, nodeHeight + 8)
               const labelHeight = mobile ? 34 : 24
-              const labelWidth = mobile
-                ? Math.max(28, node.columnWidth - 4)
-                : Math.max(28, node.columnWidth - nodeSize - 8)
-              const labelX = mobile ? node.x - nodeSize / 2 : node.x + nodeSize / 2 + 5
+              const labelWidth = Math.max(28, node.columnWidth - nodeSize - 8)
+              const labelX = node.x + nodeSize / 2 + 5
               const labelY = mobile
                 ? node.y - nodeHeight / 2 - labelHeight - 4
                 : node.y - nodeHeight / 2 - 17

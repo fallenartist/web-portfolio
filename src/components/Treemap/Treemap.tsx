@@ -187,9 +187,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .attr('height', (d) =>
         d.data.hero ? heroCrop(d, d.x1 - d.x0, d.y1 - d.y0).height : d.y1 - d.y0,
       )
-      .attr('preserveAspectRatio', (d) =>
-        d.data.hero && d.data.width && d.data.height ? 'none' : 'xMidYMid slice',
-      )
+      .attr('preserveAspectRatio', 'xMidYMid slice')
     const titlePresentation = data.settings?.projectTitle
     const heroDimColor = /^#[0-9a-f]{6}$/i.test(titlePresentation?.dimColor || '')
       ? titlePresentation!.dimColor
@@ -292,9 +290,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
               : imageFor(d.data, innerW(d), innerH(d))
             : d.data.sizes?.thumbnail?.url || d.data.image || null,
         )
-        .attr('preserveAspectRatio', (d) =>
-          d.data.hero && d.data.width && d.data.height ? 'none' : 'xMidYMid slice',
-        )
+        .attr('preserveAspectRatio', 'xMidYMid slice')
         .transition(transition)
         .attr('x', (d) => (d.data.hero ? heroCrop(d, innerW(d), innerH(d)).x : 0))
         .attr('y', (d) => (d.data.hero ? heroCrop(d, innerW(d), innerH(d)).y : 0))

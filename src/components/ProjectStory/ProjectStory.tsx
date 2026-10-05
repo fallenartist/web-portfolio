@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
-import { proportionalMediaSize } from '@/lib/media-image'
+import { mediaFocalPosition, proportionalMediaSize } from '@/lib/media-image'
 import styles from './ProjectStory.module.scss'
 
 type ResponsiveImage = {
@@ -141,6 +141,9 @@ function HeroVideo({
       : cover.width / cover.height
   const [videoRatio, setVideoRatio] = useState(coverRatio)
   const heroStyle = { '--hero-ratio': videoRatio } as CSSProperties
+  const coverStyle = {
+    objectPosition: mediaFocalPosition(hero.coverFocalX, hero.coverFocalY),
+  }
 
   useEffect(() => {
     if (!started || !iframeRef.current) return
@@ -148,23 +151,25 @@ function HeroVideo({
     let active = true
     const iframe = iframeRef.current
 
-    void import('@vimeo/player').then(async ({ default: Player }) => {
-      const player = new Player(iframe)
-      try {
-        await player.ready()
-        const [width, height] = await Promise.all([
-          player.getVideoWidth(),
-          player.getVideoHeight(),
-        ])
-        if (active && width > 0 && height > 0) setVideoRatio(width / height)
-      } catch {
-        // Retain the original cover ratio when Vimeo metadata is unavailable.
-      } finally {
+    void import('@vimeo/player')
+      .then(async ({ default: Player }) => {
+        const player = new Player(iframe)
+        try {
+          await player.ready()
+          const [width, height] = await Promise.all([
+            player.getVideoWidth(),
+            player.getVideoHeight(),
+          ])
+          if (active && width > 0 && height > 0) setVideoRatio(width / height)
+        } catch {
+          // Retain the original cover ratio when Vimeo metadata is unavailable.
+        } finally {
+          if (active) setLoaded(true)
+        }
+      })
+      .catch(() => {
         if (active) setLoaded(true)
-      }
-    }).catch(() => {
-      if (active) setLoaded(true)
-    })
+      })
 
     return () => {
       active = false
@@ -183,6 +188,7 @@ function HeroVideo({
           alt={hero.coverAlt}
           priority
           unoptimized
+          style={coverStyle}
         />
       )}
       {started && (
@@ -289,16 +295,35 @@ function ProjectPreview({ project }: { project: TreemapData }) {
   const previewStyle = {
     '--preview-discipline-color': project.color || 'transparent',
   } as CSSProperties
+  const previewImageStyle = {
+    objectPosition: mediaFocalPosition(hero?.focalX, hero?.focalY),
+  }
 
   return (
     <span className={styles.preview} style={previewStyle}>
       {heroPreview ? (
-        <Image className={styles.previewHero} src={heroPreview} width={320} height={200} sizes="(max-width: 720px) 45vw, 260px" alt="" unoptimized />
+        <Image
+          className={styles.previewHero}
+          src={heroPreview}
+          width={320}
+          height={200}
+          sizes="(max-width: 720px) 45vw, 260px"
+          alt=""
+          unoptimized
+          style={previewImageStyle}
+        />
       ) : (
         <span className={styles.previewPlaceholder} />
       )}
       {project.thumb && (
-        <Image className={styles.previewThumbnail} src={project.thumb} width={80} height={80} alt="" unoptimized />
+        <Image
+          className={styles.previewThumbnail}
+          src={project.thumb}
+          width={80}
+          height={80}
+          alt=""
+          unoptimized
+        />
       )}
     </span>
   )
@@ -371,21 +396,29 @@ export default function ProjectStory({
   )
 
   const titleOverHero =
-    settings.placement === 'overlay' &&
-    Boolean(hero) &&
-    !(hero?.type === 'video' && videoContained)
+    settings.placement === 'overlay' && Boolean(hero) && !(hero?.type === 'video' && videoContained)
 
   return (
     <article className={styles.story} style={storyStyle} aria-label={project.title}>
-      {hero?.type === 'image' && (() => {
-        const source = imageSource(hero)
-        return (
-          <figure className={styles.hero}>
-            <Image src={source.src} width={source.width} height={source.height} sizes="100vw" alt={hero.alt} priority unoptimized />
-            {titleOverHero && <HeroTitle title={project.title} settings={settings} />}
-          </figure>
-        )
-      })()}
+      {hero?.type === 'image' &&
+        (() => {
+          const source = imageSource(hero)
+          return (
+            <figure className={styles.hero}>
+              <Image
+                src={source.src}
+                width={source.width}
+                height={source.height}
+                sizes="100vw"
+                alt={hero.alt}
+                priority
+                unoptimized
+                style={{ objectPosition: mediaFocalPosition(hero.focalX, hero.focalY) }}
+              />
+              {titleOverHero && <HeroTitle title={project.title} settings={settings} />}
+            </figure>
+          )
+        })()}
       {hero?.type === 'video' && (
         <HeroVideo
           hero={hero}
@@ -440,15 +473,31 @@ export default function ProjectStory({
       {(previousProject || nextProject) && (
         <nav className={styles.projectNavigation} aria-label="Adjacent projects">
           {previousProject ? (
-            <button className={`${styles.projectLink} ${styles.previousProject}`} type="button" onClick={() => onNavigateProject(previousProject)}>
+            <button
+              className={`${styles.projectLink} ${styles.previousProject}`}
+              type="button"
+              onClick={() => onNavigateProject(previousProject)}
+            >
               <ProjectPreview project={previousProject} />
-              <span className={styles.projectLinkLabel}><small>Previous project</small><strong>{previousProject.title}</strong></span>
+              <span className={styles.projectLinkLabel}>
+                <small>Previous project</small>
+                <strong>{previousProject.title}</strong>
+              </span>
             </button>
-          ) : <span />}
+          ) : (
+            <span />
+          )}
           {nextProject && (
-            <button className={`${styles.projectLink} ${styles.nextProject}`} type="button" onClick={() => onNavigateProject(nextProject)}>
+            <button
+              className={`${styles.projectLink} ${styles.nextProject}`}
+              type="button"
+              onClick={() => onNavigateProject(nextProject)}
+            >
               <ProjectPreview project={nextProject} />
-              <span className={styles.projectLinkLabel}><small>Next project</small><strong>{nextProject.title}</strong></span>
+              <span className={styles.projectLinkLabel}>
+                <small>Next project</small>
+                <strong>{nextProject.title}</strong>
+              </span>
             </button>
           )}
         </nav>

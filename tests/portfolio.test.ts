@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { getAdminThumbnail } from '../src/collections/Media'
-import { proportionalMediaSize } from '../src/lib/media-image'
+import { coverMediaRect, mediaFocalPosition, proportionalMediaSize } from '../src/lib/media-image'
 import type { Discipline, Industry, Project, Media, Setting } from '../src/payload-types'
 import { getInternalLinkHref, getMenuItemHref } from '../src/lib/menu-links'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
@@ -19,7 +19,14 @@ const discipline = (id: number, extra: Partial<Discipline> = {}): Discipline => 
   updatedAt: '',
   ...extra,
 })
-const image: Media = { id: 9, url: '/api/media/file/example.jpg', createdAt: '', updatedAt: '' }
+const image: Media = {
+  id: 9,
+  url: '/api/media/file/example.jpg',
+  focalX: 25,
+  focalY: 70,
+  createdAt: '',
+  updatedAt: '',
+}
 const project = (extra: Partial<Project> = {}): Project => ({
   id: 2,
   slug: 'project',
@@ -102,6 +109,21 @@ test('missing and populated hero uploads are handled safely', () => {
   )
   assert.equal(tree.children![0].children![0].children?.length, 0)
   assert.equal(tree.children![0].children![1].children?.[0].hero, true)
+  assert.equal(tree.children![0].children![1].children?.[0].focalX, 25)
+  assert.equal(tree.children![0].children![1].children?.[0].focalY, 70)
+  const transformedHero = tree.children![0].children![1].projectHero
+  assert.equal(transformedHero?.type === 'image' && transformedHero.focalX, 25)
+})
+
+test('hero crops use Payload focal points', () => {
+  assert.equal(mediaFocalPosition(25, 70), '25% 70%')
+  assert.equal(mediaFocalPosition(null, undefined), '50% 50%')
+  assert.deepEqual(coverMediaRect(1000, 500, 1000, 1000, 25, 70), {
+    x: 0,
+    y: -350,
+    width: 1000,
+    height: 1000,
+  })
 })
 
 test('project thumbnail and hero image remain independent', () => {
@@ -156,6 +178,8 @@ test('Vimeo heroes use their cover for the treemap transition and preserve playb
   if (projectNode.projectHero?.type === 'video') {
     assert.equal(projectNode.projectHero.fit, 'contain')
     assert.equal(projectNode.projectHero.muted, true)
+    assert.equal(projectNode.projectHero.coverFocalX, 25)
+    assert.equal(projectNode.projectHero.coverFocalY, 70)
     assert.match(projectNode.projectHero.url, /^https:\/\/player\.vimeo\.com\/video\/76979871\?/)
     assert.match(projectNode.projectHero.url, /autoplay=1/)
   }

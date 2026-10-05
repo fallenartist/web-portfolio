@@ -45,6 +45,8 @@ export function transformDataForTreemap(
           image: cover.url,
           width: cover.width,
           height: cover.height,
+          focalX: cover.focalX,
+          focalY: cover.focalY,
           sizes: cover.sizes,
           hero: true,
           priority: 100,
@@ -64,6 +66,8 @@ export function transformDataForTreemap(
           coverAlt: cover.alt || project.title,
           coverWidth: cover.width,
           coverHeight: cover.height,
+          coverFocalX: cover.focalX,
+          coverFocalY: cover.focalY,
           coverSizes: cover.sizes,
         }
       }
@@ -79,6 +83,8 @@ export function transformDataForTreemap(
           image: image.url,
           width: image.width,
           height: image.height,
+          focalX: image.focalX,
+          focalY: image.focalY,
           sizes: image.sizes,
           hero: true,
           priority: 100,
@@ -89,6 +95,8 @@ export function transformDataForTreemap(
           alt: image.alt || project.title,
           width: image.width,
           height: image.height,
+          focalX: image.focalX,
+          focalY: image.focalY,
           sizes: image.sizes,
         }
       }

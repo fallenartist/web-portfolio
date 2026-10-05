@@ -42,6 +42,8 @@ export type ProjectHero =
       alt: string
       width?: number | null
       height?: number | null
+      focalX?: number | null
+      focalY?: number | null
       sizes?: Media['sizes']
     }
   | {
@@ -57,6 +59,8 @@ export type ProjectHero =
       coverAlt: string
       coverWidth?: number | null
       coverHeight?: number | null
+      coverFocalX?: number | null
+      coverFocalY?: number | null
       coverSizes?: Media['sizes']
     }
 
@@ -72,6 +76,8 @@ export interface TreemapData {
   image?: string
   width?: number | null
   height?: number | null
+  focalX?: number | null
+  focalY?: number | null
   alt?: string
   desc?: Project['description']
   excerpt?: string

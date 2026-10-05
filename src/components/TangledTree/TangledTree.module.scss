@@ -28,11 +28,12 @@
 }
 
 .scroller {
+  box-sizing: border-box;
   min-height: 0;
   flex: 1 1 auto;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 6px 0 24px;
+  padding: 6px 0 24px var(--page-gutter);
   overscroll-behavior: contain;
 }
 
@@ -75,28 +76,6 @@
   letter-spacing: 0.09em;
   opacity: 0.48;
   text-transform: uppercase;
-}
-
-.metadataHeadings {
-  fill: #222;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-
-  text {
-    cursor: pointer;
-    opacity: 0.25;
-
-    &:focus-visible {
-      outline: none;
-      text-decoration: underline;
-    }
-  }
-
-  .activeHeading {
-    opacity: 0.48;
-  }
 }
 
 .node {
@@ -227,7 +206,7 @@
   }
 
   .scroller {
-    padding: 4px 0 20px;
+    padding: 4px 0 20px var(--page-gutter);
   }
 
   .linkTargets path {

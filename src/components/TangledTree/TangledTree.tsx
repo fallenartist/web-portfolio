@@ -93,11 +93,9 @@ export default function TangledTree({
   const initialAnimationRef = useRef(false)
   const measuredSizeRef = useRef({ width: 0, height: 0 })
   const [containerSize, setContainerSize] = useState({ width: 1100, height: 700 })
+  const [hasMeasuredContainer, setHasMeasuredContainer] = useState(false)
   const [activeNode, setActiveNode] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initialSelectedId ?? null)
-  const [visibleMetadataKinds, setVisibleMetadataKinds] = useState<Set<MetadataKind>>(
-    () => new Set(METADATA_KINDS),
-  )
 
   useEffect(() => {
     const element = containerRef.current
@@ -117,6 +115,7 @@ export default function TangledTree({
 
       measuredSizeRef.current = next
       setContainerSize(next)
+      setHasMeasuredContainer(true)
     }
 
     const initial = element.getBoundingClientRect()
@@ -164,7 +163,7 @@ export default function TangledTree({
       metroDistance: 5,
       bandGap: mobile ? 54 : 48,
       nodeMarkerWidth: nodeSize,
-      padding: mobile ? 8 : 12,
+      padding: nodeSize / 2,
       rootColumnWidth: mobile ? 48 : 88,
     }
     const initial = constructTangledTreeLayout(data.levels, options)
@@ -177,31 +176,6 @@ export default function TangledTree({
       bandGap: options.bandGap * scale,
     })
   }, [containerSize.height, containerSize.width, data.levels, mobile, nodeSize])
-
-  const visibleNodes = useMemo(
-    () =>
-      layout.nodes.filter(
-        (node) =>
-          !METADATA_KINDS.includes(node.kind as MetadataKind) ||
-          visibleMetadataKinds.has(node.kind as MetadataKind),
-      ),
-    [layout.nodes, visibleMetadataKinds],
-  )
-  const visibleLinks = useMemo(
-    () =>
-      layout.links.filter((link) => {
-        const metadataNode =
-          link.source.kind === 'project' ||
-          !METADATA_KINDS.includes(link.source.kind as MetadataKind)
-            ? link.target
-            : link.source
-        return (
-          !METADATA_KINDS.includes(metadataNode.kind as MetadataKind) ||
-          visibleMetadataKinds.has(metadataNode.kind as MetadataKind)
-        )
-      }),
-    [layout.links, visibleMetadataKinds],
-  )
 
   useEffect(() => {
     const breadcrumbs = [
@@ -233,7 +207,7 @@ export default function TangledTree({
   }, [nodesByPermalink])
 
   useLayoutEffect(() => {
-    if (initialAnimationRef.current) return
+    if (!hasMeasuredContainer || initialAnimationRef.current) return
     const paths = linksRef.current?.querySelectorAll<SVGPathElement>('path[data-visible-link]')
     if (!paths?.length) return
     initialAnimationRef.current = true
@@ -257,9 +231,13 @@ export default function TangledTree({
     })
 
     return () => {
-      paths.forEach((path) => select(path).interrupt('layout'))
+      paths.forEach((path) => {
+        select(path).interrupt('layout')
+        path.removeAttribute('stroke-dasharray')
+        path.removeAttribute('stroke-dashoffset')
+      })
     }
-  }, [])
+  }, [hasMeasuredContainer, layout.height, layout.width])
 
   const active = useMemo(() => {
     const id = selectedNodeId || activeNode
@@ -293,7 +271,7 @@ export default function TangledTree({
     const root = layout.nodes.find((node) => node.kind === 'root')
     if (root && projectIds.size) nodeIds.add(root.id)
 
-    for (const link of visibleLinks) {
+    for (const link of layout.links) {
       const rootLink = link.source.kind === 'discipline' && link.target.kind === 'root'
       if (projectIds.has(link.projectId) || (rootLink && disciplineIds.has(link.source.id))) {
         linkIds.add(link.id)
@@ -302,7 +280,7 @@ export default function TangledTree({
       }
     }
     return { linkIds, nodeIds }
-  }, [activeNode, layout.nodes, selectedNodeId, visibleLinks])
+  }, [activeNode, layout.links, layout.nodes, selectedNodeId])
 
   const bandStarts = useMemo(() => {
     const starts: TangledLayoutNode[] = []
@@ -324,20 +302,6 @@ export default function TangledTree({
       }),
     [layout.nodes],
   )
-
-  const toggleMetadataKind = (kind: MetadataKind) => {
-    setActiveNode(null)
-    if (selectedNode?.kind === kind && visibleMetadataKinds.has(kind)) {
-      setSelectedNodeId(null)
-      window.history.pushState(null, '', overviewPath)
-    }
-    setVisibleMetadataKinds((current) => {
-      const next = new Set(current)
-      if (next.has(kind)) next.delete(kind)
-      else next.add(kind)
-      return next
-    })
-  }
 
   const selectNode = (node: TangledTreeNode) => {
     setSelectedNodeId(node.id)
@@ -405,9 +369,10 @@ export default function TangledTree({
           viewBox={`0 0 ${layout.width} ${layout.height}`}
           role="img"
           aria-label="Bundled connections between disciplines, projects, industries, clients, agencies and tags"
+          style={{ visibility: hasMeasuredContainer ? 'visible' : 'hidden' }}
         >
           <g className={styles.links} ref={linksRef} aria-hidden="true">
-            {visibleLinks.map((link) => (
+            {layout.links.map((link) => (
               <path
                 className={active && !active.linkIds.has(link.id) ? styles.mutedLink : undefined}
                 data-visible-link="true"
@@ -419,7 +384,7 @@ export default function TangledTree({
           </g>
 
           <g className={styles.linkTargets}>
-            {visibleLinks.map((link) => (
+            {layout.links.map((link) => (
               <path
                 aria-label={`Select ${link.source.kind === 'project' ? link.source.title : link.target.title} relationship`}
                 d={tangledLinkPath(link)}
@@ -443,28 +408,10 @@ export default function TangledTree({
             ))}
           </g>
 
-          <g className={styles.metadataHeadings} aria-label="Visible relationship groups">
+          <g className={styles.bandLabels} aria-hidden="true">
             {bandStarts.map((node) => (
               <text
-                aria-pressed={visibleMetadataKinds.has(node.kind as MetadataKind)}
-                className={
-                  visibleMetadataKinds.has(node.kind as MetadataKind)
-                    ? styles.activeHeading
-                    : undefined
-                }
                 key={node.kind}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  toggleMetadataKind(node.kind as MetadataKind)
-                }}
-                onKeyDown={(event) => {
-                  if (event.key !== 'Enter' && event.key !== ' ') return
-                  event.preventDefault()
-                  event.stopPropagation()
-                  toggleMetadataKind(node.kind as MetadataKind)
-                }}
-                role="button"
-                tabIndex={0}
                 x={node.x + nodeSize}
                 y={node.y - node.height / 2 - 36}
               >
@@ -474,7 +421,7 @@ export default function TangledTree({
           </g>
 
           <g className={styles.nodes}>
-            {visibleNodes.map((node) => {
+            {layout.nodes.map((node) => {
               const muted = Boolean(active && !active.nodeIds.has(node.id))
               const relationshipSelected = Boolean(selectedNodeId && active?.nodeIds.has(node.id))
               const selected = selectedNodeId === node.id

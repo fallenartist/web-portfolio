@@ -134,9 +134,9 @@ export function buildTangledTreeData(
   const kindOrder: Record<TangledNodeKind, number> = {
     discipline: 0,
     project: 1,
-    client: 2,
-    agency: 3,
-    industry: 4,
+    industry: 2,
+    client: 3,
+    agency: 4,
     tag: 5,
   }
   const metadataNodes = [...metadata.values()].sort(

@@ -1,8 +1,8 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { easeCubicOut, select } from 'd3'
+import { useRouter } from 'next/navigation'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import type { TangledTreeData, TangledTreeNode } from '@/lib/tangled-tree-data'
@@ -14,12 +14,15 @@ import {
 } from '@/lib/tangled-tree-layout'
 import styles from './TangledTree.module.scss'
 
+const RESIZE_DEBOUNCE = 140
+const MOBILE_BREAKPOINT = 768
+
 const KIND_LABELS = {
   discipline: 'Discipline',
   project: 'Project',
+  industry: 'Industries',
   client: 'Clients',
   agency: 'Agencies',
-  industry: 'Industries',
   tag: 'Tags',
 } as const
 
@@ -36,6 +39,10 @@ function linkColor(link: TangledLayoutLink) {
   return mutedColor(taxonomy.color)
 }
 
+function isCoarsePointer() {
+  return window.matchMedia('(hover: none), (pointer: coarse)').matches
+}
+
 export default function TangledTree({
   data,
   overviewPath,
@@ -44,47 +51,116 @@ export default function TangledTree({
   overviewPath: string
 }) {
   const router = useRouter()
-  const pathname = usePathname()
   const { updateBreadcrumb } = useBreadcrumb()
   const containerRef = useRef<HTMLDivElement>(null)
-  const [containerWidth, setContainerWidth] = useState(1100)
+  const linksRef = useRef<SVGGElement>(null)
+  const resizeTimerRef = useRef<number | undefined>(undefined)
+  const measuredSizeRef = useRef({ width: 0, height: 0 })
+  const [containerSize, setContainerSize] = useState({ width: 1100, height: 700 })
+  const [layoutRevision, setLayoutRevision] = useState(0)
   const [activeNode, setActiveNode] = useState<string | null>(null)
   const [touchNode, setTouchNode] = useState<string | null>(null)
 
   useEffect(() => {
     const element = containerRef.current
     if (!element) return
+
+    const applyMeasurement = (width: number, height: number, immediate = false) => {
+      const next = {
+        width: Math.max(280, Math.round(width)),
+        height: Math.max(240, Math.round(height)),
+      }
+      if (
+        measuredSizeRef.current.width === next.width &&
+        measuredSizeRef.current.height === next.height
+      ) {
+        return
+      }
+
+      const commit = () => {
+        measuredSizeRef.current = next
+        setContainerSize(next)
+        setLayoutRevision((revision) => revision + 1)
+      }
+      window.clearTimeout(resizeTimerRef.current)
+      if (immediate) commit()
+      else resizeTimerRef.current = window.setTimeout(commit, RESIZE_DEBOUNCE)
+    }
+
+    const initial = element.getBoundingClientRect()
+    applyMeasurement(initial.width, initial.height, true)
     const observer = new ResizeObserver(([entry]) => {
-      setContainerWidth(Math.max(320, Math.round(entry.contentRect.width)))
+      applyMeasurement(entry.contentRect.width, entry.contentRect.height)
     })
     observer.observe(element)
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      window.clearTimeout(resizeTimerRef.current)
+    }
   }, [])
 
   useEffect(() => {
     updateBreadcrumb([
       { data: { title: 'WORK' }, path: '/' },
       { data: { title: 'Projects' }, path: overviewPath },
-      { data: { title: 'Tangled' }, path: pathname },
     ])
     const onBreadcrumb = (event: Event) => {
       router.push((event as CustomEvent<string>).detail)
     }
     window.addEventListener('breadcrumb-click', onBreadcrumb)
     return () => window.removeEventListener('breadcrumb-click', onBreadcrumb)
-  }, [overviewPath, pathname, router, updateBreadcrumb])
+  }, [overviewPath, router, updateBreadcrumb])
 
+  const mobile = containerSize.width < MOBILE_BREAKPOINT
   const layout = useMemo(() => {
-    const mobile = containerWidth < 768
+    const baseNodeHeight = mobile ? 44 : 30
+    const options = {
+      targetWidth: containerSize.width,
+      minimumNodeWidth: mobile ? 70 : 150,
+      nodeHeight: baseNodeHeight,
+      bundleWidth: mobile ? 2.5 : 10,
+      levelPadding: mobile ? 12 : 18,
+      curveRadius: mobile ? 8 : 14,
+      metroDistance: 5,
+      bandGap: mobile ? 36 : 34,
+      padding: mobile ? 8 : 12,
+    }
+    const initial = constructTangledTreeLayout(data.levels, options)
+    if (initial.height >= containerSize.height) return initial
+    const scale = Math.min(1.35, containerSize.height / initial.height)
     return constructTangledTreeLayout(data.levels, {
-      nodeWidth: mobile ? 122 : Math.max(170, Math.min(270, (containerWidth - 120) / 3)),
-      nodeHeight: mobile ? 28 : 24,
-      bundleWidth: mobile ? 8 : 11,
-      levelPadding: mobile ? 14 : 18,
-      curveRadius: mobile ? 10 : 14,
-      bandGap: mobile ? 34 : 30,
+      ...options,
+      nodeHeight: baseNodeHeight * scale,
+      levelPadding: options.levelPadding * scale,
+      bandGap: options.bandGap * scale,
     })
-  }, [containerWidth, data.levels])
+  }, [containerSize.height, containerSize.width, data.levels, mobile])
+
+  useLayoutEffect(() => {
+    const paths = linksRef.current?.querySelectorAll<SVGPathElement>('path[data-visible-link]')
+    if (!paths?.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    paths.forEach((path, index) => {
+      const length = path.getTotalLength()
+      select(path)
+        .interrupt('layout')
+        .attr('stroke-dasharray', `${length} ${length}`)
+        .attr('stroke-dashoffset', length)
+        .transition('layout')
+        .delay(Math.min(index * 5, 180))
+        .duration(480)
+        .ease(easeCubicOut)
+        .attr('stroke-dashoffset', 0)
+        .on('end', () => {
+          path.removeAttribute('stroke-dasharray')
+          path.removeAttribute('stroke-dashoffset')
+        })
+    })
+
+    return () => {
+      paths.forEach((path) => select(path).interrupt('layout'))
+    }
+  }, [layout, layoutRevision])
 
   const active = useMemo(() => {
     const id = activeNode || touchNode
@@ -109,6 +185,14 @@ export default function TangledTree({
     return { linkIds, nodeIds }
   }, [activeNode, layout.links, layout.nodes, touchNode])
 
+  const projectHrefs = useMemo(
+    () =>
+      new Map(
+        layout.nodes.filter((node) => node.kind === 'project').map((node) => [node.id, node.href]),
+      ),
+    [layout.nodes],
+  )
+
   const bandStarts = useMemo(() => {
     const starts: TangledLayoutNode[] = []
     let previous: TangledTreeNode['kind'] | undefined
@@ -120,28 +204,44 @@ export default function TangledTree({
   }, [layout.nodes])
 
   const handleNodeClick = (event: React.MouseEvent, node: TangledLayoutNode) => {
-    if (window.matchMedia('(hover: none), (pointer: coarse)').matches && touchNode !== node.id) {
+    if (isCoarsePointer() && touchNode !== node.id) {
       event.preventDefault()
       event.stopPropagation()
       setTouchNode(node.id)
     }
   }
 
+  const handleLinkClick = (event: React.MouseEvent, link: TangledLayoutLink) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (isCoarsePointer() && touchNode !== link.projectId) {
+      setTouchNode(link.projectId)
+      return
+    }
+    const href = projectHrefs.get(link.projectId)
+    if (href) router.push(href)
+  }
+
+  const handleLinkKeyDown = (event: React.KeyboardEvent, link: TangledLayoutLink) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    const href = projectHrefs.get(link.projectId)
+    if (href) router.push(href)
+  }
+
   if (!data.levels[1].length) {
     return <p className={styles.empty}>No projects are available for the overview.</p>
   }
 
+  const nodeSize = mobile ? 14 : 12
+
   return (
-    <section className={styles.page} aria-label="Tangled project relationship overview">
+    <section className={styles.page} aria-label="Project relationship overview">
       <header className={styles.header}>
-        <nav className={styles.viewSwitch} aria-label="Project overview style">
-          <Link href={overviewPath}>Sankey</Link>
-          <span aria-current="page">Tangled</span>
-        </nav>
         <div className={styles.columns} aria-hidden="true">
           <span>Discipline</span>
           <span>Project</span>
-          <span>Client / Agency / Industry / Tags</span>
+          <span>Industry / Client / Agency / Tags</span>
         </div>
       </header>
 
@@ -157,12 +257,13 @@ export default function TangledTree({
           height={layout.height}
           viewBox={`0 0 ${layout.width} ${layout.height}`}
           role="img"
-          aria-label="Bundled connections between disciplines, projects, clients, agencies, industries and tags"
+          aria-label="Bundled connections between disciplines, projects, industries, clients, agencies and tags"
         >
-          <g className={styles.links} aria-hidden="true">
+          <g className={styles.links} ref={linksRef} aria-hidden="true">
             {layout.links.map((link) => (
               <path
                 className={active && !active.linkIds.has(link.id) ? styles.mutedLink : undefined}
+                data-visible-link="true"
                 d={tangledLinkPath(link)}
                 key={link.id}
                 stroke={linkColor(link)}
@@ -170,9 +271,26 @@ export default function TangledTree({
             ))}
           </g>
 
+          <g className={styles.linkTargets}>
+            {layout.links.map((link) => (
+              <path
+                aria-label={`Open ${link.source.kind === 'project' ? link.source.title : link.target.title}`}
+                d={tangledLinkPath(link)}
+                key={link.id}
+                onClick={(event) => handleLinkClick(event, link)}
+                onKeyDown={(event) => handleLinkKeyDown(event, link)}
+                onFocus={() => setActiveNode(link.projectId)}
+                onBlur={() => setActiveNode(null)}
+                onMouseEnter={() => setActiveNode(link.projectId)}
+                role="link"
+                tabIndex={0}
+              />
+            ))}
+          </g>
+
           <g className={styles.bandLabels} aria-hidden="true">
             {bandStarts.map((node) => (
-              <text x={node.x + 6} y={node.y - layout.nodeHeight / 2 - 9} key={node.kind}>
+              <text x={node.x + nodeSize} y={node.y - node.height / 2 - 24} key={node.kind}>
                 {KIND_LABELS[node.kind]}
               </text>
             ))}
@@ -181,9 +299,14 @@ export default function TangledTree({
           <g className={styles.nodes}>
             {layout.nodes.map((node) => {
               const muted = Boolean(active && !active.nodeIds.has(node.id))
+              const nodeHeight = nodeSize + node.height
+              const targetHeight = mobile
+                ? Math.max(44, nodeHeight + 8)
+                : Math.max(28, nodeHeight + 8)
+              const labelWidth = Math.max(28, layout.nodeWidth - nodeSize - 8)
               return (
                 <a
-                  className={`${styles.node} ${muted ? styles.mutedNode : ''}`}
+                  className={`${styles.node} ${node.kind === 'project' ? styles.projectNode : ''} ${muted ? styles.mutedNode : ''}`}
                   href={node.href}
                   key={node.id}
                   onClick={(event) => handleNodeClick(event, node)}
@@ -192,21 +315,44 @@ export default function TangledTree({
                   onMouseEnter={() => setActiveNode(node.id)}
                 >
                   <title>{`${KIND_LABELS[node.kind]}: ${node.title}`}</title>
-                  <path
+                  <rect
                     className={styles.nodeOuter}
-                    d={`M${node.x} ${node.y - node.height / 2 - 4}L${node.x} ${node.y + node.height / 2 + 4}`}
-                    stroke={node.kind === 'project' ? '#111111' : mutedColor(node.color)}
+                    fill={node.kind === 'project' ? '#111111' : mutedColor(node.color)}
+                    height={nodeHeight}
+                    rx={nodeSize / 2}
+                    width={nodeSize}
+                    x={node.x - nodeSize / 2}
+                    y={node.y - nodeHeight / 2}
                   />
-                  <path
+                  <rect
                     className={styles.nodeInner}
-                    d={`M${node.x} ${node.y - node.height / 2 - 4}L${node.x} ${node.y + node.height / 2 + 4}`}
+                    height={Math.max(2, nodeHeight - 4)}
+                    rx={(nodeSize - 4) / 2}
+                    width={nodeSize - 4}
+                    x={node.x - (nodeSize - 4) / 2}
+                    y={node.y - nodeHeight / 2 + 2}
                   />
-                  <text x={node.x + 7} y={node.y - node.height / 2 - 8}>
-                    {node.title}
-                  </text>
-                  <path
+                  {mobile ? (
+                    <foreignObject
+                      className={styles.mobileLabel}
+                      height={44}
+                      width={labelWidth}
+                      x={node.x + nodeSize / 2 + 4}
+                      y={node.y - 22}
+                    >
+                      <span>{node.title}</span>
+                    </foreignObject>
+                  ) : (
+                    <text x={node.x + nodeSize / 2 + 5} y={node.y - nodeHeight / 2 - 7}>
+                      {node.title}
+                    </text>
+                  )}
+                  <rect
                     className={styles.hitArea}
-                    d={`M${node.x - 10} ${node.y - 18}H${node.x + Math.min(layout.nodeWidth - 4, Math.max(64, node.title.length * 8))}V${node.y + 12}H${node.x - 10}Z`}
+                    height={targetHeight}
+                    width={Math.max(44, layout.nodeWidth - 4)}
+                    x={node.x - 22}
+                    y={node.y - targetHeight / 2}
                   />
                 </a>
               )

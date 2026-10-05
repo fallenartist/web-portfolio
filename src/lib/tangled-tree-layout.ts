@@ -65,6 +65,8 @@ type LayoutOptions = {
   curveRadius?: number
   padding?: number
   bandGap?: number
+  targetWidth?: number
+  minimumNodeWidth?: number
 }
 
 const maximum = <T>(values: T[], accessor: (value: T) => number, fallback = 0) =>
@@ -81,8 +83,6 @@ export function constructTangledTreeLayout(
 ): TangledTreeLayout {
   const padding = options.padding ?? 12
   const nodeHeight = options.nodeHeight ?? 24
-  const nodeWidth = options.nodeWidth ?? 180
-  const bundleWidth = options.bundleWidth ?? 12
   const levelPadding = options.levelPadding ?? 18
   const metroDistance = options.metroDistance ?? 4
   const curveRadius = options.curveRadius ?? 14
@@ -140,6 +140,20 @@ export function constructTangledTreeLayout(
     return [...index.values()]
   })
 
+  let bundleWidth = options.bundleWidth ?? 12
+  let nodeWidth = options.nodeWidth ?? 180
+  const targetWidth = options.targetWidth
+  if (targetWidth) {
+    const bundleChannels = levelBundles.reduce((total, level) => total + level.length, 0)
+    const minimumNodeWidth = options.minimumNodeWidth ?? 72
+    const horizontalBudget = Math.max(1, targetWidth - 3 * padding)
+    if (bundleChannels) {
+      const availableForBundles = horizontalBudget - 3 * minimumNodeWidth
+      bundleWidth = Math.max(0.5, Math.min(bundleWidth, availableForBundles / bundleChannels))
+    }
+    nodeWidth = Math.max(12, (horizontalBudget - bundleChannels * bundleWidth) / 3)
+  }
+
   const bundles = levelBundles.flat()
   const links: TangledLayoutLink[] = []
   for (const source of nodes) {
@@ -184,7 +198,11 @@ export function constructTangledTreeLayout(
     node.bundleGroups.forEach((group, index) => {
       group.index = index
     })
-    node.height = (Math.max(1, node.bundleGroups.length) - 1) * metroDistance
+    const relationshipCount = links.reduce(
+      (count, link) => count + Number(link.source === node || link.target === node),
+      0,
+    )
+    node.height = (Math.max(1, node.bundleGroups.length, relationshipCount) - 1) * metroDistance
   }
 
   let xOffset = padding
@@ -259,7 +277,7 @@ export function constructTangledTreeLayout(
     nodes,
     links,
     bundles,
-    width: maximum(nodes, (node) => node.x) + nodeWidth + 2 * padding,
+    width: targetWidth ?? maximum(nodes, (node) => node.x) + nodeWidth + 2 * padding,
     height: maximum(nodes, (node) => node.y) + nodeHeight / 2 + 2 * padding,
     nodeWidth,
     nodeHeight,

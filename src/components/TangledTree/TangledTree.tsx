@@ -508,9 +508,7 @@ export default function TangledTree({
                   <title>{`${KIND_BREADCRUMBS[node.kind]}: ${node.title}`}</title>
                   <rect
                     className={styles.nodeOuter}
-                    fill={
-                      relationshipSelected ? '#111111' : (displayColors.get(node.id) ?? node.color)
-                    }
+                    fill={selected ? '#111111' : (displayColors.get(node.id) ?? node.color)}
                     height={nodeHeight}
                     rx={nodeSize / 2}
                     width={nodeSize}
@@ -524,7 +522,7 @@ export default function TangledTree({
                     width={nodeSize - 4}
                     x={node.x - (nodeSize - 4) / 2}
                     y={node.y - nodeHeight / 2 + 2}
-                    style={{ fill: relationshipSelected ? '#111111' : '#ffffff' }}
+                    style={{ fill: selected ? '#111111' : '#ffffff' }}
                   />
                   <rect
                     className={styles.hitArea}

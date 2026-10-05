@@ -31,7 +31,7 @@
   box-sizing: border-box;
   min-height: 0;
   flex: 1 1 auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
   padding: 0 0 24px var(--page-gutter);
   overscroll-behavior: contain;
@@ -39,8 +39,7 @@
 
 .canvas {
   display: block;
-  width: 100%;
-  max-width: 100%;
+  max-width: none;
 }
 
 .links path {

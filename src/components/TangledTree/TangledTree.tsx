@@ -72,6 +72,28 @@ function nodePermalink(overviewPath: string, node: TangledTreeNode) {
   return `${overviewPath.replace(/\/$/, '')}/${node.kind}/${encodeURIComponent(node.slug)}`
 }
 
+function minimumDiagramWidth(data: TangledTreeData, nodeSize: number) {
+  const allNodes = data.levels.flat()
+  const longestLabel = allNodes.reduce((length, node) => Math.max(length, node.title.length), 0)
+  const twoLineLabelWidth = Math.ceil(longestLabel / 2) * 7 + nodeSize + 20
+  const columnWidth = Math.min(220, Math.max(150, twoLineLabelWidth))
+  const bundleChannels = data.levels.reduce((total, level) => {
+    const keys = new Set(
+      level
+        .filter((node) => node.parentIds.length)
+        .map((node) => {
+          const parentKey = [...node.parentIds].sort().join('-X-')
+          return node.parentIds.some((id) => id.startsWith('root-'))
+            ? `${parentKey}-X-${node.id}`
+            : parentKey
+        }),
+    )
+    return total + keys.size
+  }, 0)
+
+  return Math.ceil(Math.max(640, 64 + columnWidth * 3 + bundleChannels * 2.5 + nodeSize))
+}
+
 export default function TangledTree({
   data,
   guideInstruction,
@@ -133,14 +155,6 @@ export default function TangledTree({
     }
   }, [])
 
-  useEffect(() => {
-    const onBreadcrumb = (event: Event) => {
-      router.push((event as CustomEvent<string>).detail)
-    }
-    window.addEventListener('breadcrumb-click', onBreadcrumb)
-    return () => window.removeEventListener('breadcrumb-click', onBreadcrumb)
-  }, [overviewPath, router, updateBreadcrumb])
-
   const mobile = containerSize.width < MOBILE_BREAKPOINT
   const nodeSize = mobile ? 14 : 12
   const allNodes = useMemo(() => data.levels.flat(), [data.levels])
@@ -151,14 +165,15 @@ export default function TangledTree({
   )
   const selectedNode = selectedNodeId ? nodesById.get(selectedNodeId) : undefined
   const displayColors = useMemo(() => buildDisplayColors(data), [data])
+  const diagramWidth = Math.max(containerSize.width, minimumDiagramWidth(data, nodeSize))
   const layout = useMemo(() => {
     const baseNodeHeight = mobile ? 58 : 30
     const options = {
-      targetWidth: containerSize.width,
+      targetWidth: diagramWidth,
       minimumNodeWidth: mobile ? 70 : 150,
       nodeHeight: baseNodeHeight,
       bundleWidth: mobile ? 2.5 : 10,
-      levelPadding: mobile ? 8 : 18,
+      levelPadding: mobile ? 2 : 6,
       curveRadius: mobile ? 8 : 14,
       metroDistance: 5,
       bandGap: mobile ? 54 : 48,
@@ -175,7 +190,36 @@ export default function TangledTree({
       levelPadding: options.levelPadding * scale,
       bandGap: options.bandGap * scale,
     })
-  }, [containerSize.height, containerSize.width, data.levels, mobile, nodeSize])
+  }, [containerSize.height, data.levels, diagramWidth, mobile, nodeSize])
+  const diagramTop = useMemo(() => {
+    const root = layout.nodes.find((node) => node.kind === 'root')
+    if (!root) return 0
+    const rootHeight = nodeSize + root.height
+    const labelTop = mobile
+      ? root.y - rootHeight / 2 - 38
+      : root.y - rootHeight / 2 - 17
+    return Math.max(0, labelTop - (mobile ? 18 : 24))
+  }, [layout.nodes, mobile, nodeSize])
+  const diagramHeight = Math.max(1, layout.height - diagramTop)
+
+  useEffect(() => {
+    const onBreadcrumb = (event: Event) => {
+      const path = (event as CustomEvent<string>).detail
+      if (path === overviewPath) {
+        setSelectedNodeId(null)
+        setActiveNode(null)
+      } else {
+        const nodeId = nodesByPermalink.get(path)
+        if (nodeId) {
+          setSelectedNodeId(nodeId)
+          setActiveNode(null)
+        }
+      }
+      router.push(path)
+    }
+    window.addEventListener('breadcrumb-click', onBreadcrumb)
+    return () => window.removeEventListener('breadcrumb-click', onBreadcrumb)
+  }, [nodesByPermalink, overviewPath, router])
 
   useEffect(() => {
     const breadcrumbs = [
@@ -365,11 +409,14 @@ export default function TangledTree({
         <svg
           className={styles.canvas}
           width={layout.width}
-          height={layout.height}
-          viewBox={`0 0 ${layout.width} ${layout.height}`}
+          height={diagramHeight}
+          viewBox={`0 ${diagramTop} ${layout.width} ${diagramHeight}`}
           role="img"
           aria-label="Bundled connections between disciplines, projects, industries, clients, agencies and tags"
-          style={{ visibility: hasMeasuredContainer ? 'visible' : 'hidden' }}
+          style={{
+            visibility: hasMeasuredContainer ? 'visible' : 'hidden',
+            width: `${layout.width}px`,
+          }}
         >
           <g className={styles.links} ref={linksRef} aria-hidden="true">
             {layout.links.map((link) => (

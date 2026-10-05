@@ -98,7 +98,7 @@ test('tangled layout reuses shared trunks and produces rounded orthogonal paths'
     'work',
   )
   const layout = constructTangledTreeLayout(data.levels, {
-    targetWidth: 320,
+    targetWidth: 400,
     minimumNodeWidth: 70,
     bundleWidth: 2.5,
     nodeHeight: 44,
@@ -115,10 +115,13 @@ test('tangled layout reuses shared trunks and produces rounded orthogonal paths'
   assert.equal(new Set(tagLinks.map((link) => link.xb)).size, 1)
   assert.equal(disciplineLinks[0].xt, disciplineLinks[0].target.x + 7)
   assert.equal(tagLinks[0].xs, tagLinks[0].source.x - 7)
+  const projectEdgeClearance =
+    disciplineLinks[0].source.x - disciplineLinks[0].xb - 7
+  assert.ok(projectEdgeClearance >= 2.5, `project edge clearance: ${projectEdgeClearance}`)
   assert.equal(tagLinks[0].c1, tagLinks[0].c2)
   assert.ok(tagLinks[0].c1 > 0)
   assert.match(tangledLinkPath(tagLinks[0]), /^M.+L.+A.+L.+A.+L/)
-  assert.equal(layout.width, 320)
+  assert.equal(layout.width, 400)
   assert.ok(layout.nodes.every((node) => node.x >= 0 && node.x <= layout.width))
   assert.ok(layout.nodes.every((node) => node.height === 0))
 

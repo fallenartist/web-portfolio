@@ -155,6 +155,9 @@ export function constructTangledTreeLayout(
   const hasRootColumn = levels[0]?.some((node) => node.kind === 'root') ?? false
   let rootColumnWidth = hasRootColumn ? (options.rootColumnWidth ?? 84) : 0
   const regularColumnCount = Math.max(1, levels.length - Number(hasRootColumn))
+  const markerClearance = hasRootColumn
+    ? regularColumnCount * (nodeMarkerWidth / 2)
+    : Math.max(0, levels.length - 1) * (nodeMarkerWidth / 2)
   const targetWidth = options.targetWidth
   if (targetWidth) {
     const bundleChannels = levelBundles.reduce((total, level) => total + level.length, 0)
@@ -163,12 +166,16 @@ export function constructTangledTreeLayout(
     rootColumnWidth = Math.min(rootColumnWidth, horizontalBudget * 0.22)
     if (bundleChannels) {
       const availableForBundles =
-        horizontalBudget - rootColumnWidth - regularColumnCount * minimumNodeWidth
+        horizontalBudget -
+        rootColumnWidth -
+        markerClearance -
+        regularColumnCount * minimumNodeWidth
       bundleWidth = Math.max(0.5, Math.min(bundleWidth, availableForBundles / bundleChannels))
     }
     nodeWidth = Math.max(
       12,
-      (horizontalBudget - rootColumnWidth - bundleChannels * bundleWidth) / regularColumnCount,
+      (horizontalBudget - rootColumnWidth - markerClearance - bundleChannels * bundleWidth) /
+        regularColumnCount,
     )
   }
 
@@ -223,6 +230,7 @@ export function constructTangledTreeLayout(
   let yOffset = padding
   levels.forEach((level, levelIndex) => {
     xOffset += levelBundles[levelIndex].length * bundleWidth
+    if (levelIndex > 0) xOffset += nodeMarkerWidth / 2
     yOffset += levelPadding
     level.forEach((node, nodeIndex) => {
       if (

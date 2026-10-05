@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import TangledTree from '@/components/TangledTree/TangledTree'
 import Treemap from '@/components/Treemap/Treemap'
-import { buildTangledTreeData } from '@/lib/tangled-tree-data'
+import { buildTangledTreeData, type TangledNodeKind } from '@/lib/tangled-tree-data'
 import { getProjectsOverviewPath } from '@/lib/menu-links'
 import { getPortfolio } from '@/lib/site-data'
 import { findTreemapNode } from '@/lib/treemap-data'
@@ -29,6 +29,30 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
     slug[1] === 'tangled'
   ) {
     redirect(overviewPath)
+  }
+  if (slug.length === 3 && slug[0] === portfolio.settings.projectsOverviewSlug) {
+    const kind = slug[1] as TangledNodeKind
+    const validKinds: TangledNodeKind[] = [
+      'discipline',
+      'project',
+      'industry',
+      'client',
+      'agency',
+      'tag',
+    ]
+    if (!validKinds.includes(kind)) notFound()
+    const data = buildTangledTreeData(
+      portfolio.disciplines,
+      portfolio.projects,
+      treemapData.legacyRootSlug,
+    )
+    const selected = data.levels.flat().find((node) => node.kind === kind && node.slug === slug[2])
+    if (!selected) notFound()
+    return (
+      <main>
+        <TangledTree data={data} initialSelectedId={selected.id} overviewPath={overviewPath} />
+      </main>
+    )
   }
   if (treemapData.legacyRootSlug === slug[0] && findTreemapNode(treemapData, slug.slice(1))) {
     redirect('/' + slug.slice(1).map(encodeURIComponent).join('/'))

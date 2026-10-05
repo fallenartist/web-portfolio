@@ -4,6 +4,7 @@ export type TangledNodeKind = 'discipline' | 'project' | 'client' | 'agency' | '
 
 export type TangledTreeNode = {
   id: string
+  slug: string
   title: string
   kind: TangledNodeKind
   href: string
@@ -79,6 +80,7 @@ export function buildTangledTreeData(
     }
     metadata.set(id, {
       id,
+      slug: item.slug,
       title: item.title,
       kind,
       href: filterHref(kind, item.slug),
@@ -101,6 +103,7 @@ export function buildTangledTreeData(
     if (!disciplineNodes.has(discipline.id)) {
       disciplineNodes.set(discipline.id, {
         id: disciplineNodeID,
+        slug: discipline.slug,
         title: discipline.title,
         kind: 'discipline',
         href: disciplineHref,
@@ -111,6 +114,7 @@ export function buildTangledTreeData(
 
     projectNodes.push({
       id: projectID,
+      slug: project.slug,
       title: project.title,
       kind: 'project',
       href: `${disciplineHref}/${encodeURIComponent(project.slug)}`.replace(/\/+/g, '/'),

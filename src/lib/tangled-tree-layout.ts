@@ -67,6 +67,7 @@ type LayoutOptions = {
   bandGap?: number
   targetWidth?: number
   minimumNodeWidth?: number
+  nodeMarkerWidth?: number
 }
 
 const maximum = <T>(values: T[], accessor: (value: T) => number, fallback = 0) =>
@@ -87,6 +88,7 @@ export function constructTangledTreeLayout(
   const metroDistance = options.metroDistance ?? 4
   const curveRadius = options.curveRadius ?? 14
   const bandGap = options.bandGap ?? 28
+  const nodeMarkerWidth = options.nodeMarkerWidth ?? 0
   const minimumFamilyHeight = nodeHeight
 
   const levels = inputLevels.map((level, levelIndex) =>
@@ -230,7 +232,7 @@ export function constructTangledTreeLayout(
 
   const setLinkCoordinates = (link: TangledLayoutLink) => {
     const group = link.target.bundleGroupsByID.get(link.bundle.id)
-    link.xt = link.target.x
+    link.xt = link.target.x + nodeMarkerWidth / 2
     link.yt =
       link.target.y +
       (group?.index ?? 0) * metroDistance -
@@ -238,7 +240,7 @@ export function constructTangledTreeLayout(
       metroDistance / 2
     link.xb = link.bundle.x
     link.yb = link.bundle.y
-    link.xs = link.source.x
+    link.xs = link.source.x - nodeMarkerWidth / 2
     link.ys = link.source.y
   }
   links.forEach(setLinkCoordinates)

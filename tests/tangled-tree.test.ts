@@ -79,7 +79,9 @@ test('tangled tree data exposes every project relationship as an interactive nod
     [['discipline'], ['project', 'project'], ['industry', 'client', 'agency', 'tag']],
   )
   assert.equal(data.levels[0][0].href, '/identity')
+  assert.equal(data.levels[0][0].slug, 'identity')
   assert.equal(data.levels[1][0].href, '/identity/project-a')
+  assert.equal(data.levels[1][0].slug, 'project-a')
   assert.equal(data.levels[2].find((node) => node.kind === 'agency')?.href, '/?agency=studio-one')
   assert.deepEqual(data.levels[2].find((node) => node.kind === 'tag')?.parentIds, [
     'project-10',
@@ -98,6 +100,7 @@ test('tangled layout reuses shared trunks and produces rounded orthogonal paths'
     minimumNodeWidth: 70,
     bundleWidth: 2.5,
     nodeHeight: 44,
+    nodeMarkerWidth: 14,
   })
   const disciplineLinks = layout.links.filter((link) => link.target.id === 'discipline-2')
   const tagLinks = layout.links.filter((link) => link.source.id === 'tag-6')
@@ -106,6 +109,8 @@ test('tangled layout reuses shared trunks and produces rounded orthogonal paths'
   assert.equal(new Set(disciplineLinks.map((link) => link.xb)).size, 1)
   assert.equal(tagLinks.length, 2)
   assert.equal(new Set(tagLinks.map((link) => link.xb)).size, 1)
+  assert.equal(disciplineLinks[0].xt, disciplineLinks[0].target.x + 7)
+  assert.equal(tagLinks[0].xs, tagLinks[0].source.x - 7)
   assert.match(tangledLinkPath(tagLinks[0]), /^M.+L.+A.+L.+A.+L/)
   assert.equal(layout.width, 320)
   assert.ok(layout.nodes.every((node) => node.x >= 0 && node.x <= layout.width))
@@ -119,6 +124,7 @@ test('tangled layout reuses shared trunks and produces rounded orthogonal paths'
         ...data.levels[2],
         {
           id: 'tag-unique',
+          slug: 'unique',
           title: 'Unique tag',
           kind: 'tag',
           href: '/?tag=unique',

@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { RichText } from '@payloadcms/richtext-lexical/react'
 import { getAdminThumbnail } from '../src/collections/Media'
 import { coverMediaRect, mediaFocalPosition, proportionalMediaSize } from '../src/lib/media-image'
+import { projectTextConverters } from '../src/lib/project-rich-text'
 import type { Discipline, Industry, Project, Media, Setting } from '../src/payload-types'
 import { getInternalLinkHref, getMenuItemHref } from '../src/lib/menu-links'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
@@ -327,6 +331,50 @@ test('Lexical content stays structured rather than being assigned to innerHTML',
   }
   const tree = transformDataForTreemap([discipline(1)], [project({ description })])
   assert.deepEqual(tree.children![0].children![0].desc, description)
+})
+
+test('project rich text renders the all-small-caps text state', () => {
+  const description = {
+    root: {
+      type: 'root',
+      version: 1,
+      direction: null,
+      format: '',
+      indent: 0,
+      children: [
+        {
+          type: 'paragraph',
+          version: 1,
+          direction: null,
+          format: '',
+          indent: 0,
+          textFormat: 0,
+          textStyle: '',
+          children: [
+            {
+              type: 'text',
+              version: 1,
+              detail: 0,
+              format: 0,
+              mode: 'normal',
+              style: '',
+              text: 'Selected text',
+              $: { fontFeatures: 'allSmallCaps' },
+            },
+          ],
+        },
+      ],
+    },
+  } as unknown as NonNullable<Project['description']>
+
+  const markup = renderToStaticMarkup(
+    createElement(RichText, { converters: projectTextConverters, data: description }),
+  )
+
+  assert.match(markup, /font-feature-settings/)
+  assert.match(markup, /smcp/)
+  assert.match(markup, /c2sc/)
+  assert.match(markup, /Selected text/)
 })
 
 test('CMS queries disable default pagination and enforce public read access', async () => {

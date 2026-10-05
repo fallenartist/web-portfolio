@@ -1,5 +1,24 @@
 import type { CollectionConfig } from 'payload'
+import { lexicalEditor, TextStateFeature } from '@payloadcms/richtext-lexical'
 import { validateVideoURL } from '@/lib/video-embed'
+
+const projectTextEditor = lexicalEditor({
+  features: ({ rootFeatures }) => [
+    ...rootFeatures,
+    TextStateFeature({
+      state: {
+        fontFeatures: {
+          allSmallCaps: {
+            label: 'All Small Caps',
+            css: {
+              'font-feature-settings': '"smcp" 1, "c2sc" 1',
+            },
+          },
+        },
+      },
+    }),
+  ],
+})
 
 const videoOptions = [
   {
@@ -28,6 +47,7 @@ export const Projects: CollectionConfig = {
     {
       name: 'description',
       type: 'richText',
+      editor: projectTextEditor,
       admin: { description: 'Shown below the hero, alongside the project title' },
     },
     {
@@ -164,7 +184,7 @@ export const Projects: CollectionConfig = {
           slug: 'text',
           labels: { singular: 'Text', plural: 'Text blocks' },
           fields: [
-            { name: 'content', type: 'richText', required: true },
+            { name: 'content', type: 'richText', required: true, editor: projectTextEditor },
             {
               name: 'quote',
               label: 'Display as quote',

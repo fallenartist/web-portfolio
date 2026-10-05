@@ -5,6 +5,7 @@ import { RichText } from '@payloadcms/richtext-lexical/react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
 import { mediaFocalPosition, proportionalMediaSize } from '@/lib/media-image'
+import { projectTextConverters } from '@/lib/project-rich-text'
 import styles from './ProjectStory.module.scss'
 
 type ResponsiveImage = {
@@ -434,7 +435,7 @@ export default function ProjectStory({
           {!titleOverHero && <h1>{project.title}</h1>}
           {project.desc && (
             <div className={styles.description}>
-              <RichText data={project.desc} />
+              <RichText converters={projectTextConverters} data={project.desc} />
             </div>
           )}
         </header>
@@ -461,7 +462,7 @@ export default function ProjectStory({
                 className={`${styles.contentBlock} ${styles.textBlock} ${block.quote ? styles.quoteBlock : ''}`}
                 key={block.id}
               >
-                <RichText data={block.content} />
+                <RichText converters={projectTextConverters} data={block.content} />
               </section>
             )
           }

@@ -23,13 +23,10 @@ html, body {
   overflow: hidden;
   font-family: "October Condensed", sans-serif;
   font-kerning: normal;
-  -moz-font-feature-settings: 'kern';
-  -webkit-font-feature-settings: 'kern';
-  font-feature-settings: "kern" on;
   font-variant-ligatures: common-ligatures;
-  -moz-font-feature-settings: 'liga';
-  -webkit-font-feature-settings: 'liga';
-  font-feature-settings: 'liga' on;
+  -moz-font-feature-settings: 'liga' 1, 'onum' 1, 'pnum' 1;
+  -webkit-font-feature-settings: 'liga' 1, 'onum' 1, 'pnum' 1;
+  font-feature-settings: "liga" 1, "onum" 1, "pnum" 1;
 }
 
 body {

@@ -1,11 +1,11 @@
 'use client'
 
-import { easeCubicOut, select } from 'd3'
+import { easeCubicOut, schemeCategory10, schemeDark2, schemeTableau10, select } from 'd3'
 import { useRouter } from 'next/navigation'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
-import type { TangledTreeData, TangledTreeNode } from '@/lib/tangled-tree-data'
+import type { TangledNodeKind, TangledTreeData, TangledTreeNode } from '@/lib/tangled-tree-data'
 import {
   constructTangledTreeLayout,
   tangledLinkPath,
@@ -16,6 +16,9 @@ import styles from './TangledTree.module.scss'
 
 const RESIZE_DEBOUNCE = 140
 const MOBILE_BREAKPOINT = 768
+type MetadataKind = Extract<TangledNodeKind, 'industry' | 'client' | 'agency' | 'tag'>
+
+const METADATA_KINDS: MetadataKind[] = ['industry', 'client', 'agency', 'tag']
 
 const KIND_LABELS = {
   discipline: 'Discipline',
@@ -26,17 +29,33 @@ const KIND_LABELS = {
   tag: 'Tags',
 } as const
 
-function mutedColor(color: string) {
-  const value = color.replace('#', '')
-  if (!/^[0-9a-f]{6}$/i.test(value)) return '#777777'
-  const channel = (offset: number) => parseInt(value.slice(offset, offset + 2), 16)
-  const mix = (number: number) => Math.round(number + (255 - number) * 0.28)
-  return `rgb(${mix(channel(0))} ${mix(channel(2))} ${mix(channel(4))})`
+function linkColor(link: TangledLayoutLink, colors: Map<string, string>) {
+  const taxonomy = link.source.kind === 'project' ? link.target : link.source
+  return colors.get(taxonomy.id) ?? taxonomy.color
 }
 
-function linkColor(link: TangledLayoutLink) {
-  const taxonomy = link.source.kind === 'project' ? link.target : link.source
-  return mutedColor(taxonomy.color)
+function buildDisplayColors(data: TangledTreeData) {
+  const colors = new Map<string, string>()
+  const indexes: Record<'client' | 'agency' | 'tag', number> = {
+    client: 0,
+    agency: 0,
+    tag: 0,
+  }
+  const palettes = {
+    client: schemeCategory10,
+    agency: schemeDark2,
+    tag: schemeTableau10,
+  }
+
+  for (const node of data.levels.flat()) {
+    if (node.kind === 'client' || node.kind === 'agency' || node.kind === 'tag') {
+      const palette = palettes[node.kind]
+      colors.set(node.id, palette[indexes[node.kind]++ % palette.length])
+    } else {
+      colors.set(node.id, node.color)
+    }
+  }
+  return colors
 }
 
 function isCoarsePointer() {
@@ -60,6 +79,9 @@ export default function TangledTree({
   const [layoutRevision, setLayoutRevision] = useState(0)
   const [activeNode, setActiveNode] = useState<string | null>(null)
   const [touchNode, setTouchNode] = useState<string | null>(null)
+  const [visibleMetadataKinds, setVisibleMetadataKinds] = useState<Set<MetadataKind>>(
+    () => new Set(METADATA_KINDS),
+  )
 
   useEffect(() => {
     const element = containerRef.current
@@ -112,6 +134,16 @@ export default function TangledTree({
   }, [overviewPath, router, updateBreadcrumb])
 
   const mobile = containerSize.width < MOBILE_BREAKPOINT
+  const nodeSize = mobile ? 14 : 12
+  const displayColors = useMemo(() => buildDisplayColors(data), [data])
+  const visibleLevels = useMemo<TangledTreeNode[][]>(
+    () => [
+      data.levels[0],
+      data.levels[1],
+      data.levels[2].filter((node) => visibleMetadataKinds.has(node.kind as MetadataKind)),
+    ],
+    [data.levels, visibleMetadataKinds],
+  )
   const layout = useMemo(() => {
     const baseNodeHeight = mobile ? 44 : 30
     const options = {
@@ -122,19 +154,19 @@ export default function TangledTree({
       levelPadding: mobile ? 12 : 18,
       curveRadius: mobile ? 8 : 14,
       metroDistance: 5,
-      bandGap: mobile ? 36 : 34,
+      bandGap: mobile ? 54 : 48,
       padding: mobile ? 8 : 12,
     }
-    const initial = constructTangledTreeLayout(data.levels, options)
+    const initial = constructTangledTreeLayout(visibleLevels, options)
     if (initial.height >= containerSize.height) return initial
     const scale = Math.min(1.35, containerSize.height / initial.height)
-    return constructTangledTreeLayout(data.levels, {
+    return constructTangledTreeLayout(visibleLevels, {
       ...options,
       nodeHeight: baseNodeHeight * scale,
       levelPadding: options.levelPadding * scale,
       bandGap: options.bandGap * scale,
     })
-  }, [containerSize.height, containerSize.width, data.levels, mobile])
+  }, [containerSize.height, containerSize.width, mobile, visibleLevels])
 
   useLayoutEffect(() => {
     const paths = linksRef.current?.querySelectorAll<SVGPathElement>('path[data-visible-link]')
@@ -203,6 +235,34 @@ export default function TangledTree({
     return starts
   }, [layout.nodes])
 
+  const columnPositions = useMemo(() => {
+    const first = (level: number) => layout.nodes.find((node) => node.level === level)?.x
+    const disciplineNode = first(0) ?? 0
+    const projectNode = first(1) ?? layout.width / 3
+    const metadataNode = first(2) ?? projectNode + layout.nodeWidth
+    const discipline = disciplineNode + nodeSize
+    const project = projectNode + nodeSize
+    const metadata = metadataNode + nodeSize
+    return {
+      paddingLeft: `${discipline}px`,
+      gridTemplateColumns: `${Math.max(1, project - discipline)}px ${Math.max(
+        1,
+        metadata - project,
+      )}px minmax(0, 1fr)`,
+    }
+  }, [layout.nodeWidth, layout.nodes, layout.width, nodeSize])
+
+  const toggleMetadataKind = (kind: MetadataKind) => {
+    setActiveNode(null)
+    setTouchNode(null)
+    setVisibleMetadataKinds((current) => {
+      const next = new Set(current)
+      if (next.has(kind)) next.delete(kind)
+      else next.add(kind)
+      return next
+    })
+  }
+
   const handleNodeClick = (event: React.MouseEvent, node: TangledLayoutNode) => {
     if (isCoarsePointer() && touchNode !== node.id) {
       event.preventDefault()
@@ -233,15 +293,28 @@ export default function TangledTree({
     return <p className={styles.empty}>No projects are available for the overview.</p>
   }
 
-  const nodeSize = mobile ? 14 : 12
-
   return (
     <section className={styles.page} aria-label="Project relationship overview">
       <header className={styles.header}>
-        <div className={styles.columns} aria-hidden="true">
+        <div className={styles.columns} style={columnPositions}>
           <span>Discipline</span>
           <span>Project</span>
-          <span>Industry / Client / Agency / Tags</span>
+          <div className={styles.metadataControls} aria-label="Visible relationship groups">
+            {METADATA_KINDS.map((kind) => {
+              const visible = visibleMetadataKinds.has(kind)
+              return (
+                <button
+                  aria-pressed={visible}
+                  className={visible ? styles.activeControl : undefined}
+                  key={kind}
+                  onClick={() => toggleMetadataKind(kind)}
+                  type="button"
+                >
+                  {KIND_LABELS[kind]}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </header>
 
@@ -266,7 +339,7 @@ export default function TangledTree({
                 data-visible-link="true"
                 d={tangledLinkPath(link)}
                 key={link.id}
-                stroke={linkColor(link)}
+                stroke={linkColor(link, displayColors)}
               />
             ))}
           </g>
@@ -290,7 +363,7 @@ export default function TangledTree({
 
           <g className={styles.bandLabels} aria-hidden="true">
             {bandStarts.map((node) => (
-              <text x={node.x + nodeSize} y={node.y - node.height / 2 - 24} key={node.kind}>
+              <text x={node.x + nodeSize} y={node.y - node.height / 2 - 36} key={node.kind}>
                 {KIND_LABELS[node.kind]}
               </text>
             ))}
@@ -317,7 +390,7 @@ export default function TangledTree({
                   <title>{`${KIND_LABELS[node.kind]}: ${node.title}`}</title>
                   <rect
                     className={styles.nodeOuter}
-                    fill={node.kind === 'project' ? '#111111' : mutedColor(node.color)}
+                    fill={displayColors.get(node.id) ?? node.color}
                     height={nodeHeight}
                     rx={nodeSize / 2}
                     width={nodeSize}

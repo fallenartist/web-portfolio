@@ -109,5 +109,26 @@ test('tangled layout reuses shared trunks and produces rounded orthogonal paths'
   assert.match(tangledLinkPath(tagLinks[0]), /^M.+L.+A.+L.+A.+L/)
   assert.equal(layout.width, 320)
   assert.ok(layout.nodes.every((node) => node.x >= 0 && node.x <= layout.width))
-  assert.ok(layout.nodes.filter((node) => node.kind === 'project').every((node) => node.height > 0))
+  assert.ok(layout.nodes.every((node) => node.height === 0))
+
+  const layoutWithUniqueTrunk = constructTangledTreeLayout(
+    [
+      data.levels[0],
+      data.levels[1],
+      [
+        ...data.levels[2],
+        {
+          id: 'tag-unique',
+          title: 'Unique tag',
+          kind: 'tag',
+          href: '/?tag=unique',
+          color: '#555555',
+          parentIds: ['project-10'],
+        },
+      ],
+    ],
+    { nodeHeight: 44 },
+  )
+  assert.ok(layoutWithUniqueTrunk.nodes.find((node) => node.id === 'project-10')!.height > 0)
+  assert.equal(layoutWithUniqueTrunk.nodes.find((node) => node.id === 'project-11')!.height, 0)
 })

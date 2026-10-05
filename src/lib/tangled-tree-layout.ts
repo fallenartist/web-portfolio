@@ -198,11 +198,7 @@ export function constructTangledTreeLayout(
     node.bundleGroups.forEach((group, index) => {
       group.index = index
     })
-    const relationshipCount = links.reduce(
-      (count, link) => count + Number(link.source === node || link.target === node),
-      0,
-    )
-    node.height = (Math.max(1, node.bundleGroups.length, relationshipCount) - 1) * metroDistance
+    node.height = (Math.max(1, node.bundleGroups.length) - 1) * metroDistance
   }
 
   let xOffset = padding

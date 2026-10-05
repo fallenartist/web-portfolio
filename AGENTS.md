@@ -22,3 +22,9 @@
 - Components in `src/components` with module CSS/SCSS
 - Collection schemas in `src/collections`
 - API routes using Next.js route handlers
+
+## TODO
+- Add an `Agencies` collection to admin to record the studio through which a project was commissioned.
+- Add a `Tags` collection to admin, listing all tags used in projects.
+- Show `Client:`, `Agency:`, and tags next to the description in the project UI.
+- Develop ways to present projects by industry, client, agency, and tag so these can become clickable throughout the front end.

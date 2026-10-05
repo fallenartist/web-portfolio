@@ -24,7 +24,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <head>
-        <link rel="stylesheet" href="https://fonts.typotheque.com/WF-004891-002394.css" />
+        <link rel="stylesheet" href="https://webfonts.typotheque.com/WF-004891-002394.css" />
       </head>
       <body>
         <BreadcrumbProvider

@@ -21,12 +21,12 @@ const METADATA_KINDS: MetadataKind[] = ['industry', 'client', 'agency', 'tag']
 
 const KIND_LABELS = {
   root: 'Work',
-  discipline: 'Disciplines',
-  project: 'Projects',
-  industry: 'Industries',
-  client: 'Clients',
-  agency: 'Agencies',
-  tag: 'Tags',
+  discipline: 'Discipline',
+  project: 'Project',
+  industry: 'Industry',
+  client: 'Client',
+  agency: 'Agency',
+  tag: 'Tag',
 } as const
 
 const KIND_BREADCRUMBS: Record<TangledNodeKind, string> = {
@@ -152,13 +152,13 @@ export default function TangledTree({
   const selectedNode = selectedNodeId ? nodesById.get(selectedNodeId) : undefined
   const displayColors = useMemo(() => buildDisplayColors(data), [data])
   const layout = useMemo(() => {
-    const baseNodeHeight = mobile ? 44 : 30
+    const baseNodeHeight = mobile ? 58 : 30
     const options = {
       targetWidth: containerSize.width,
       minimumNodeWidth: mobile ? 70 : 150,
       nodeHeight: baseNodeHeight,
       bundleWidth: mobile ? 2.5 : 10,
-      levelPadding: mobile ? 12 : 18,
+      levelPadding: mobile ? 8 : 18,
       curveRadius: mobile ? 8 : 14,
       metroDistance: 5,
       bandGap: mobile ? 54 : 48,
@@ -190,7 +190,7 @@ export default function TangledTree({
         })
       }
       breadcrumbs.push({
-        data: { title: selectedNode.title },
+        data: { title: selectedNode.kind === 'root' ? 'All' : selectedNode.title },
         path: nodePermalink(overviewPath, selectedNode),
       })
     }
@@ -434,8 +434,14 @@ export default function TangledTree({
               const targetHeight = mobile
                 ? Math.max(44, nodeHeight + 8)
                 : Math.max(28, nodeHeight + 8)
-              const labelWidth = Math.max(28, node.columnWidth - nodeSize - 8)
-              const labelY = mobile ? node.y - 22 : node.y - nodeHeight / 2 - 17
+              const labelHeight = mobile ? 34 : 24
+              const labelWidth = mobile
+                ? Math.max(28, node.columnWidth - 4)
+                : Math.max(28, node.columnWidth - nodeSize - 8)
+              const labelX = mobile ? node.x - nodeSize / 2 : node.x + nodeSize / 2 + 5
+              const labelY = mobile
+                ? node.y - nodeHeight / 2 - labelHeight - 4
+                : node.y - nodeHeight / 2 - 17
               return (
                 <g
                   aria-label={`Select ${KIND_BREADCRUMBS[node.kind]} ${node.title}`}
@@ -480,9 +486,9 @@ export default function TangledTree({
                   />
                   <foreignObject
                     className={`${styles.nodeLabel} ${showView ? styles.selectedLabel : ''}`}
-                    height={mobile ? 44 : 24}
+                    height={labelHeight}
                     width={labelWidth}
-                    x={node.x + nodeSize / 2 + 5}
+                    x={labelX}
                     y={labelY}
                   >
                     <div className={styles.labelRow}>
@@ -505,13 +511,6 @@ export default function TangledTree({
           </g>
         </svg>
       </div>
-      <p className={styles.attribution}>
-        Routing adapted from{' '}
-        <a href="https://observablehq.com/@nitaku/tangled-tree-visualization-ii">
-          Tangled Tree Visualization II
-        </a>{' '}
-        by Matteo Abrate.
-      </p>
     </section>
   )
 }

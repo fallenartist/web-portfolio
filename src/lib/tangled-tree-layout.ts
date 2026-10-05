@@ -258,12 +258,14 @@ export function constructTangledTreeLayout(
 
   const setLinkCoordinates = (link: TangledLayoutLink) => {
     const group = link.target.bundleGroupsByID.get(link.bundle.id)
-    link.xt = link.target.x + nodeMarkerWidth / 2
     link.yt =
       link.target.y +
       (group?.index ?? 0) * metroDistance -
       (link.target.bundleGroups.length * metroDistance) / 2 +
       metroDistance / 2
+    // Paths terminate at the outer left/right edge of the node capsule. Nodes
+    // are rendered above links, so the strokes meet the outline without crossing it.
+    link.xt = link.target.x + nodeMarkerWidth / 2
     link.xb = link.bundle.x
     link.yb = link.bundle.y
     link.xs = link.source.x - nodeMarkerWidth / 2
@@ -287,13 +289,9 @@ export function constructTangledTreeLayout(
 
   links.forEach((link) => {
     setLinkCoordinates(link)
-    link.c1 =
-      link.source.level - link.target.level > 1
-        ? Math.max(
-            0,
-            Math.min(nodeWidth + curveRadius, link.xb - link.xt, link.yb - link.yt) - curveRadius,
-          )
-        : curveRadius
+    // Both turns are true quarter circles. The layout clearance above reserves
+    // two radii between endpoints, so even the shortest branch can use the full arc.
+    link.c1 = curveRadius
     link.c2 = curveRadius
   })
 

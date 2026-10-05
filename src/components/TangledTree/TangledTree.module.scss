@@ -140,6 +140,11 @@
   line-height: 1;
   text-decoration: none;
   text-transform: uppercase;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: #cc2929;
+  }
 
   &:focus-visible {
     outline: 1px solid #111;

@@ -445,6 +445,7 @@ export default function TangledTree({
                 onFocus={() => setActiveNode(link.projectId)}
                 onBlur={() => setActiveNode(null)}
                 onMouseEnter={() => setActiveNode(link.projectId)}
+                onMouseLeave={() => setActiveNode(null)}
                 role="button"
                 tabIndex={0}
               />
@@ -502,6 +503,7 @@ export default function TangledTree({
                   onFocus={() => setActiveNode(node.id)}
                   onBlur={() => setActiveNode(null)}
                   onMouseEnter={() => setActiveNode(node.id)}
+                  onMouseLeave={() => setActiveNode(null)}
                   role="button"
                   tabIndex={0}
                 >

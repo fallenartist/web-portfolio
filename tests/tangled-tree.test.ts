@@ -76,14 +76,16 @@ test('tangled tree data exposes every project relationship as an interactive nod
 
   assert.deepEqual(
     data.levels.map((level) => level.map((node) => node.kind)),
-    [['discipline'], ['project', 'project'], ['industry', 'client', 'agency', 'tag']],
+    [['root'], ['discipline'], ['project', 'project'], ['industry', 'client', 'agency', 'tag']],
   )
-  assert.equal(data.levels[0][0].href, '/identity')
-  assert.equal(data.levels[0][0].slug, 'identity')
-  assert.equal(data.levels[1][0].href, '/identity/project-a')
-  assert.equal(data.levels[1][0].slug, 'project-a')
-  assert.equal(data.levels[2].find((node) => node.kind === 'agency')?.href, '/?agency=studio-one')
-  assert.deepEqual(data.levels[2].find((node) => node.kind === 'tag')?.parentIds, [
+  assert.equal(data.levels[0][0].href, '/')
+  assert.equal(data.levels[0][0].slug, 'work')
+  assert.equal(data.levels[1][0].href, '/identity')
+  assert.equal(data.levels[1][0].slug, 'identity')
+  assert.equal(data.levels[2][0].href, '/identity/project-a')
+  assert.equal(data.levels[2][0].slug, 'project-a')
+  assert.equal(data.levels[3].find((node) => node.kind === 'agency')?.href, '/?agency=studio-one')
+  assert.deepEqual(data.levels[3].find((node) => node.kind === 'tag')?.parentIds, [
     'project-10',
     'project-11',
   ])
@@ -120,8 +122,9 @@ test('tangled layout reuses shared trunks and produces rounded orthogonal paths'
     [
       data.levels[0],
       data.levels[1],
+      data.levels[2],
       [
-        ...data.levels[2],
+        ...data.levels[3],
         {
           id: 'tag-unique',
           slug: 'unique',

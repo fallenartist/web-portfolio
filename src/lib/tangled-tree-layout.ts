@@ -8,6 +8,7 @@ export type TangledLayoutNode = TangledTreeNode & {
   x: number
   y: number
   height: number
+  columnWidth: number
   parents: TangledLayoutNode[]
   bundle?: TangledLayoutBundle
   bundleGroups: TangledNodeBundleGroup[]
@@ -68,6 +69,7 @@ type LayoutOptions = {
   targetWidth?: number
   minimumNodeWidth?: number
   nodeMarkerWidth?: number
+  rootColumnWidth?: number
 }
 
 const maximum = <T>(values: T[], accessor: (value: T) => number, fallback = 0) =>
@@ -99,6 +101,7 @@ export function constructTangledTreeLayout(
       x: 0,
       y: 0,
       height: 0,
+      columnWidth: 0,
       parents: [],
       bundleGroups: [],
       bundleGroupsByID: new Map(),
@@ -144,16 +147,24 @@ export function constructTangledTreeLayout(
 
   let bundleWidth = options.bundleWidth ?? 12
   let nodeWidth = options.nodeWidth ?? 180
+  const hasRootColumn = levels[0]?.some((node) => node.kind === 'root') ?? false
+  let rootColumnWidth = hasRootColumn ? (options.rootColumnWidth ?? 84) : 0
+  const regularColumnCount = Math.max(1, levels.length - Number(hasRootColumn))
   const targetWidth = options.targetWidth
   if (targetWidth) {
     const bundleChannels = levelBundles.reduce((total, level) => total + level.length, 0)
     const minimumNodeWidth = options.minimumNodeWidth ?? 72
     const horizontalBudget = Math.max(1, targetWidth - 3 * padding)
+    rootColumnWidth = Math.min(rootColumnWidth, horizontalBudget * 0.22)
     if (bundleChannels) {
-      const availableForBundles = horizontalBudget - 3 * minimumNodeWidth
+      const availableForBundles =
+        horizontalBudget - rootColumnWidth - regularColumnCount * minimumNodeWidth
       bundleWidth = Math.max(0.5, Math.min(bundleWidth, availableForBundles / bundleChannels))
     }
-    nodeWidth = Math.max(12, (horizontalBudget - bundleChannels * bundleWidth) / 3)
+    nodeWidth = Math.max(
+      12,
+      (horizontalBudget - rootColumnWidth - bundleChannels * bundleWidth) / regularColumnCount,
+    )
   }
 
   const bundles = levelBundles.flat()
@@ -209,10 +220,20 @@ export function constructTangledTreeLayout(
     xOffset += levelBundles[levelIndex].length * bundleWidth
     yOffset += levelPadding
     level.forEach((node, nodeIndex) => {
-      if (levelIndex === 2 && nodeIndex > 0 && node.kind !== level[nodeIndex - 1].kind) {
+      if (
+        levelIndex === levels.length - 1 &&
+        nodeIndex > 0 &&
+        node.kind !== level[nodeIndex - 1].kind
+      ) {
         yOffset += bandGap
       }
-      node.x = node.level * nodeWidth + xOffset
+      const columnOffset = hasRootColumn
+        ? levelIndex === 0
+          ? 0
+          : rootColumnWidth + (levelIndex - 1) * nodeWidth
+        : levelIndex * nodeWidth
+      node.columnWidth = hasRootColumn && levelIndex === 0 ? rootColumnWidth : nodeWidth
+      node.x = columnOffset + xOffset
       node.y = nodeHeight + yOffset + node.height / 2
       yOffset += nodeHeight + node.height
     })
@@ -223,7 +244,7 @@ export function constructTangledTreeLayout(
     levelBundles[levelIndex].forEach((bundle) => {
       bundle.x =
         maximum(bundle.parents, (parent) => parent.x) +
-        nodeWidth +
+        maximum(bundle.parents, (parent) => parent.columnWidth) +
         (levelBundles[levelIndex].length - 1 - bundle.index) * bundleWidth
       bundle.y = precedingNodes * nodeHeight
     })
@@ -275,7 +296,7 @@ export function constructTangledTreeLayout(
     nodes,
     links,
     bundles,
-    width: targetWidth ?? maximum(nodes, (node) => node.x) + nodeWidth + 2 * padding,
+    width: targetWidth ?? maximum(nodes, (node) => node.x + node.columnWidth) + 2 * padding,
     height: maximum(nodes, (node) => node.y) + nodeHeight / 2 + 2 * padding,
     nodeWidth,
     nodeHeight,

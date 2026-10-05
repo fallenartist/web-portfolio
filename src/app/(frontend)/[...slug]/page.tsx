@@ -33,6 +33,7 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
   if (slug.length === 3 && slug[0] === portfolio.settings.projectsOverviewSlug) {
     const kind = slug[1] as TangledNodeKind
     const validKinds: TangledNodeKind[] = [
+      'root',
       'discipline',
       'project',
       'industry',

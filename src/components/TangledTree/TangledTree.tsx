@@ -14,13 +14,13 @@ import {
 } from '@/lib/tangled-tree-layout'
 import styles from './TangledTree.module.scss'
 
-const RESIZE_DEBOUNCE = 140
 const MOBILE_BREAKPOINT = 768
 type MetadataKind = Extract<TangledNodeKind, 'industry' | 'client' | 'agency' | 'tag'>
 
 const METADATA_KINDS: MetadataKind[] = ['industry', 'client', 'agency', 'tag']
 
 const KIND_LABELS = {
+  root: 'Work',
   discipline: 'Discipline',
   project: 'Project',
   industry: 'Industries',
@@ -30,6 +30,7 @@ const KIND_LABELS = {
 } as const
 
 const KIND_BREADCRUMBS: Record<TangledNodeKind, string> = {
+  root: 'Work',
   discipline: 'Discipline',
   project: 'Project',
   industry: 'Industry',
@@ -84,10 +85,10 @@ export default function TangledTree({
   const { updateBreadcrumb } = useBreadcrumb()
   const containerRef = useRef<HTMLDivElement>(null)
   const linksRef = useRef<SVGGElement>(null)
-  const resizeTimerRef = useRef<number | undefined>(undefined)
+  const resizeFrameRef = useRef<number | undefined>(undefined)
+  const initialAnimationRef = useRef(false)
   const measuredSizeRef = useRef({ width: 0, height: 0 })
   const [containerSize, setContainerSize] = useState({ width: 1100, height: 700 })
-  const [layoutRevision, setLayoutRevision] = useState(0)
   const [activeNode, setActiveNode] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initialSelectedId ?? null)
   const [visibleMetadataKinds, setVisibleMetadataKinds] = useState<Set<MetadataKind>>(
@@ -98,7 +99,7 @@ export default function TangledTree({
     const element = containerRef.current
     if (!element) return
 
-    const applyMeasurement = (width: number, height: number, immediate = false) => {
+    const applyMeasurement = (width: number, height: number) => {
       const next = {
         width: Math.max(280, Math.round(width)),
         height: Math.max(240, Math.round(height)),
@@ -110,25 +111,22 @@ export default function TangledTree({
         return
       }
 
-      const commit = () => {
-        measuredSizeRef.current = next
-        setContainerSize(next)
-        setLayoutRevision((revision) => revision + 1)
-      }
-      window.clearTimeout(resizeTimerRef.current)
-      if (immediate) commit()
-      else resizeTimerRef.current = window.setTimeout(commit, RESIZE_DEBOUNCE)
+      measuredSizeRef.current = next
+      setContainerSize(next)
     }
 
     const initial = element.getBoundingClientRect()
-    applyMeasurement(initial.width, initial.height, true)
+    applyMeasurement(initial.width, initial.height)
     const observer = new ResizeObserver(([entry]) => {
-      applyMeasurement(entry.contentRect.width, entry.contentRect.height)
+      window.cancelAnimationFrame(resizeFrameRef.current ?? 0)
+      resizeFrameRef.current = window.requestAnimationFrame(() => {
+        applyMeasurement(entry.contentRect.width, entry.contentRect.height)
+      })
     })
     observer.observe(element)
     return () => {
       observer.disconnect()
-      window.clearTimeout(resizeTimerRef.current)
+      window.cancelAnimationFrame(resizeFrameRef.current ?? 0)
     }
   }, [])
 
@@ -154,7 +152,8 @@ export default function TangledTree({
     () => [
       data.levels[0],
       data.levels[1],
-      data.levels[2].filter((node) => visibleMetadataKinds.has(node.kind as MetadataKind)),
+      data.levels[2],
+      data.levels[3].filter((node) => visibleMetadataKinds.has(node.kind as MetadataKind)),
     ],
     [data.levels, visibleMetadataKinds],
   )
@@ -171,6 +170,7 @@ export default function TangledTree({
       bandGap: mobile ? 54 : 48,
       nodeMarkerWidth: nodeSize,
       padding: mobile ? 8 : 12,
+      rootColumnWidth: mobile ? 48 : 88,
     }
     const initial = constructTangledTreeLayout(visibleLevels, options)
     if (initial.height >= containerSize.height) return initial
@@ -189,13 +189,16 @@ export default function TangledTree({
       { data: { title: 'Projects' }, path: overviewPath },
     ]
     if (selectedNode) {
-      breadcrumbs.push(
-        { data: { title: KIND_BREADCRUMBS[selectedNode.kind] }, path: overviewPath },
-        {
-          data: { title: selectedNode.title },
-          path: nodePermalink(overviewPath, selectedNode),
-        },
-      )
+      if (selectedNode.kind !== 'root') {
+        breadcrumbs.push({
+          data: { title: KIND_BREADCRUMBS[selectedNode.kind] },
+          path: overviewPath,
+        })
+      }
+      breadcrumbs.push({
+        data: { title: selectedNode.title },
+        path: nodePermalink(overviewPath, selectedNode),
+      })
     }
     updateBreadcrumb(breadcrumbs)
   }, [overviewPath, selectedNode, updateBreadcrumb])
@@ -210,8 +213,11 @@ export default function TangledTree({
   }, [nodesByPermalink])
 
   useLayoutEffect(() => {
+    if (initialAnimationRef.current) return
     const paths = linksRef.current?.querySelectorAll<SVGPathElement>('path[data-visible-link]')
-    if (!paths?.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (!paths?.length) return
+    initialAnimationRef.current = true
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     paths.forEach((path, index) => {
       const length = path.getTotalLength()
@@ -233,7 +239,7 @@ export default function TangledTree({
     return () => {
       paths.forEach((path) => select(path).interrupt('layout'))
     }
-  }, [layout, layoutRevision])
+  }, [])
 
   const active = useMemo(() => {
     const id = selectedNodeId || activeNode
@@ -244,12 +250,32 @@ export default function TangledTree({
     const selected = layout.nodes.find((node) => node.id === id)
     if (!selected) return null
 
-    if (selected.kind === 'project') projectIds.add(selected.id)
-    for (const link of layout.links) {
-      if (link.source.id === id || link.target.id === id) projectIds.add(link.projectId)
+    const projects = layout.nodes.filter((node) => node.kind === 'project')
+    if (selected.kind === 'root') {
+      projects.forEach((project) => projectIds.add(project.id))
+    } else if (selected.kind === 'discipline') {
+      projects.forEach((project) => {
+        if (project.parentIds.includes(selected.id)) projectIds.add(project.id)
+      })
+    } else if (selected.kind === 'project') {
+      projectIds.add(selected.id)
+    } else {
+      selected.parentIds.forEach((projectId) => projectIds.add(projectId))
     }
+
+    const disciplineIds = new Set<string>()
+    projects.forEach((project) => {
+      if (!projectIds.has(project.id)) return
+      nodeIds.add(project.id)
+      project.parentIds.forEach((disciplineId) => disciplineIds.add(disciplineId))
+    })
+    disciplineIds.forEach((disciplineId) => nodeIds.add(disciplineId))
+    const root = layout.nodes.find((node) => node.kind === 'root')
+    if (root && projectIds.size) nodeIds.add(root.id)
+
     for (const link of layout.links) {
-      if (projectIds.has(link.projectId)) {
+      const rootLink = link.source.kind === 'discipline' && link.target.kind === 'root'
+      if (projectIds.has(link.projectId) || (rootLink && disciplineIds.has(link.source.id))) {
         linkIds.add(link.id)
         nodeIds.add(link.source.id)
         nodeIds.add(link.target.id)
@@ -261,7 +287,9 @@ export default function TangledTree({
   const bandStarts = useMemo(() => {
     const starts: TangledLayoutNode[] = []
     let previous: TangledTreeNode['kind'] | undefined
-    for (const node of layout.nodes.filter((item) => item.level === 2)) {
+    for (const node of layout.nodes.filter((item) =>
+      METADATA_KINDS.includes(item.kind as MetadataKind),
+    )) {
       if (node.kind !== previous) starts.push(node)
       previous = node.kind
     }
@@ -269,10 +297,12 @@ export default function TangledTree({
   }, [layout.nodes])
 
   const columnPositions = useMemo(() => {
-    const first = (level: number) => layout.nodes.find((node) => node.level === level)?.x
-    const disciplineNode = first(0) ?? 0
-    const projectNode = first(1) ?? layout.width / 3
-    const metadataNode = first(2) ?? projectNode + layout.nodeWidth
+    const first = (kind: TangledNodeKind) => layout.nodes.find((node) => node.kind === kind)?.x
+    const disciplineNode = first('discipline') ?? layout.width / 4
+    const projectNode = first('project') ?? layout.width / 2
+    const metadataNode =
+      METADATA_KINDS.map(first).find((position) => position != null) ??
+      projectNode + layout.nodeWidth
     const discipline = disciplineNode + nodeSize
     const project = projectNode + nodeSize
     const metadata = metadataNode + nodeSize
@@ -424,11 +454,16 @@ export default function TangledTree({
               const muted = Boolean(active && !active.nodeIds.has(node.id))
               const relationshipSelected = Boolean(selectedNodeId && active?.nodeIds.has(node.id))
               const selected = selectedNodeId === node.id
+              const showView = Boolean(
+                selectedNodeId &&
+                relationshipSelected &&
+                (node.kind === 'root' || node.kind === 'discipline' || node.kind === 'project'),
+              )
               const nodeHeight = nodeSize + node.height
               const targetHeight = mobile
                 ? Math.max(44, nodeHeight + 8)
                 : Math.max(28, nodeHeight + 8)
-              const labelWidth = Math.max(28, layout.nodeWidth - nodeSize - 8)
+              const labelWidth = Math.max(28, node.columnWidth - nodeSize - 8)
               const labelY = mobile ? node.y - 22 : node.y - nodeHeight / 2 - 17
               return (
                 <g
@@ -468,12 +503,12 @@ export default function TangledTree({
                   <rect
                     className={styles.hitArea}
                     height={targetHeight}
-                    width={Math.max(44, layout.nodeWidth - 4)}
+                    width={Math.max(44, node.columnWidth - 4)}
                     x={node.x - 22}
                     y={node.y - targetHeight / 2}
                   />
                   <foreignObject
-                    className={`${styles.nodeLabel} ${selected ? styles.selectedLabel : ''}`}
+                    className={`${styles.nodeLabel} ${showView ? styles.selectedLabel : ''}`}
                     height={mobile ? 44 : 24}
                     width={labelWidth}
                     x={node.x + nodeSize / 2 + 5}
@@ -481,7 +516,7 @@ export default function TangledTree({
                   >
                     <div className={styles.labelRow}>
                       <span className={styles.labelText}>{node.title}</span>
-                      {selected && node.href.startsWith('/') ? (
+                      {showView && node.href.startsWith('/') ? (
                         <a
                           aria-label={`View ${node.title}`}
                           className={styles.viewLink}

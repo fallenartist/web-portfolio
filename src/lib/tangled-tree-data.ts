@@ -1,6 +1,7 @@
 import type { Agency, Discipline, Industry, Project, Tag } from '@/payload-types'
 
-export type TangledNodeKind = 'discipline' | 'project' | 'client' | 'agency' | 'industry' | 'tag'
+export type TangledNodeKind =
+  'root' | 'discipline' | 'project' | 'client' | 'agency' | 'industry' | 'tag'
 
 export type TangledTreeNode = {
   id: string
@@ -13,10 +14,11 @@ export type TangledTreeNode = {
 }
 
 export type TangledTreeData = {
-  levels: [TangledTreeNode[], TangledTreeNode[], TangledTreeNode[]]
+  levels: [TangledTreeNode[], TangledTreeNode[], TangledTreeNode[], TangledTreeNode[]]
 }
 
 const FALLBACK_COLORS: Record<TangledNodeKind, string> = {
+  root: '#111111',
   discipline: '#747474',
   project: '#111111',
   client: '#60747e',
@@ -53,7 +55,10 @@ function disciplineSegments(discipline: Discipline, disciplines: Map<number, Dis
   return segments
 }
 
-function filterHref(kind: Exclude<TangledNodeKind, 'discipline' | 'project'>, slug: string) {
+function filterHref(
+  kind: Exclude<TangledNodeKind, 'root' | 'discipline' | 'project'>,
+  slug: string,
+) {
   return `/?${kind}=${encodeURIComponent(slug)}`
 }
 
@@ -63,6 +68,18 @@ export function buildTangledTreeData(
   legacyRootSlug?: string,
 ): TangledTreeData {
   const disciplineMap = new Map(disciplines.map((discipline) => [discipline.id, discipline]))
+  const rootDiscipline = disciplines.find(
+    (discipline) => discipline.slug === legacyRootSlug && !relationshipID(discipline.parent),
+  )
+  const rootNode: TangledTreeNode = {
+    id: 'root-work',
+    slug: 'work',
+    title: rootDiscipline?.title.toUpperCase() || 'WORK',
+    kind: 'root',
+    href: '/',
+    color: FALLBACK_COLORS.root,
+    parentIds: [],
+  }
   const disciplineNodes = new Map<number, TangledTreeNode>()
   const projectNodes: TangledTreeNode[] = []
   const metadata = new Map<string, TangledTreeNode>()
@@ -108,7 +125,7 @@ export function buildTangledTreeData(
         kind: 'discipline',
         href: disciplineHref,
         color: validColor(discipline.color, FALLBACK_COLORS.discipline),
-        parentIds: [],
+        parentIds: [rootNode.id],
       })
     }
 
@@ -136,12 +153,13 @@ export function buildTangledTreeData(
 
   const byTitle = (a: TangledTreeNode, b: TangledTreeNode) => a.title.localeCompare(b.title)
   const kindOrder: Record<TangledNodeKind, number> = {
-    discipline: 0,
-    project: 1,
-    industry: 2,
-    client: 3,
-    agency: 4,
-    tag: 5,
+    root: 0,
+    discipline: 1,
+    project: 2,
+    industry: 3,
+    client: 4,
+    agency: 5,
+    tag: 6,
   }
   const metadataNodes = [...metadata.values()].sort(
     (a, b) => kindOrder[a.kind] - kindOrder[b.kind] || byTitle(a, b),
@@ -149,6 +167,7 @@ export function buildTangledTreeData(
 
   return {
     levels: [
+      [rootNode],
       [...disciplineNodes.values()].sort(byTitle),
       projectNodes.sort(byTitle),
       metadataNodes,

@@ -72,6 +72,8 @@ export interface Config {
     disciplines: Discipline;
     industries: Industry;
     clients: Client;
+    agencies: Agency;
+    tags: Tag;
     media: Media;
     menus: Menu;
     'payload-kv': PayloadKv;
@@ -86,6 +88,8 @@ export interface Config {
     disciplines: DisciplinesSelect<false> | DisciplinesSelect<true>;
     industries: IndustriesSelect<false> | IndustriesSelect<true>;
     clients: ClientsSelect<false> | ClientsSelect<true>;
+    agencies: AgenciesSelect<false> | AgenciesSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     menus: MenusSelect<false> | MenusSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -278,6 +282,10 @@ export interface Project {
    */
   excerpt?: string | null;
   client?: (number | null) | Client;
+  /**
+   * Studio or agency through which the project was commissioned
+   */
+  agency?: (number | null) | Agency;
   discipline: number | Discipline;
   /**
    * Client industry; used for portfolio filtering and menu links
@@ -287,12 +295,10 @@ export interface Project {
    * Higher values appear larger in the treemap (default: 100)
    */
   priority?: number | null;
-  tags?:
-    | {
-        tag?: string | null;
-        id?: string | null;
-      }[]
-    | null;
+  /**
+   * Reusable terms describing the project
+   */
+  tags?: (number | Tag)[] | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -364,6 +370,19 @@ export interface Client {
   createdAt: string;
 }
 /**
+ * Studios or agencies through which projects were commissioned.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agencies".
+ */
+export interface Agency {
+  id: number;
+  title: string;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "disciplines".
  */
@@ -410,6 +429,19 @@ export interface Industry {
   createdAt: string;
 }
 /**
+ * Reusable project tags.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  title: string;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "menus".
  */
@@ -434,6 +466,18 @@ export interface Menu {
           | ({
               relationTo: 'industries';
               value: number | Industry;
+            } | null)
+          | ({
+              relationTo: 'clients';
+              value: number | Client;
+            } | null)
+          | ({
+              relationTo: 'agencies';
+              value: number | Agency;
+            } | null)
+          | ({
+              relationTo: 'tags';
+              value: number | Tag;
             } | null);
         externalLink?: string | null;
         openInNewTab?: boolean | null;
@@ -454,6 +498,18 @@ export interface Menu {
                 | ({
                     relationTo: 'industries';
                     value: number | Industry;
+                  } | null)
+                | ({
+                    relationTo: 'clients';
+                    value: number | Client;
+                  } | null)
+                | ({
+                    relationTo: 'agencies';
+                    value: number | Agency;
+                  } | null)
+                | ({
+                    relationTo: 'tags';
+                    value: number | Tag;
                   } | null);
               externalLink?: string | null;
               openInNewTab?: boolean | null;
@@ -509,6 +565,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'clients';
         value: number | Client;
+      } | null)
+    | ({
+        relationTo: 'agencies';
+        value: number | Agency;
+      } | null)
+    | ({
+        relationTo: 'tags';
+        value: number | Tag;
       } | null)
     | ({
         relationTo: 'media';
@@ -641,15 +705,11 @@ export interface ProjectsSelect<T extends boolean = true> {
   slug?: T;
   excerpt?: T;
   client?: T;
+  agency?: T;
   discipline?: T;
   industry?: T;
   priority?: T;
-  tags?:
-    | T
-    | {
-        tag?: T;
-        id?: T;
-      };
+  tags?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -684,6 +744,26 @@ export interface IndustriesSelect<T extends boolean = true> {
  * via the `definition` "clients_select".
  */
 export interface ClientsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agencies_select".
+ */
+export interface AgenciesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   updatedAt?: T;

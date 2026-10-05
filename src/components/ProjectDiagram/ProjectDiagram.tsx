@@ -2,6 +2,7 @@
 
 import { easeCubicInOut, interpolateRgb, select } from 'd3'
 import { sankey, type SankeyLink, type SankeyNode } from 'd3-sankey'
+import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
@@ -72,7 +73,13 @@ function nodeCenter(node: LayoutNode) {
   return precise(((node.y0 ?? 0) + (node.y1 ?? 0)) / 2)
 }
 
-export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
+export default function ProjectDiagram({
+  data,
+  overviewPath,
+}: {
+  data: ProjectDiagramData
+  overviewPath: string
+}) {
   const router = useRouter()
   const pathname = usePathname()
   const { updateBreadcrumb } = useBreadcrumb()
@@ -516,6 +523,10 @@ export default function ProjectDiagram({ data }: { data: ProjectDiagramData }) {
     <section className={styles.page} aria-label="Project relationship overview">
       <div className={styles.diagram} ref={containerRef}>
         <div className={styles.headers}>
+          <nav className={styles.viewSwitch} aria-label="Project overview style">
+            <span aria-current="page">Sankey</span>
+            <Link href={`${overviewPath}/tangled`}>Tangled</Link>
+          </nav>
           {(['discipline', 'project', 'industry'] as const).map((column) => (
             <div className={styles.columnHeader} data-column={column} key={column}>
               <span className={styles.columnTitle}>{column}</span>

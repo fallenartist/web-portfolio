@@ -231,6 +231,15 @@ export const Projects: CollectionConfig = {
       admin: { position: 'sidebar' },
     },
     {
+      name: 'agency',
+      type: 'relationship',
+      relationTo: 'agencies',
+      admin: {
+        position: 'sidebar',
+        description: 'Studio or agency through which the project was commissioned',
+      },
+    },
+    {
       name: 'discipline',
       type: 'relationship',
       relationTo: 'disciplines',
@@ -258,9 +267,13 @@ export const Projects: CollectionConfig = {
     },
     {
       name: 'tags',
-      type: 'array',
-      fields: [{ name: 'tag', type: 'text' }],
-      admin: { position: 'sidebar' },
+      type: 'relationship',
+      relationTo: 'tags',
+      hasMany: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Reusable terms describing the project',
+      },
     },
   ],
 }

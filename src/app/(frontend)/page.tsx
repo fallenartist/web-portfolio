@@ -5,23 +5,38 @@ import { transformDataForTreemap } from '@/lib/treemap-data'
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ industry?: string | string[] }>
+  searchParams: Promise<{
+    client?: string | string[]
+    agency?: string | string[]
+    industry?: string | string[]
+    tag?: string | string[]
+  }>
 }) {
-  const [{ industry }, portfolio] = await Promise.all([searchParams, getPortfolio()])
+  const [filters, portfolio] = await Promise.all([searchParams, getPortfolio()])
   let treemapData = portfolio.treemapData
-  const industrySlug = typeof industry === 'string' ? industry : undefined
-  const selectedIndustry = industrySlug
-    ? portfolio.industries.find((item) => item.slug === industrySlug)
-    : undefined
+  const selected = (['client', 'agency', 'industry', 'tag'] as const).find(
+    (kind) => typeof filters[kind] === 'string',
+  )
+  const slug = selected && typeof filters[selected] === 'string' ? filters[selected] : undefined
 
-  if (selectedIndustry) {
-    const projects = portfolio.projects.filter((project) =>
-      typeof project.industry === 'object'
-        ? project.industry?.id === selectedIndustry.id
-        : project.industry === selectedIndustry.id,
-    )
+  if (selected && slug) {
+    const projects = portfolio.projects.filter((project) => {
+      if (selected === 'tag') {
+        return project.tags?.some((tag) => typeof tag === 'object' && tag.slug === slug)
+      }
+      const relationship = project[selected]
+      return typeof relationship === 'object' && relationship?.slug === slug
+    })
     treemapData = transformDataForTreemap(portfolio.disciplines, projects, portfolio.settings)
-    treemapData.title = selectedIndustry.title
+    const relationship =
+      selected === 'tag'
+        ? projects
+            .flatMap((project) => project.tags || [])
+            .find((tag) => typeof tag === 'object' && tag.slug === slug)
+        : projects
+            .map((project) => project[selected])
+            .find((item) => typeof item === 'object' && item?.slug === slug)
+    if (relationship && typeof relationship === 'object') treemapData.title = relationship.title
   }
 
   return (

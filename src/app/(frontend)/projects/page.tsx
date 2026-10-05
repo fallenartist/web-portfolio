@@ -17,7 +17,7 @@ export default async function ProjectsOverviewPage() {
 
   return (
     <main>
-      <ProjectDiagram data={data} />
+      <ProjectDiagram data={data} overviewPath={overviewPath} />
     </main>
   )
 }

@@ -25,8 +25,19 @@ export function getInternalLinkHref(
   legacyRootSlug?: string,
 ): string {
   if (!link || typeof link.value !== 'object') return '/'
-  if (link.relationTo === 'industries') {
-    return `/?industry=${encodeURIComponent(link.value.slug)}`
+  if (
+    link.relationTo === 'industries' ||
+    link.relationTo === 'clients' ||
+    link.relationTo === 'agencies' ||
+    link.relationTo === 'tags'
+  ) {
+    const parameter =
+      link.relationTo === 'industries'
+        ? 'industry'
+        : link.relationTo === 'agencies'
+          ? 'agency'
+          : link.relationTo.slice(0, -1)
+    return `/?${parameter}=${encodeURIComponent(link.value.slug)}`
   }
   const segments =
     link.relationTo === 'disciplines'

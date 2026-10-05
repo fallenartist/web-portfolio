@@ -10,6 +10,8 @@ import { Disciplines } from '@/collections/Disciplines'
 import { Media } from '@/collections/Media'
 import { Industries } from '@/collections/Industries'
 import { Clients } from '@/collections/Clients'
+import { Agencies } from '@/collections/Agencies'
+import { Tags } from '@/collections/Tags'
 import { Users } from '@/collections/Users'
 import { Menus } from '@/collections/Menus'
 import { Settings } from '@/globals/Settings'
@@ -25,7 +27,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Projects, Disciplines, Industries, Clients, Media, Menus],
+  collections: [Users, Projects, Disciplines, Industries, Clients, Agencies, Tags, Media, Menus],
   globals: [Settings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

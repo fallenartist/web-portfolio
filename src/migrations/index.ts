@@ -16,6 +16,8 @@ import * as migration_20261003_150000_mobile_project_title_size from './20261003
 import * as migration_20261004_124136_discipline_rename from './20261004_124136_discipline_rename'
 import * as migration_20261004_185118_menu_internal_destinations from './20261004_185118_menu_internal_destinations'
 import * as migration_20261004_190940_menu_submenus_projects_slug from './20261004_190940_menu_submenus_projects_slug'
+import * as migration_20261005_114355_tangled_tree_taxonomies from './20261005_114355_tangled_tree_taxonomies'
+import * as migration_20261005_114820_taxonomy_menu_links from './20261005_114820_taxonomy_menu_links'
 
 export const migrations = [
   {
@@ -107,5 +109,15 @@ export const migrations = [
     up: migration_20261004_190940_menu_submenus_projects_slug.up,
     down: migration_20261004_190940_menu_submenus_projects_slug.down,
     name: '20261004_190940_menu_submenus_projects_slug',
+  },
+  {
+    up: migration_20261005_114355_tangled_tree_taxonomies.up,
+    down: migration_20261005_114355_tangled_tree_taxonomies.down,
+    name: '20261005_114355_tangled_tree_taxonomies',
+  },
+  {
+    up: migration_20261005_114820_taxonomy_menu_links.up,
+    down: migration_20261005_114820_taxonomy_menu_links.down,
+    name: '20261005_114820_taxonomy_menu_links',
   },
 ]

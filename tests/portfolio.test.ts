@@ -6,7 +6,15 @@ import { RichText } from '@payloadcms/richtext-lexical/react'
 import { getAdminThumbnail } from '../src/collections/Media'
 import { coverMediaRect, mediaFocalPosition, proportionalMediaSize } from '../src/lib/media-image'
 import { projectTextConverters } from '../src/lib/project-rich-text'
-import type { Discipline, Industry, Project, Media, Setting } from '../src/payload-types'
+import type {
+  Agency,
+  Discipline,
+  Industry,
+  Project,
+  Media,
+  Setting,
+  Tag,
+} from '../src/payload-types'
 import { getInternalLinkHref, getMenuItemHref } from '../src/lib/menu-links'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
 import { fetchTreemapData } from '../src/lib/transformers'
@@ -421,6 +429,29 @@ test('industry menu links open the industry-filtered portfolio', () => {
     getInternalLinkHref({ relationTo: 'industries', value: industry }),
     '/?industry=financial-services',
   )
+})
+
+test('agency and tag menu links open their filtered portfolios', () => {
+  const agency: Agency = {
+    id: 7,
+    title: 'Studio One',
+    slug: 'studio-one',
+    createdAt: '',
+    updatedAt: '',
+  }
+  const tag: Tag = {
+    id: 8,
+    title: 'Wayfinding',
+    slug: 'wayfinding',
+    createdAt: '',
+    updatedAt: '',
+  }
+
+  assert.equal(
+    getInternalLinkHref({ relationTo: 'agencies', value: agency }),
+    '/?agency=studio-one',
+  )
+  assert.equal(getInternalLinkHref({ relationTo: 'tags', value: tag }), '/?tag=wayfinding')
 })
 
 test('the projects overview can be selected as an internal menu destination', () => {

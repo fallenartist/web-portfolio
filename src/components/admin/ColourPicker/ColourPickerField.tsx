@@ -9,35 +9,75 @@ import {
   useModal,
   usePreferences,
 } from '@payloadcms/ui'
+import type { Color } from 'culori'
 import type { TextFieldClientComponent } from 'payload'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import styles from './ColourPicker.module.scss'
 import {
-  hexToRgb,
+  colourAlpha,
+  colourKey,
+  colourToOklch,
+  colourToRgb,
+  detectColourFormat,
+  formatColour,
   hsbToRgb,
-  parseColour,
+  parseCssColour,
+  rgbColour,
   rgbToHex,
   rgbToHsb,
+  toSrgbCss,
+  withAlpha,
+  type ColourFormat,
   type HSB,
   type RGB,
 } from './colourUtils'
 
-const PREFERENCE_KEY = 'portfolio-colour-picker-recents-v1'
+const PREFERENCE_KEY = 'portfolio-colour-picker-recents-v2'
 const DEFAULT_COLOURS = ['#FAC800', '#3200FA', '#FA0032']
 const REMOVE_MODAL_SLUG = 'remove-colour-from-palette'
+const DEFAULT_COLOUR = parseCssColour('#FF0000')!
 
-type Channel = keyof HSB | keyof RGB
 type ColourPreferences = { colours: string[] }
 type EditorMode = 'add' | 'edit'
 type ColourDocument = { color?: null | string; title?: string }
 type CollectionResponse = { docs?: ColourDocument[] }
+type AppearanceResponse = Record<string, unknown>
 
-const uniqueColours = (values: string[]) => [...new Set(values.map((value) => value.toUpperCase()))]
+const uniqueColours = (values: string[]) => {
+  const seen = new Set<string>()
+  return values.filter((value) => {
+    const key = colourKey(value)
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
 
-const hexInputToRgb = (value: string) => (value.length === 6 ? hexToRgb(`#${value}`) : null)
+const round = (value: number, places = 3) => Number(value.toFixed(places))
 
-const sliderBackground = (type: 'b' | 'blue' | 'g' | 'h' | 'r' | 's', rgb: RGB, hsb: HSB) => {
+const sameColour = (left?: null | string, right?: null | string) => {
+  const leftKey = colourKey(left)
+  return Boolean(leftKey && leftKey === colourKey(right))
+}
+
+const appearanceColourUsage = (
+  value: AppearanceResponse,
+  selected: string,
+  parentPath = 'Appearance',
+): string[] =>
+  Object.entries(value).flatMap(([key, child]) => {
+    const path = `${parentPath} / ${key}`
+    if (typeof child === 'string' && /color$/i.test(key) && sameColour(child, selected)) {
+      return [path]
+    }
+    if (child && typeof child === 'object' && !Array.isArray(child)) {
+      return appearanceColourUsage(child as AppearanceResponse, selected, path)
+    }
+    return []
+  })
+
+const hsbSliderBackground = (type: 'b' | 'blue' | 'g' | 'h' | 'r' | 's', rgb: RGB, hsb: HSB) => {
   switch (type) {
     case 'h':
       return `linear-gradient(90deg, ${[0, 60, 120, 180, 240, 300, 360]
@@ -56,90 +96,141 @@ const sliderBackground = (type: 'b' | 'blue' | 'g' | 'h' | 'r' | 's', rgb: RGB, 
   }
 }
 
+const oklchSliderBackground = (type: 'c' | 'h' | 'l', colour: Color) => {
+  const oklch = colourToOklch(colour)
+  const alpha = colourAlpha(colour)
+  if (type === 'l') {
+    return `linear-gradient(90deg, ${[0, 0.25, 0.5, 0.75, 1]
+      .map((l) => formatColour({ ...oklch, l, alpha }, 'oklch'))
+      .join(', ')})`
+  }
+  if (type === 'c') {
+    return `linear-gradient(90deg, ${[0, 0.125, 0.25, 0.375, 0.5]
+      .map((c) => formatColour({ ...oklch, c, alpha }, 'oklch'))
+      .join(', ')})`
+  }
+  return `linear-gradient(90deg, ${[0, 60, 120, 180, 240, 300, 360]
+    .map((h) => formatColour({ ...oklch, h, alpha }, 'oklch'))
+    .join(', ')})`
+}
+
 export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => {
   const { setValue, value } = useField<null | string>({ path })
   const { getPreference, setPreference } = usePreferences()
   const { closeModal, openModal } = useModal()
-  const current = parseColour(value)
+  const assignedColour = parseCssColour(value)
   const [isOpen, setIsOpen] = useState(false)
   const [editorMode, setEditorMode] = useState<EditorMode>('add')
   const [recentColours, setRecentColours] = useState(DEFAULT_COLOURS)
   const [selectedPaletteColour, setSelectedPaletteColour] = useState<null | string>(null)
-  const initialRgb = current ?? { b: 0, g: 0, r: 255 }
-  const [rgb, setRgb] = useState<RGB>(initialRgb)
-  const [hsb, setHsb] = useState<HSB>(rgbToHsb(initialRgb))
-  const [hexInput, setHexInput] = useState(rgbToHex(initialRgb).slice(1))
+  const [activeColour, setActiveColour] = useState<Color>(assignedColour ?? DEFAULT_COLOUR)
+  const [colourInput, setColourInput] = useState(value || '#FF0000')
+  const [format, setFormat] = useState<ColourFormat>(detectColourFormat(value || '#FF0000'))
+  const [hsbHue, setHsbHue] = useState(0)
+  const [oklchHue, setOklchHue] = useState(0)
   const [isCheckingUsage, setIsCheckingUsage] = useState(false)
   const [removeWarning, setRemoveWarning] = useState('')
-  const assignedColour = current ? rgbToHex(current) : null
   const hasSelectedSwatch = Boolean(
     selectedPaletteColour && recentColours.includes(selectedPaletteColour),
   )
+  const parsedInput = parseCssColour(colourInput)
+  const rgb = colourToRgb(activeColour)
+  const convertedHsb = rgbToHsb(rgb)
+  const hsb = {
+    ...convertedHsb,
+    h: convertedHsb.s === 0 || convertedHsb.b === 0 ? hsbHue : convertedHsb.h,
+  }
+  const convertedOklch = colourToOklch(activeColour)
+  const oklch = { ...convertedOklch, h: convertedOklch.h ?? oklchHue }
+  const alpha = colourAlpha(activeColour)
+  const wideGamutCss = parsedInput ? colourInput.trim() : formatColour(activeColour, format)
+  const fallbackCss = toSrgbCss(activeColour)
 
   useEffect(() => {
     void getPreference<ColourPreferences | string[] | null>(PREFERENCE_KEY).then((saved) => {
       const stored = Array.isArray(saved) ? saved : saved?.colours
       const savedColours = Array.isArray(stored)
-        ? stored.filter((colour) => parseColour(colour))
+        ? stored.filter((colour) => parseCssColour(colour))
         : null
-      const assigned = current ? [rgbToHex(current)] : []
+      const assigned = value && parseCssColour(value) ? [value] : []
       setRecentColours(uniqueColours([...assigned, ...(savedColours ?? DEFAULT_COLOURS)]))
     })
     // Preferences only need to load when this field mounts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const updateRgb = useCallback(
-    (next: RGB) => {
-      const converted = rgbToHsb(next)
-      // Hue is undefined for black and grey. Retain it so the hue control can be
-      // moved first, before saturation or brightness gives it a visible colour.
-      if (converted.s === 0 || converted.b === 0) converted.h = hsb.h
-      setRgb(next)
-      setHsb(converted)
-      setHexInput(rgbToHex(next).slice(1))
-    },
-    [hsb.h],
-  )
+  const syncHueMemory = (colour: Color) => {
+    const nextHsb = rgbToHsb(colourToRgb(colour))
+    const nextOklch = colourToOklch(colour)
+    if (nextHsb.s > 0 && nextHsb.b > 0) setHsbHue(nextHsb.h)
+    if (nextOklch.h !== undefined) setOklchHue(nextOklch.h)
+  }
+
+  const updateColour = (colour: Color, nextFormat = format) => {
+    setActiveColour(colour)
+    syncHueMemory(colour)
+    setColourInput(formatColour(colour, nextFormat))
+  }
 
   const openEditor = (mode: EditorMode) => {
-    const parsed = mode === 'edit' ? parseColour(selectedPaletteColour) : null
-    const next = parsed ?? { b: 0, g: 0, r: 255 }
+    const source = mode === 'edit' ? selectedPaletteColour : '#FF0000'
+    const next = parseCssColour(source) ?? DEFAULT_COLOUR
+    const nextFormat = detectColourFormat(source)
     setEditorMode(mode)
-    setHsb(rgbToHsb(next))
-    setRgb(next)
-    setHexInput(rgbToHex(next).slice(1))
+    setFormat(nextFormat)
+    setActiveColour(next)
+    setColourInput(source || '#FF0000')
+    syncHueMemory(next)
     setIsOpen(true)
   }
 
-  const updateHsbChannel = (channel: Channel, nextValue: number) => {
-    const next = { ...hsb, [channel]: nextValue }
-    const nextRgb = hsbToRgb(next)
-    setHsb(next)
-    setRgb(nextRgb)
-    setHexInput(rgbToHex(nextRgb).slice(1))
+  const updateHsbChannel = (channel: keyof HSB, nextValue: number) => {
+    const nextHsb = { ...hsb, [channel]: nextValue }
+    if (channel === 'h') setHsbHue(nextValue)
+    updateColour(rgbColour(hsbToRgb(nextHsb), alpha))
   }
 
-  const updateRgbChannel = (channel: Channel, nextValue: number) =>
-    updateRgb({ ...rgb, [channel]: nextValue })
+  const updateRgbChannel = (channel: keyof RGB, nextValue: number) =>
+    updateColour(rgbColour({ ...rgb, [channel]: nextValue }, alpha))
+
+  const updateOklchChannel = (channel: 'c' | 'h' | 'l', nextValue: number) => {
+    if (channel === 'h') setOklchHue(nextValue)
+    updateColour({ ...oklch, [channel]: nextValue, alpha })
+  }
+
+  const updateAlpha = (nextValue: number) => updateColour(withAlpha(activeColour, nextValue / 100))
+
+  const changeFormat = (nextFormat: ColourFormat) => {
+    setFormat(nextFormat)
+    setColourInput(formatColour(activeColour, nextFormat))
+  }
+
+  const handleCssInput = (next: string) => {
+    setColourInput(next)
+    const parsed = parseCssColour(next)
+    if (!parsed) return
+    setActiveColour(parsed)
+    setFormat(detectColourFormat(next))
+    syncHueMemory(parsed)
+  }
 
   const saveRecents = (colours: string[]) => {
-    setRecentColours(colours)
-    void setPreference<ColourPreferences>(PREFERENCE_KEY, { colours })
+    const unique = uniqueColours(colours)
+    setRecentColours(unique)
+    void setPreference<ColourPreferences>(PREFERENCE_KEY, { colours: unique })
   }
 
   const applyColour = () => {
-    const colour = rgbToHex(rgb)
+    if (!parsedInput) return
+    const colour = colourInput.trim()
     if (editorMode === 'edit' && selectedPaletteColour) {
-      const wasAssigned = assignedColour === selectedPaletteColour
+      const wasAssigned = sameColour(value, selectedPaletteColour)
       saveRecents(
-        uniqueColours(
-          recentColours.map((recent) => (recent === selectedPaletteColour ? colour : recent)),
-        ),
+        recentColours.map((recent) => (recent === selectedPaletteColour ? colour : recent)),
       )
       if (wasAssigned) setValue(colour)
     } else {
-      saveRecents(uniqueColours([colour, ...recentColours]))
+      saveRecents([colour, ...recentColours])
     }
     setSelectedPaletteColour(colour)
     setIsOpen(false)
@@ -160,7 +251,6 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
   const checkUsageAndRemove = async () => {
     if (!selectedPaletteColour) return
     setIsCheckingUsage(true)
-
     try {
       const endpoints = ['disciplines', 'industries'].map((collection) =>
         fetch(`/api/${collection}?limit=1000&depth=0&select[color]=true&select[title]=true`).then(
@@ -170,21 +260,23 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
           },
         ),
       )
-      const results = await Promise.all(endpoints)
+      const [results, appearance] = await Promise.all([
+        Promise.all(endpoints),
+        fetch('/api/globals/appearance?depth=0').then(async (response) => {
+          if (!response.ok) throw new Error('Could not check Appearance')
+          return (await response.json()) as AppearanceResponse
+        }),
+      ])
       const usage = results.flatMap(({ collection, response }) =>
         (response.docs ?? [])
-          .filter((document) => {
-            const parsed = parseColour(document.color)
-            return parsed && rgbToHex(parsed) === selectedPaletteColour
-          })
+          .filter((document) => sameColour(document.color, selectedPaletteColour))
           .map((document) => `${document.title ?? 'Untitled'} (${collection})`),
       )
-
+      usage.push(...appearanceColourUsage(appearance, selectedPaletteColour))
       if (usage.length === 0) {
         removeSelected()
         return
       }
-
       setRemoveWarning(
         `This colour is used by ${usage.length} item${usage.length === 1 ? '' : 's'}: ${usage.join(', ')}. Removing it from the palette will not change other saved items.`,
       )
@@ -195,34 +287,23 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
     } finally {
       setIsCheckingUsage(false)
     }
-
     openModal(REMOVE_MODAL_SLUG)
   }
 
-  const handleHex = (next: string) => {
-    const cleaned = next
-      .replace(/#/g, '')
-      .replace(/[^\da-f]/gi, '')
-      .slice(0, 6)
-      .toUpperCase()
-    setHexInput(cleaned)
-    const parsed = hexInputToRgb(cleaned)
-    if (parsed) updateRgb(parsed)
-  }
-
-  const sliders: Array<{
-    channel: Channel
-    label: string
-    max: number
-    type: 'b' | 'blue' | 'g' | 'h' | 'r' | 's'
-    value: number
-  }> = [
-    { channel: 'h', label: 'H', max: 360, type: 'h', value: hsb.h },
-    { channel: 's', label: 'S', max: 100, type: 's', value: hsb.s },
-    { channel: 'b', label: 'B', max: 100, type: 'b', value: hsb.b },
-    { channel: 'r', label: 'R', max: 255, type: 'r', value: rgb.r },
-    { channel: 'g', label: 'G', max: 255, type: 'g', value: rgb.g },
-    { channel: 'b', label: 'B', max: 255, type: 'blue', value: rgb.b },
+  const hsbSliders = [
+    { channel: 'h' as const, label: 'H', max: 360, type: 'h' as const, value: hsb.h },
+    { channel: 's' as const, label: 'S', max: 100, type: 's' as const, value: hsb.s },
+    { channel: 'b' as const, label: 'B', max: 100, type: 'b' as const, value: hsb.b },
+  ]
+  const rgbSliders = [
+    { channel: 'r' as const, label: 'R', type: 'r' as const, value: rgb.r },
+    { channel: 'g' as const, label: 'G', type: 'g' as const, value: rgb.g },
+    { channel: 'b' as const, label: 'B', type: 'blue' as const, value: rgb.b },
+  ]
+  const oklchSliders = [
+    { channel: 'l' as const, label: 'L', max: 1, step: 0.001, value: round(oklch.l) },
+    { channel: 'c' as const, label: 'C', max: 0.5, step: 0.001, value: round(oklch.c) },
+    { channel: 'h' as const, label: 'H', max: 360, step: 1, value: Math.round(oklch.h) },
   ]
 
   return (
@@ -237,12 +318,12 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
             className={[styles.swatch, selectedPaletteColour === colour && styles.swatchSelected]
               .filter(Boolean)
               .join(' ')}
-            key={colour}
+            key={`${colourKey(colour)}-${colour}`}
             onClick={() => setSelectedPaletteColour(colour)}
             style={{ backgroundColor: colour }}
             type="button"
           >
-            {assignedColour === colour && <span className={styles.assigned}>✓</span>}
+            {sameColour(value, colour) && <span className={styles.assigned}>✓</span>}
           </button>
         ))}
       </div>
@@ -278,42 +359,118 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
           <div className={styles.editorLabel}>
             {editorMode === 'edit' ? 'Edit colour:' : 'Add colour:'}
           </div>
-          <div className={styles.preview} style={{ backgroundColor: rgbToHex(rgb) }} />
-          <div className={styles.sliders}>
-            {sliders.map((slider, index) => (
-              <label className={styles.sliderRow} key={`${slider.type}-${index}`}>
-                <span>{slider.label}</span>
-                <input
-                  aria-label={`${slider.label} ${slider.type}`}
-                  max={slider.max}
-                  min={0}
-                  onChange={(event) =>
-                    index < 3
-                      ? updateHsbChannel(slider.channel, Number(event.target.value))
-                      : updateRgbChannel(slider.channel, Number(event.target.value))
-                  }
-                  style={{ background: sliderBackground(slider.type, rgb, hsb) }}
-                  type="range"
-                  value={slider.value}
-                />
-                <output>{slider.value}</output>
-              </label>
-            ))}
+          <div className={styles.previews}>
+            <figure className={styles.preview}>
+              <div className={styles.previewColour} style={{ backgroundColor: wideGamutCss }} />
+              <figcaption>Wide gamut</figcaption>
+            </figure>
+            <figure className={styles.preview}>
+              <div className={styles.previewColour} style={{ backgroundColor: fallbackCss }} />
+              <figcaption>sRGB fallback</figcaption>
+            </figure>
           </div>
+          <div className={styles.sliders}>
+            <fieldset className={styles.sliderGroup}>
+              <legend>HSB</legend>
+              {hsbSliders.map((slider) => (
+                <label className={styles.sliderRow} key={`hsb-${slider.channel}`}>
+                  <span>{slider.label}</span>
+                  <input
+                    aria-label={`HSB ${slider.label}`}
+                    max={slider.max}
+                    min={0}
+                    onChange={(event) =>
+                      updateHsbChannel(slider.channel, Number(event.target.value))
+                    }
+                    style={{ background: hsbSliderBackground(slider.type, rgb, hsb) }}
+                    type="range"
+                    value={slider.value}
+                  />
+                  <output>{slider.value}</output>
+                </label>
+              ))}
+            </fieldset>
+            <fieldset className={styles.sliderGroup}>
+              <legend>RGB</legend>
+              {rgbSliders.map((slider) => (
+                <label className={styles.sliderRow} key={`rgb-${slider.channel}`}>
+                  <span>{slider.label}</span>
+                  <input
+                    aria-label={`RGB ${slider.label}`}
+                    max={255}
+                    min={0}
+                    onChange={(event) =>
+                      updateRgbChannel(slider.channel, Number(event.target.value))
+                    }
+                    style={{ background: hsbSliderBackground(slider.type, rgb, hsb) }}
+                    type="range"
+                    value={slider.value}
+                  />
+                  <output>{slider.value}</output>
+                </label>
+              ))}
+            </fieldset>
+            <fieldset className={styles.sliderGroup}>
+              <legend>OKLCH</legend>
+              {oklchSliders.map((slider) => (
+                <label className={styles.sliderRow} key={`oklch-${slider.channel}`}>
+                  <span>{slider.label}</span>
+                  <input
+                    aria-label={`OKLCH ${slider.label}`}
+                    max={slider.max}
+                    min={0}
+                    onChange={(event) =>
+                      updateOklchChannel(slider.channel, Number(event.target.value))
+                    }
+                    step={slider.step}
+                    style={{ background: oklchSliderBackground(slider.channel, activeColour) }}
+                    type="range"
+                    value={slider.value}
+                  />
+                  <output>{slider.value}</output>
+                </label>
+              ))}
+            </fieldset>
+          </div>
+          <label className={styles.alphaRow}>
+            <span>Alpha</span>
+            <input
+              aria-label="Alpha"
+              max={100}
+              min={0}
+              onChange={(event) => updateAlpha(Number(event.target.value))}
+              style={{
+                background: `linear-gradient(90deg, transparent, ${formatColour(withAlpha(activeColour, 1), 'css')})`,
+              }}
+              type="range"
+              value={Math.round(alpha * 100)}
+            />
+            <output>{Math.round(alpha * 100)}%</output>
+          </label>
           <div className={styles.footer}>
-            <label className={styles.hexField}>
-              <span>Hex</span>
-              <span className={styles.hexInputWrap}>
-                <span aria-hidden="true">#</span>
-                <input
-                  aria-invalid={!hexInputToRgb(hexInput)}
-                  aria-label="Hex colour"
-                  maxLength={7}
-                  onChange={(event) => handleHex(event.target.value)}
-                  spellCheck={false}
-                  value={hexInput}
-                />
-              </span>
+            <label className={styles.cssField}>
+              <span>CSS colour</span>
+              <input
+                aria-invalid={!parsedInput}
+                aria-label="CSS colour"
+                onChange={(event) => handleCssInput(event.target.value)}
+                spellCheck={false}
+                value={colourInput}
+              />
+            </label>
+            <label className={styles.formatField}>
+              <span>Format</span>
+              <select
+                aria-label="Colour format"
+                onChange={(event) => changeFormat(event.target.value as ColourFormat)}
+                value={format}
+              >
+                <option value="css">CSS / original</option>
+                <option value="hex">Hex</option>
+                <option value="rgb">RGB</option>
+                <option value="hsl">HSL</option>
+                <option value="oklch">OKLCH</option>
+              </select>
             </label>
             <div className={styles.actions}>
               <Button
@@ -324,12 +481,7 @@ export const ColourPickerField: TextFieldClientComponent = ({ field, path }) => 
               >
                 Cancel
               </Button>
-              <Button
-                disabled={!hexInputToRgb(hexInput)}
-                onClick={applyColour}
-                size="small"
-                type="button"
-              >
+              <Button disabled={!parsedInput} onClick={applyColour} size="small" type="button">
                 {editorMode === 'edit' ? 'Save' : 'Add'}
               </Button>
             </div>

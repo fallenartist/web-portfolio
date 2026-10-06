@@ -1,9 +1,5 @@
 import type { GlobalConfig } from 'payload'
-import { normalizeColour } from '@/lib/colour'
-
-const cssColour = (value: null | string | undefined) =>
-  Boolean(normalizeColour(value)) ||
-  'Enter a CSS colour, such as #f4f4f4, rgba(), hsl(), or oklch().'
+import { cssColourField } from '@/fields/colourPicker'
 
 export const Appearance: GlobalConfig = {
   slug: 'appearance',
@@ -14,28 +10,26 @@ export const Appearance: GlobalConfig = {
     read: () => true,
   },
   fields: [
-    {
+    cssColourField({
       name: 'keyColor',
       label: 'Key colour',
       type: 'text',
       required: true,
       defaultValue: '#cc2929',
-      validate: cssColour,
       admin: {
         description: 'Used for links, navigation logos and Project Map VIEW buttons.',
       },
-    },
-    {
+    }),
+    cssColourField({
       name: 'menuBackgroundColor',
       label: 'Menu background colour',
       type: 'text',
       required: true,
       defaultValue: '#f4f4f4',
-      validate: cssColour,
       admin: {
         description: 'Used by the main menu and the project guide instruction bar.',
       },
-    },
+    }),
     {
       name: 'projectTitle',
       label: 'Project title presentation',
@@ -75,17 +69,16 @@ export const Appearance: GlobalConfig = {
             condition: (_, siblingData) => siblingData?.placement === 'overlay',
           },
         },
-        {
+        cssColourField({
           name: 'dimColor',
           label: 'Dim colour',
           type: 'text',
           required: true,
           defaultValue: '#000000',
-          validate: cssColour,
           admin: {
             condition: (_, siblingData) => siblingData?.placement === 'overlay',
           },
-        },
+        }),
         {
           name: 'dimIntensity',
           label: 'Dim intensity (%)',
@@ -136,14 +129,13 @@ export const Appearance: GlobalConfig = {
           min: 24,
           max: 140,
         },
-        {
+        cssColourField({
           name: 'textColor',
           label: 'Text colour',
           type: 'text',
           required: true,
           defaultValue: '#222222',
-          validate: cssColour,
-        },
+        }),
       ],
     },
     {
@@ -170,14 +162,13 @@ export const Appearance: GlobalConfig = {
           min: 16,
           max: 72,
         },
-        {
+        cssColourField({
           name: 'textColor',
           label: 'Text colour',
           type: 'text',
           required: true,
           defaultValue: '#222222',
-          validate: cssColour,
-        },
+        }),
       ],
     },
   ],

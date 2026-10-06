@@ -24,6 +24,7 @@ import * as migration_20261006_133000_project_industries_many from './20261006_1
 import * as migration_20261006_140000_agency_url from './20261006_140000_agency_url'
 import * as migration_20261006_143000_story_image_presentation from './20261006_143000_story_image_presentation'
 import * as migration_20261006_164500_remove_treemap_autoplay from './20261006_164500_remove_treemap_autoplay'
+import * as migration_20261006_173000_appearance_key_colour from './20261006_173000_appearance_key_colour'
 
 export const migrations = [
   {
@@ -155,5 +156,10 @@ export const migrations = [
     up: migration_20261006_164500_remove_treemap_autoplay.up,
     down: migration_20261006_164500_remove_treemap_autoplay.down,
     name: '20261006_164500_remove_treemap_autoplay',
+  },
+  {
+    up: migration_20261006_173000_appearance_key_colour.up,
+    down: migration_20261006_173000_appearance_key_colour.down,
+    name: '20261006_173000_appearance_key_colour',
   },
 ]

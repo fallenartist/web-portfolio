@@ -15,6 +15,17 @@ export const Appearance: GlobalConfig = {
   },
   fields: [
     {
+      name: 'keyColor',
+      label: 'Key colour',
+      type: 'text',
+      required: true,
+      defaultValue: '#cc2929',
+      validate: cssColour,
+      admin: {
+        description: 'Used for links, navigation logos and Project Map VIEW buttons.',
+      },
+    },
+    {
       name: 'menuBackgroundColor',
       label: 'Menu background colour',
       type: 'text',

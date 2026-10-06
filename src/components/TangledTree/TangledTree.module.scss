@@ -145,7 +145,8 @@
   transition: background-color 120ms ease;
 
   &:hover {
-    background: #cc2929;
+    background: var(--key-color);
+    color: #fff;
   }
 
   &:focus-visible {

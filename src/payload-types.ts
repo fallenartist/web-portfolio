@@ -969,6 +969,10 @@ export interface Setting {
 export interface Appearance {
   id: number;
   /**
+   * Used for links, navigation logos and Project Map VIEW buttons.
+   */
+  keyColor: string;
+  /**
    * Used by the main menu and the project guide instruction bar.
    */
   menuBackgroundColor: string;
@@ -1022,6 +1026,7 @@ export interface SettingsSelect<T extends boolean = true> {
  * via the `definition` "appearance_select".
  */
 export interface AppearanceSelect<T extends boolean = true> {
+  keyColor?: T;
   menuBackgroundColor?: T;
   projectTitle?:
     | T

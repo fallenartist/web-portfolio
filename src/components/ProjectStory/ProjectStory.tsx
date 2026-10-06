@@ -528,16 +528,20 @@ export default function ProjectStory({
       {(!titleOverHero || project.desc || hasMetadata) && (
         <header className={styles.introduction} data-title-overlay={titleOverHero}>
           {!titleOverHero && <h1>{project.title}</h1>}
-          {project.desc && (
-            <div className={styles.description}>
-              <RichText converters={projectTextConverters} data={project.desc} />
+          {(project.desc || hasMetadata) && (
+            <div className={styles.projectDetails}>
+              {project.desc && (
+                <div className={styles.description}>
+                  <RichText converters={projectTextConverters} data={project.desc} />
+                </div>
+              )}
+              {metadata && hasMetadata && (
+                <ProjectMetadataList
+                  metadata={metadata}
+                  projectGuidePath={projectGuidePath}
+                />
+              )}
             </div>
-          )}
-          {metadata && hasMetadata && (
-            <ProjectMetadataList
-              metadata={metadata}
-              projectGuidePath={projectGuidePath}
-            />
           )}
         </header>
       )}

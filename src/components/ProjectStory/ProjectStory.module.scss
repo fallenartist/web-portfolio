@@ -149,7 +149,6 @@
 }
 
 .description {
-  grid-column: 1;
   max-width: 42rem;
   color: var(--project-description-color, #222);
   font-family: var(--project-description-font, 'October Condensed'), sans-serif;
@@ -177,18 +176,18 @@
   }
 }
 
+.projectDetails {
+  display: grid;
+  grid-column: 1;
+  gap: clamp(18px, 2vw, 32px);
+}
+
 .projectMetadata {
-  grid-column: 2;
-  grid-row: 1;
   display: grid;
   gap: 0.45em;
   margin: 0;
   font-size: clamp(17px, 1.4vw, 24px);
   line-height: 1.25;
-
-  .introduction[data-title-overlay='false'] & {
-    grid-row: 2;
-  }
 
   > div {
     display: flex;
@@ -205,6 +204,9 @@
     flex: none;
     color: #777;
     font-weight: 600;
+    font-feature-settings: 'smcp' 1, 'c2sc' 1;
+    font-variant-caps: all-small-caps;
+    letter-spacing: 0.025em;
   }
 
   dd {
@@ -220,8 +222,8 @@
 
   a:hover,
   a:focus-visible {
-    text-decoration: underline;
-    text-underline-offset: 0.12em;
+    color: var(--key-color);
+    text-decoration: none;
   }
 }
 
@@ -560,11 +562,6 @@
   .introduction {
     grid-template-columns: 1fr;
     padding-block: var(--story-block-gap);
-  }
-
-  .introduction[data-title-overlay] .projectMetadata {
-    grid-column: 1;
-    grid-row: auto;
   }
 
   .portraitPair {

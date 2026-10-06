@@ -116,6 +116,7 @@ test('Appearance presentation values are included in the front-end settings', ()
   }
   const appearance: Appearance = {
     id: 1,
+    keyColor: '#cc2929',
     menuBackgroundColor: '#f4f4f4',
     projectTitle: {
       placement: 'overlay',

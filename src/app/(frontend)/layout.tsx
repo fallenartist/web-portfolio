@@ -26,6 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const upLogo =
     settings?.upLogo && typeof settings.upLogo === 'object' ? settings.upLogo.url : undefined
   const menuBackgroundColor = normalizeColour(appearance.menuBackgroundColor) || '#f4f4f4'
+  const keyColor = normalizeColour(appearance.keyColor) || '#cc2929'
   return (
     <html lang="en">
       <head>
@@ -34,6 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body
         style={
           {
+            '--key-color': keyColor,
             '--menu-background': `color-mix(in srgb, ${menuBackgroundColor} 97%, transparent)`,
           } as React.CSSProperties
         }

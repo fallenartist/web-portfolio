@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import styles from './Header.module.scss'
 import { usePathname } from 'next/navigation'
 import type { Menu } from '@/payload-types'
@@ -47,6 +46,12 @@ export default function Header({
   const menuOpen = openPath === pathname
   const atRoot = breadcrumb.length <= 1
   const logo = atRoot ? rootLogo : upLogo
+  const logoStyle = logo
+    ? {
+        maskImage: `url(${JSON.stringify(logo)})`,
+        WebkitMaskImage: `url(${JSON.stringify(logo)})`,
+      }
+    : undefined
   const projectsOverviewPath = getProjectsOverviewPath(projectsOverviewSlug)
   const menuEntries = menu?.items?.flatMap((item) => [item, ...(item.subItems || [])]) || []
   const hasProjectsLink = menuEntries.some(
@@ -128,7 +133,7 @@ export default function Header({
         onClick={onLogoClick}
       >
         {logo ? (
-          <Image src={logo} width={40} height={40} alt="" unoptimized />
+          <span className={styles.customLogo} style={logoStyle} aria-hidden="true" />
         ) : atRoot ? (
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img">
             <path

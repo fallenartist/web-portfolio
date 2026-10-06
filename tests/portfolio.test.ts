@@ -258,6 +258,7 @@ test('project content keeps its order and derives presentation from media', () =
           {
             blockType: 'image',
             image,
+            presentation: 'center',
           },
           {
             blockType: 'text',
@@ -282,6 +283,10 @@ test('project content keeps its order and derives presentation from media', () =
   assert.deepEqual(
     projectNode.story?.map((block) => block.blockType),
     ['image', 'text', 'video'],
+  )
+  assert.equal(
+    projectNode.story?.[0]?.blockType === 'image' && projectNode.story[0].presentation,
+    'center',
   )
   assert.equal(projectNode.story?.[1].blockType === 'text' && projectNode.story[1].quote, true)
   const video = projectNode.story?.[2]

@@ -227,6 +227,10 @@ export interface Project {
         | {
             image: number | Media;
             caption?: string | null;
+            /**
+             * Auto pairs adjacent portrait images. Choose a single layout to keep this image separate.
+             */
+            presentation: 'auto' | 'center' | 'full';
             id?: string | null;
             blockName?: string | null;
             blockType: 'image';
@@ -691,6 +695,7 @@ export interface ProjectsSelect<T extends boolean = true> {
           | {
               image?: T;
               caption?: T;
+              presentation?: T;
               id?: T;
               blockName?: T;
             };

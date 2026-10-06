@@ -156,6 +156,22 @@ export const Projects: CollectionConfig = {
           fields: [
             { name: 'image', type: 'upload', relationTo: 'media', required: true },
             { name: 'caption', type: 'text' },
+            {
+              name: 'presentation',
+              label: 'Presentation',
+              type: 'select',
+              defaultValue: 'auto',
+              required: true,
+              options: [
+                { label: 'Auto', value: 'auto' },
+                { label: 'Single centred', value: 'center' },
+                { label: 'Single full width', value: 'full' },
+              ],
+              admin: {
+                description:
+                  'Auto pairs adjacent portrait images. Choose a single layout to keep this image separate.',
+              },
+            },
           ],
         },
         {

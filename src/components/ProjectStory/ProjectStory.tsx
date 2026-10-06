@@ -75,12 +75,16 @@ function isPortraitImage(block: ProjectStoryBlock): block is StoryImageBlock {
   return height > width
 }
 
+function isAutomaticPortrait(block: ProjectStoryBlock): block is StoryImageBlock {
+  return isPortraitImage(block) && block.presentation === 'auto'
+}
+
 function arrangeStory(story: ProjectStoryBlock[]): StoryLayoutItem[] {
   const items: StoryLayoutItem[] = []
   for (let index = 0; index < story.length; index += 1) {
     const block = story[index]
     const next = story[index + 1]
-    if (isPortraitImage(block) && next && isPortraitImage(next)) {
+    if (isAutomaticPortrait(block) && next && isAutomaticPortrait(next)) {
       items.push({ kind: 'portraitPair', blocks: [block, next] })
       index += 1
     } else {
@@ -91,6 +95,7 @@ function arrangeStory(story: ProjectStoryBlock[]): StoryLayoutItem[] {
 }
 
 function StoryImage({ block, paired = false }: { block: StoryImageBlock; paired?: boolean }) {
+  const presentation = block.presentation
   const source = imageSource({
     image: block.image,
     width: block.imageWidth,
@@ -102,13 +107,19 @@ function StoryImage({ block, paired = false }: { block: StoryImageBlock; paired?
   return (
     <figure
       className={paired ? styles.imageBlock : `${styles.contentBlock} ${styles.imageBlock}`}
+      data-paired={paired || undefined}
       data-portrait={portrait}
+      data-presentation={paired ? 'auto' : presentation}
     >
       <Image
         src={source.src}
         width={source.width}
         height={source.height}
-        sizes={portrait ? '(max-width: 720px) 100vw, 50vw' : '100vw'}
+        sizes={
+          presentation === 'full' || (!portrait && presentation === 'auto')
+            ? '100vw'
+            : '(max-width: 720px) 100vw, 50vw'
+        }
         alt={block.alt}
         unoptimized
       />

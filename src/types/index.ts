@@ -8,6 +8,7 @@ export type ProjectStoryBlock =
       image: string
       alt: string
       caption?: string
+      presentation: 'auto' | 'center' | 'full'
       imageWidth?: number | null
       imageHeight?: number | null
       sizes?: Media['sizes']

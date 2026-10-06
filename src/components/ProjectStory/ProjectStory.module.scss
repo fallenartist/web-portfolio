@@ -216,8 +216,18 @@
 .videoBlock {
   width: 100%;
 
-  &[data-portrait='true'] {
+  &[data-portrait='true']:not([data-presentation='full']):not([data-paired='true']) {
     width: calc(50% - clamp(10px, 2vw, 36px));
+  }
+
+  &[data-presentation='center'] {
+    width: calc(50% - clamp(10px, 2vw, 36px));
+    margin-inline: auto;
+  }
+
+  &[data-presentation='full'] {
+    width: 100%;
+    margin-inline: 0;
   }
 
   img {
@@ -227,12 +237,18 @@
     background: #f3f3f3;
   }
 
-  &[data-portrait='true'] img {
+  &[data-portrait='true']:not([data-presentation='full']) img {
     width: auto;
     max-width: 100%;
     height: auto;
     max-height: calc(100svh - 96px);
     object-fit: contain;
+  }
+
+  &[data-presentation='full'] img {
+    width: 100%;
+    max-width: none;
+    max-height: none;
   }
 
   figcaption {
@@ -242,7 +258,7 @@
     line-height: 1.2;
   }
 
-  &[data-portrait='true'] figcaption {
+  &[data-portrait='true']:not([data-presentation='full']) figcaption {
     padding-inline: 0;
   }
 }
@@ -492,6 +508,11 @@
     margin-left: 0;
   }
 
+  .imageBlock[data-presentation='center'] {
+    width: 100%;
+    margin-inline: 0;
+  }
+
   .quoteBlock {
     padding-top: 0.9em;
 
@@ -501,7 +522,7 @@
     }
   }
 
-  .imageBlock[data-portrait='true'] img {
+  .imageBlock[data-portrait='true']:not([data-presentation='full']) img {
     margin-inline: auto;
     max-height: calc(100svh - 72px);
   }

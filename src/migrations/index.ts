@@ -22,6 +22,7 @@ import * as migration_20261005_160000_project_guide_settings from './20261005_16
 import * as migration_20261006_104500_appearance_global from './20261006_104500_appearance_global'
 import * as migration_20261006_133000_project_industries_many from './20261006_133000_project_industries_many'
 import * as migration_20261006_140000_agency_url from './20261006_140000_agency_url'
+import * as migration_20261006_143000_story_image_presentation from './20261006_143000_story_image_presentation'
 
 export const migrations = [
   {
@@ -143,5 +144,10 @@ export const migrations = [
     up: migration_20261006_140000_agency_url.up,
     down: migration_20261006_140000_agency_url.down,
     name: '20261006_140000_agency_url',
+  },
+  {
+    up: migration_20261006_143000_story_image_presentation.up,
+    down: migration_20261006_143000_story_image_presentation.down,
+    name: '20261006_143000_story_image_presentation',
   },
 ]

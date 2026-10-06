@@ -145,6 +145,7 @@ export function transformDataForTreemap(
         image: image.url,
         alt: image.alt || block.caption || project.title,
         caption: block.caption || undefined,
+        presentation: block.presentation || 'auto',
         imageWidth: image.width,
         imageHeight: image.height,
         sizes: image.sizes,

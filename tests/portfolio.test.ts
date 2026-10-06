@@ -20,7 +20,7 @@ import { getInternalLinkHref, getMenuItemHref, getMenuItemLabel } from '../src/l
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
 import { fetchTreemapData } from '../src/lib/transformers'
 import { selectMainMenu } from '../src/lib/site-data'
-import { getVideoEmbed, validateVideoURL } from '../src/lib/video-embed'
+import { enableVimeoControls, getVideoEmbed, validateVideoURL } from '../src/lib/video-embed'
 import { GET } from '../src/app/my-route/route'
 import type { Payload } from 'payload'
 
@@ -279,6 +279,23 @@ test('only Vimeo links are accepted and normalized for safe responsive embeds', 
   assert.match(vimeo?.embedURL || '', /muted=1/)
   assert.equal(validateVideoURL('https://youtu.be/M7lc1UVf-VE'), 'Enter a valid Vimeo video URL.')
   assert.equal(validateVideoURL('https://example.com/video'), 'Enter a valid Vimeo video URL.')
+})
+
+test('full-view Vimeo heroes enable controls without changing other embed options', () => {
+  const background = getVideoEmbed('https://vimeo.com/123456', {
+    autoplay: true,
+    controls: false,
+    loop: true,
+  })
+  assert.ok(background)
+  const controlled = new URL(enableVimeoControls(background.embedURL))
+  assert.equal(controlled.searchParams.get('controls'), '1')
+  assert.equal(controlled.searchParams.get('autoplay'), '1')
+  assert.equal(controlled.searchParams.get('loop'), '1')
+
+  const standard = getVideoEmbed('https://vimeo.com/123456', { controls: true })
+  assert.ok(standard)
+  assert.equal(enableVimeoControls(standard.embedURL), standard.embedURL)
 })
 
 test('media admin thumbnail falls back to the original SVG', () => {

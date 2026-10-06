@@ -7,6 +7,7 @@ import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
 import { mediaFocalPosition, proportionalMediaSize } from '@/lib/media-image'
 import { normalizeColour } from '@/lib/colour'
 import { projectTextConverters } from '@/lib/project-rich-text'
+import { enableVimeoControls } from '@/lib/video-embed'
 import styles from './ProjectStory.module.scss'
 
 type ResponsiveImage = {
@@ -142,6 +143,7 @@ function HeroVideo({
       ? hero.coverWidth / hero.coverHeight
       : cover.width / cover.height
   const [videoRatio, setVideoRatio] = useState(coverRatio)
+  const videoURL = fit === 'contain' ? enableVimeoControls(hero.url) : hero.url
   const heroStyle = { '--hero-ratio': videoRatio } as CSSProperties
   const coverStyle = {
     objectPosition: mediaFocalPosition(hero.coverFocalX, hero.coverFocalY),
@@ -176,7 +178,7 @@ function HeroVideo({
     return () => {
       active = false
     }
-  }, [started])
+  }, [started, videoURL])
 
   return (
     <figure className={styles.hero} data-video-fit={fit} style={heroStyle}>
@@ -197,7 +199,7 @@ function HeroVideo({
         <iframe
           ref={iframeRef}
           className={loaded ? styles.videoLoaded : undefined}
-          src={hero.url}
+          src={videoURL}
           title={`${title} Vimeo video`}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen
@@ -220,6 +222,9 @@ function HeroVideo({
         type="button"
         onClick={() => {
           const next = fit === 'cover' ? 'contain' : 'cover'
+          if (started && (next === 'contain' ? enableVimeoControls(hero.url) : hero.url) !== videoURL) {
+            setLoaded(false)
+          }
           setFit(next)
           onFitChange(next)
         }}

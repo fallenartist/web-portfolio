@@ -48,6 +48,8 @@ export const Media: CollectionConfig = {
     // Payload owns this directory: every original needs a matching database
     // record and generated sizes, so files must enter through Admin or the API.
     staticDir: path.resolve(__dirname, '../../public/media'),
+    // Keep `withoutEnlargement` unset. Payload then omits sizes larger than the
+    // source; setting it to true re-encodes a duplicate at the source dimensions.
     imageSizes: [
       {
         name: 'thumbnail',
@@ -58,17 +60,14 @@ export const Media: CollectionConfig = {
       {
         name: 'small',
         width: 800,
-        withoutEnlargement: true,
       },
       {
         name: 'medium',
         width: 1600,
-        withoutEnlargement: true,
       },
       {
         name: 'large',
         width: 2400,
-        withoutEnlargement: true,
       },
     ],
     adminThumbnail: getAdminThumbnail,

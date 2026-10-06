@@ -21,8 +21,32 @@ import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-dat
 import { fetchTreemapData } from '../src/lib/transformers'
 import { selectMainMenu } from '../src/lib/site-data'
 import { enableVimeoControls, getVideoEmbed, validateVideoURL } from '../src/lib/video-embed'
+import { validateExternalURL } from '../src/lib/external-url'
+import { stripProjectCreateID } from '../src/collections/hooks/strip-project-create-id'
 import { GET } from '../src/app/my-route/route'
 import type { Payload } from 'payload'
+
+test('new projects discard temporary document IDs while retaining nested IDs', async () => {
+  const storyID = '6ac4da655c8f6d251c5802b8'
+  const data = {
+    id: '6ac4da655c8f6d251c5802b9',
+    title: 'Project',
+    story: [{ id: storyID, blockType: 'image' }],
+  }
+  const result = await stripProjectCreateID({ data, operation: 'create' } as never)
+
+  assert.equal(result?.id, undefined)
+  assert.equal(result?.story?.[0]?.id, storyID)
+  assert.equal((await stripProjectCreateID({ data, operation: 'update' } as never))?.id, data.id)
+})
+
+test('agency URLs accept web addresses only', () => {
+  assert.equal(validateExternalURL(undefined), true)
+  assert.equal(validateExternalURL('https://example.com/studio'), true)
+  assert.equal(validateExternalURL('http://example.com'), true)
+  assert.equal(typeof validateExternalURL('example.com'), 'string')
+  assert.equal(typeof validateExternalURL('javascript:alert(1)'), 'string')
+})
 
 const discipline = (id: number, extra: Partial<Discipline> = {}): Discipline => ({
   id,

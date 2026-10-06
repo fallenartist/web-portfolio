@@ -305,6 +305,8 @@ export interface Project {
   createdAt: string;
 }
 /**
+ * Upload files here. public/media is managed storage and files should not be copied into it manually.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
@@ -381,6 +383,10 @@ export interface Agency {
   id: number;
   title: string;
   slug: string;
+  /**
+   * Optional agency website, including https://
+   */
+  url?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -764,6 +770,7 @@ export interface ClientsSelect<T extends boolean = true> {
 export interface AgenciesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  url?: T;
   updatedAt?: T;
   createdAt?: T;
 }

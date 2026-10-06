@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { lexicalEditor, TextStateFeature } from '@payloadcms/richtext-lexical'
 import { validateVideoURL } from '@/lib/video-embed'
+import { stripProjectCreateID } from '@/collections/hooks/strip-project-create-id'
 
 const projectTextEditor = lexicalEditor({
   features: ({ rootFeatures }) => [
@@ -42,6 +43,9 @@ export const Projects: CollectionConfig = {
     defaultColumns: ['title', 'client', 'discipline', 'industries', 'priority', 'updatedAt'],
   },
   access: { read: () => true },
+  hooks: {
+    beforeValidate: [stripProjectCreateID],
+  },
   fields: [
     { name: 'title', type: 'text', required: true, index: true },
     {

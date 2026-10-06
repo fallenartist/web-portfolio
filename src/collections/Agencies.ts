@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { validateExternalURL } from '@/lib/external-url'
 
 export const Agencies: CollectionConfig = {
   slug: 'agencies',
@@ -9,7 +10,7 @@ export const Agencies: CollectionConfig = {
   admin: {
     group: 'Content',
     useAsTitle: 'title',
-    defaultColumns: ['title', 'updatedAt'],
+    defaultColumns: ['title', 'url', 'updatedAt'],
     description: 'Studios or agencies through which projects were commissioned.',
   },
   access: {
@@ -41,6 +42,16 @@ export const Agencies: CollectionConfig = {
             return data?.slug
           },
         ],
+      },
+    },
+    {
+      name: 'url',
+      label: 'Website URL',
+      type: 'text',
+      validate: validateExternalURL,
+      admin: {
+        description: 'Optional agency website, including https://',
+        position: 'sidebar',
       },
     },
   ],

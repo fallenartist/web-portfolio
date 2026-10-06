@@ -38,11 +38,15 @@ export const Media: CollectionConfig = {
     },
     group: 'Content',
     useAsTitle: 'filename',
+    description:
+      'Upload files here. public/media is managed storage and files should not be copied into it manually.',
   },
   access: {
     read: () => true,
   },
   upload: {
+    // Payload owns this directory: every original needs a matching database
+    // record and generated sizes, so files must enter through Admin or the API.
     staticDir: path.resolve(__dirname, '../../public/media'),
     imageSizes: [
       {

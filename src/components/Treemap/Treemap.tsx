@@ -87,7 +87,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
       if (node.data.kind === 'project') projectNodes.push(node)
     })
     let current = root
-    let projectMode = false
     let disposed = false
     const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600
     const timers = new Set<ReturnType<typeof setTimeout>>()
@@ -214,7 +213,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
     ) {
       if (disposed) return
       const isProject = node.data.kind === 'project'
-      projectMode = isProject
       if (isProject) {
         const projectIndex = projectNodes.indexOf(node)
         setStoryNeighbors({
@@ -390,38 +388,12 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .find((n) => n.data.kind !== 'image' && pathFor(n) === window.location.pathname) || root,
     )
 
-    // Keep autoplay opt-in settings, but cancel every scheduled step on activity/unmount.
-    const featured = root.descendants().filter((n) => n.data.featured && n.data.kind === 'image')
-    let autoplayTimer: ReturnType<typeof setTimeout> | undefined
-    let index = 0
-    function play() {
-      if (projectMode) return
-      const node = featured[index++ % featured.length]
-      if (!node) return
-      zoom(node, false)
-      autoplayTimer = schedule(() => {
-        if (node.parent) zoom(node.parent, false)
-        autoplayTimer = schedule(play, data.settings?.autoplayInterval ?? 3000)
-      }, data.settings?.autoplayInterval ?? 3000)
-    }
-    function resetIdle() {
-      clearTimer(autoplayTimer)
-      if (data.settings?.enableAutoplay && featured.length && duration && !document.hidden) {
-        autoplayTimer = schedule(play, data.settings.autoplayDelay)
-      }
-    }
-    const activity = ['pointermove', 'pointerdown', 'keydown', 'scroll'] as const
-    for (const event of activity) window.addEventListener(event, resetIdle, { passive: true })
-    document.addEventListener('visibilitychange', resetIdle)
-    resetIdle()
     return () => {
       disposed = true
       observer.disconnect()
       for (const timer of timers) clearTimeout(timer)
       window.removeEventListener('breadcrumb-click', onBreadcrumb)
       window.removeEventListener('popstate', onPopState)
-      for (const event of activity) window.removeEventListener(event, resetIdle)
-      document.removeEventListener('visibilitychange', resetIdle)
       svg.interrupt()
       svg.selectAll('*').interrupt().remove()
       lightbox.destroy()

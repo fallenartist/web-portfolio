@@ -205,9 +205,6 @@ export function transformDataForTreemap(
     children: wrapper?.children ?? roots,
     settings: {
       siteTitle: settings?.siteTitle || 'Design Portfolio',
-      enableAutoplay: settings?.enableAutoplay !== false,
-      autoplayDelay: settings?.autoplayDelay ?? 5000,
-      autoplayInterval: settings?.autoplayInterval ?? 3000,
       projectTitle: {
         placement: appearance?.projectTitle?.placement || 'below',
         fontSize: appearance?.projectTitle?.fontSize ?? 112,

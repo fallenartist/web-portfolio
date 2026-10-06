@@ -100,20 +100,5 @@ export const Settings: GlobalConfig = {
         description: 'Logo shown below the root; clicking it moves up one level',
       },
     },
-    {
-      name: 'enableAutoplay',
-      type: 'checkbox',
-      defaultValue: true,
-    },
-    {
-      name: 'autoplayDelay',
-      type: 'number',
-      defaultValue: 5000,
-    },
-    {
-      name: 'autoplayInterval',
-      type: 'number',
-      defaultValue: 3000,
-    },
   ],
 }

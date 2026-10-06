@@ -959,9 +959,6 @@ export interface Setting {
    * Logo shown below the root; clicking it moves up one level
    */
   upLogo?: (number | null) | Media;
-  enableAutoplay?: boolean | null;
-  autoplayDelay?: number | null;
-  autoplayInterval?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1016,9 +1013,6 @@ export interface SettingsSelect<T extends boolean = true> {
   projectGuideInstruction?: T;
   rootLogo?: T;
   upLogo?: T;
-  enableAutoplay?: T;
-  autoplayDelay?: T;
-  autoplayInterval?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

@@ -85,13 +85,9 @@ export interface TreemapData {
   projectHero?: ProjectHero
   story?: ProjectStoryBlock[]
   hero?: boolean
-  featured?: boolean
   sizes?: Media['sizes']
   children?: TreemapData[]
   settings?: {
-    enableAutoplay: boolean
-    autoplayDelay: number
-    autoplayInterval: number
     siteTitle: string
     projectTitle: {
       placement: 'below' | 'overlay'

@@ -142,10 +142,12 @@ export function buildTangledTreeData(
 
     const client = populated(project.client)
     const agency = populated<Agency>(project.agency)
-    const industry = populated<Industry>(project.industry)
     if (client) addMetadata('client', client, projectID)
     if (agency) addMetadata('agency', agency, projectID)
-    if (industry) addMetadata('industry', industry, projectID)
+    for (const industryValue of project.industries || []) {
+      const industry = populated<Industry>(industryValue)
+      if (industry) addMetadata('industry', industry, projectID)
+    }
     for (const tagValue of project.tags || []) {
       const tag = populated<Tag>(tagValue)
       if (tag) addMetadata('tag', tag, projectID)

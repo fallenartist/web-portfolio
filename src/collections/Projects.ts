@@ -39,7 +39,7 @@ export const Projects: CollectionConfig = {
   admin: {
     group: 'Content',
     useAsTitle: 'title',
-    defaultColumns: ['title', 'client', 'discipline', 'industry', 'priority', 'updatedAt'],
+    defaultColumns: ['title', 'client', 'discipline', 'industries', 'priority', 'updatedAt'],
   },
   access: { read: () => true },
   fields: [
@@ -247,13 +247,14 @@ export const Projects: CollectionConfig = {
       admin: { position: 'sidebar' },
     },
     {
-      name: 'industry',
-      label: 'Industry',
+      name: 'industries',
+      label: 'Industries',
       type: 'relationship',
       relationTo: 'industries',
+      hasMany: true,
       admin: {
         position: 'sidebar',
-        description: 'Client industry; used for portfolio filtering and menu links',
+        description: 'Client industries; used for portfolio filtering and menu links',
       },
     },
     {

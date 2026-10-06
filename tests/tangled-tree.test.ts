@@ -44,6 +44,14 @@ const industry = {
   updatedAt: now,
   createdAt: now,
 } as Industry
+const secondIndustry = {
+  id: 7,
+  title: 'Technology',
+  slug: 'technology',
+  color: '#00aa88',
+  updatedAt: now,
+  createdAt: now,
+} as Industry
 const tag = {
   id: 6,
   title: 'Wayfinding',
@@ -60,7 +68,7 @@ const project = (id: number, title: string): Project =>
     discipline,
     client,
     agency,
-    industry,
+    industries: [industry, secondIndustry],
     tags: [tag],
     hero: { type: 'image' },
     updatedAt: now,
@@ -76,7 +84,12 @@ test('tangled tree data exposes every project relationship as an interactive nod
 
   assert.deepEqual(
     data.levels.map((level) => level.map((node) => node.kind)),
-    [['root'], ['discipline'], ['project', 'project'], ['industry', 'client', 'agency', 'tag']],
+    [
+      ['root'],
+      ['discipline'],
+      ['project', 'project'],
+      ['industry', 'industry', 'client', 'agency', 'tag'],
+    ],
   )
   assert.equal(data.levels[0][0].href, '/')
   assert.equal(data.levels[0][0].slug, 'work')
@@ -85,6 +98,10 @@ test('tangled tree data exposes every project relationship as an interactive nod
   assert.equal(data.levels[2][0].href, '/identity/project-a')
   assert.equal(data.levels[2][0].slug, 'project-a')
   assert.equal(data.levels[3].find((node) => node.kind === 'agency')?.href, '/?agency=studio-one')
+  assert.deepEqual(
+    data.levels[3].filter((node) => node.kind === 'industry').map((node) => node.title),
+    ['Technology', 'Transport'],
+  )
   assert.deepEqual(data.levels[3].find((node) => node.kind === 'tag')?.parentIds, [
     'project-10',
     'project-11',

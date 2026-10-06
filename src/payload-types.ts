@@ -290,9 +290,9 @@ export interface Project {
   agency?: (number | null) | Agency;
   discipline: number | Discipline;
   /**
-   * Client industry; used for portfolio filtering and menu links
+   * Client industries; used for portfolio filtering and menu links
    */
-  industry?: (number | null) | Industry;
+  industries?: (number | Industry)[] | null;
   /**
    * Higher values appear larger in the treemap (default: 100)
    */
@@ -715,7 +715,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   client?: T;
   agency?: T;
   discipline?: T;
-  industry?: T;
+  industries?: T;
   priority?: T;
   tags?: T;
   updatedAt?: T;

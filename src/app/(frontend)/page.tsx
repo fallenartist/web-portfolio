@@ -21,18 +21,28 @@ export default async function Home({
 
   if (selected && slug) {
     const projects = portfolio.projects.filter((project) => {
-      if (selected === 'tag') {
-        return project.tags?.some((tag) => typeof tag === 'object' && tag.slug === slug)
+      if (selected === 'tag' || selected === 'industry') {
+        const relationships = selected === 'tag' ? project.tags : project.industries
+        return relationships?.some(
+          (relationship) => typeof relationship === 'object' && relationship.slug === slug,
+        )
       }
       const relationship = project[selected]
       return typeof relationship === 'object' && relationship?.slug === slug
     })
-    treemapData = transformDataForTreemap(portfolio.disciplines, projects, portfolio.settings)
+    treemapData = transformDataForTreemap(
+      portfolio.disciplines,
+      projects,
+      portfolio.settings,
+      portfolio.appearance,
+    )
     const relationship =
-      selected === 'tag'
+      selected === 'tag' || selected === 'industry'
         ? projects
-            .flatMap((project) => project.tags || [])
-            .find((tag) => typeof tag === 'object' && tag.slug === slug)
+            .flatMap((project) =>
+              selected === 'tag' ? project.tags || [] : project.industries || [],
+            )
+            .find((item) => typeof item === 'object' && item.slug === slug)
         : projects
             .map((project) => project[selected])
             .find((item) => typeof item === 'object' && item?.slug === slug)

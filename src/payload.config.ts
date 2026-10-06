@@ -15,6 +15,7 @@ import { Tags } from '@/collections/Tags'
 import { Users } from '@/collections/Users'
 import { Menus } from '@/collections/Menus'
 import { Settings } from '@/globals/Settings'
+import { Appearance } from '@/globals/Appearance'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -28,7 +29,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Projects, Disciplines, Industries, Clients, Agencies, Tags, Media, Menus],
-  globals: [Settings],
+  globals: [Settings, Appearance],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

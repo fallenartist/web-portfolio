@@ -60,9 +60,6 @@ export function getMenuItemHref(
   return item.internalLink ? getInternalLinkHref(item.internalLink, legacyRootSlug) : '#'
 }
 
-export function getMenuItemLabel(item: MenuEntry, projectGuideTitle?: null | string): string {
-  if (item.type === 'internal' && item.internalDestination === 'projects') {
-    return projectGuideTitle?.trim() || 'Projects'
-  }
+export function getMenuItemLabel(item: MenuEntry): string {
   return item.title
 }

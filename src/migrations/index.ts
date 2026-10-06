@@ -19,6 +19,7 @@ import * as migration_20261004_190940_menu_submenus_projects_slug from './202610
 import * as migration_20261005_114355_tangled_tree_taxonomies from './20261005_114355_tangled_tree_taxonomies'
 import * as migration_20261005_114820_taxonomy_menu_links from './20261005_114820_taxonomy_menu_links'
 import * as migration_20261005_160000_project_guide_settings from './20261005_160000_project_guide_settings'
+import * as migration_20261006_104500_appearance_global from './20261006_104500_appearance_global'
 
 export const migrations = [
   {
@@ -125,5 +126,10 @@ export const migrations = [
     up: migration_20261005_160000_project_guide_settings.up,
     down: migration_20261005_160000_project_guide_settings.down,
     name: '20261005_160000_project_guide_settings',
+  },
+  {
+    up: migration_20261006_104500_appearance_global.up,
+    down: migration_20261006_104500_appearance_global.down,
+    name: '20261006_104500_appearance_global',
   },
 ]

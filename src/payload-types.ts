@@ -103,9 +103,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     settings: Setting;
+    appearance: Appearance;
   };
   globalsSelect: {
     settings: SettingsSelect<false> | SettingsSelect<true>;
+    appearance: AppearanceSelect<false> | AppearanceSelect<true>;
   };
   locale: null;
   widgets: {
@@ -452,7 +454,7 @@ export interface Menu {
   items?:
     | {
         /**
-         * For a Project guide destination, the front end uses the guide name from Settings.
+         * This title is the menu label, including for the Project guide destination.
          */
         title: string;
         type: 'internal' | 'external' | 'group';
@@ -487,7 +489,7 @@ export interface Menu {
         subItems?:
           | {
               /**
-               * For a Project guide destination, the front end uses the guide name from Settings.
+               * This title is the menu label, including for the Project guide destination.
                */
               title: string;
               type: 'internal' | 'external';
@@ -926,7 +928,7 @@ export interface Setting {
    */
   rootDisciplineSlug?: string | null;
   /**
-   * Used in the main menu and breadcrumb for the project relationship diagram.
+   * Used in the breadcrumb for the project relationship diagram.
    */
   projectGuideTitle: string;
   /**
@@ -945,6 +947,22 @@ export interface Setting {
    * Logo shown below the root; clicking it moves up one level
    */
   upLogo?: (number | null) | Media;
+  enableAutoplay?: boolean | null;
+  autoplayDelay?: number | null;
+  autoplayInterval?: number | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appearance".
+ */
+export interface Appearance {
+  id: number;
+  /**
+   * Used by the main menu and the project guide instruction bar.
+   */
+  menuBackgroundColor: string;
   projectTitle: {
     placement: 'below' | 'overlay';
     fontSize?: number | null;
@@ -969,9 +987,6 @@ export interface Setting {
     fontSize: number;
     textColor: string;
   };
-  enableAutoplay?: boolean | null;
-  autoplayDelay?: number | null;
-  autoplayInterval?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -989,6 +1004,19 @@ export interface SettingsSelect<T extends boolean = true> {
   projectGuideInstruction?: T;
   rootLogo?: T;
   upLogo?: T;
+  enableAutoplay?: T;
+  autoplayDelay?: T;
+  autoplayInterval?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appearance_select".
+ */
+export interface AppearanceSelect<T extends boolean = true> {
+  menuBackgroundColor?: T;
   projectTitle?:
     | T
     | {
@@ -1013,9 +1041,6 @@ export interface SettingsSelect<T extends boolean = true> {
         fontSize?: T;
         textColor?: T;
       };
-  enableAutoplay?: T;
-  autoplayDelay?: T;
-  autoplayInterval?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

@@ -51,12 +51,12 @@ export const Settings: GlobalConfig = {
     },
     {
       name: 'projectGuideTitle',
-      label: 'Project guide name',
+      label: 'Project guide breadcrumb title',
       type: 'text',
       required: true,
       defaultValue: 'Projects',
       admin: {
-        description: 'Used in the main menu and breadcrumb for the project relationship diagram.',
+        description: 'Used in the breadcrumb for the project relationship diagram.',
       },
     },
     {
@@ -99,156 +99,6 @@ export const Settings: GlobalConfig = {
       admin: {
         description: 'Logo shown below the root; clicking it moves up one level',
       },
-    },
-    {
-      name: 'projectTitle',
-      label: 'Project title presentation',
-      type: 'group',
-      fields: [
-        {
-          name: 'placement',
-          type: 'radio',
-          required: true,
-          defaultValue: 'below',
-          options: [
-            { label: 'Below the hero', value: 'below' },
-            { label: 'Over the hero', value: 'overlay' },
-          ],
-        },
-        {
-          name: 'fontSize',
-          label: 'Desktop overlay font size (px)',
-          type: 'number',
-          required: true,
-          defaultValue: 112,
-          min: 32,
-          max: 240,
-          admin: {
-            condition: (_, siblingData) => siblingData?.placement === 'overlay',
-          },
-        },
-        {
-          name: 'mobileFontSize',
-          label: 'Mobile overlay font size (px)',
-          type: 'number',
-          required: true,
-          defaultValue: 48,
-          min: 24,
-          max: 120,
-          admin: {
-            condition: (_, siblingData) => siblingData?.placement === 'overlay',
-          },
-        },
-        {
-          name: 'dimColor',
-          label: 'Dim colour',
-          type: 'text',
-          required: true,
-          defaultValue: '#000000',
-          validate: (value: null | string | undefined) =>
-            Boolean(value && /^#[0-9a-f]{6}$/i.test(value)) ||
-            'Enter a six-digit hex colour, e.g. #000000.',
-          admin: {
-            condition: (_, siblingData) => siblingData?.placement === 'overlay',
-          },
-        },
-        {
-          name: 'dimIntensity',
-          label: 'Dim intensity (%)',
-          type: 'number',
-          required: true,
-          defaultValue: 35,
-          min: 0,
-          max: 90,
-          admin: {
-            condition: (_, siblingData) => siblingData?.placement === 'overlay',
-            step: 5,
-          },
-        },
-      ],
-    },
-    {
-      name: 'storyText',
-      label: 'Story text presentation',
-      type: 'group',
-      fields: [
-        {
-          name: 'width',
-          label: 'Text block width (%)',
-          type: 'number',
-          required: true,
-          defaultValue: 50,
-          min: 30,
-          max: 100,
-          admin: {
-            description: 'Used on wider screens; text remains full width on mobile.',
-          },
-        },
-        {
-          name: 'fontSize',
-          label: 'Text font size (px)',
-          type: 'number',
-          required: true,
-          defaultValue: 30,
-          min: 16,
-          max: 72,
-        },
-        {
-          name: 'quoteFontSize',
-          label: 'Quote font size (px)',
-          type: 'number',
-          required: true,
-          defaultValue: 60,
-          min: 24,
-          max: 140,
-        },
-        {
-          name: 'textColor',
-          label: 'Text colour',
-          type: 'text',
-          required: true,
-          defaultValue: '#222222',
-          validate: (value: null | string | undefined) =>
-            Boolean(value && /^#[0-9a-f]{6}$/i.test(value)) ||
-            'Enter a six-digit hex colour, e.g. #222222.',
-        },
-      ],
-    },
-    {
-      name: 'projectDescription',
-      label: 'Project description presentation',
-      type: 'group',
-      fields: [
-        {
-          name: 'fontFamily',
-          label: 'Font family',
-          type: 'text',
-          required: true,
-          defaultValue: 'October Condensed',
-          admin: {
-            description: 'Enter a CSS font family name, e.g. October Condensed.',
-          },
-        },
-        {
-          name: 'fontSize',
-          label: 'Font size (px)',
-          type: 'number',
-          required: true,
-          defaultValue: 30,
-          min: 16,
-          max: 72,
-        },
-        {
-          name: 'textColor',
-          label: 'Text colour',
-          type: 'text',
-          required: true,
-          defaultValue: '#222222',
-          validate: (value: null | string | undefined) =>
-            Boolean(value && /^#[0-9a-f]{6}$/i.test(value)) ||
-            'Enter a six-digit hex colour, e.g. #222222.',
-        },
-      ],
     },
     {
       name: 'enableAutoplay',

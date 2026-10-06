@@ -14,7 +14,7 @@ const destinationFields = (): Field[] => [
     required: true,
     options: [
       { label: 'Content item', value: 'content' },
-      { label: 'Project guide (name and URL from Settings)', value: 'projects' },
+      { label: 'Project guide (URL from Settings)', value: 'projects' },
     ],
     admin: {
       condition: (_, siblingData) => siblingData.type === 'internal',
@@ -93,7 +93,7 @@ export const Menus: CollectionConfig = {
           required: true,
           admin: {
             description:
-              'For a Project guide destination, the front end uses the guide name from Settings.',
+              'This title is the menu label, including for the Project guide destination.',
           },
         },
         {
@@ -118,7 +118,7 @@ export const Menus: CollectionConfig = {
               required: true,
               admin: {
                 description:
-                  'For a Project guide destination, the front end uses the guide name from Settings.',
+                  'This title is the menu label, including for the Project guide destination.',
               },
             },
             {

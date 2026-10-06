@@ -61,7 +61,7 @@ export default function Header({
           href={getMenuItemHref(item, legacyRootSlug, projectsOverviewSlug)}
           onClick={() => setOpenPath(null)}
         >
-          {getMenuItemLabel(item, projectGuideTitle)}
+          {getMenuItemLabel(item)}
         </Link>
       )
     }

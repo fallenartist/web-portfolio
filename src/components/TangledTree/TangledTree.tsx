@@ -486,7 +486,7 @@ export default function TangledTree({
               const targetHeight = mobile
                 ? Math.max(44, nodeHeight + 8)
                 : Math.max(28, nodeHeight + 8)
-              const labelHeight = mobile ? 34 : 24
+              const labelHeight = mobile ? 38 : 24
               const labelWidth = Math.max(28, node.columnWidth - nodeSize - 8)
               const labelX = node.x + nodeSize / 2 + 5
               const labelY = mobile

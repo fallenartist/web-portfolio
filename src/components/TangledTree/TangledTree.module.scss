@@ -7,6 +7,8 @@
   overflow: hidden;
   background: #fff;
   color: #222;
+  font-feature-settings: 'liga' 1, 'onum' 0, 'lnum' 1, 'pnum' 1;
+  font-variant-numeric: lining-nums proportional-nums;
 }
 
 .header {
@@ -17,7 +19,7 @@
   flex: 0 0 84px;
   align-items: center;
   padding: 0 var(--page-gutter);
-  background: rgb(244 244 244 / 97%);
+  background: var(--menu-background);
 
   p {
     max-width: 760px;
@@ -163,13 +165,14 @@
     .labelRow {
       width: 100%;
       align-items: flex-end;
+      padding-bottom: 2px;
     }
 
     .labelText {
       display: -webkit-box;
       min-width: 0;
       overflow: hidden;
-      line-height: 1.05;
+      line-height: 1.12;
       overflow-wrap: anywhere;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 2;

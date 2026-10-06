@@ -16,17 +16,29 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [{ settings, treemapData }, menu] = await Promise.all([getPortfolio(), getMainMenu()])
+  const [{ appearance, settings, treemapData }, menu] = await Promise.all([
+    getPortfolio(),
+    getMainMenu(),
+  ])
   const rootLogo =
     settings?.rootLogo && typeof settings.rootLogo === 'object' ? settings.rootLogo.url : undefined
   const upLogo =
     settings?.upLogo && typeof settings.upLogo === 'object' ? settings.upLogo.url : undefined
+  const menuBackgroundColor = /^#[0-9a-f]{6}$/i.test(appearance.menuBackgroundColor)
+    ? appearance.menuBackgroundColor
+    : '#f4f4f4'
   return (
     <html lang="en">
       <head>
         <link rel="stylesheet" href="https://webfonts.typotheque.com/WF-004891-002394.css" />
       </head>
-      <body>
+      <body
+        style={
+          {
+            '--menu-background': `color-mix(in srgb, ${menuBackgroundColor} 97%, transparent)`,
+          } as React.CSSProperties
+        }
+      >
         <BreadcrumbProvider
           title={settings?.siteTitle || 'Design Portfolio'}
           menu={menu}

@@ -8,6 +8,7 @@ import { coverMediaRect, mediaFocalPosition, proportionalMediaSize } from '../sr
 import { projectTextConverters } from '../src/lib/project-rich-text'
 import type {
   Agency,
+  Appearance,
   Discipline,
   Industry,
   Project,
@@ -81,13 +82,17 @@ test('nested disciplines work and cyclic parents cannot create a circular tree',
   assert.equal(cycle.children?.length, 2)
 })
 
-test('global project title presentation is included in the front-end settings', () => {
+test('Appearance presentation values are included in the front-end settings', () => {
   const settings: Setting = {
     id: 1,
     siteTitle: 'Portfolio',
     projectGuideTitle: 'Project Guide',
     projectGuideInstruction: 'Choose a relationship.',
     projectsOverviewSlug: 'projects',
+  }
+  const appearance: Appearance = {
+    id: 1,
+    menuBackgroundColor: '#f4f4f4',
     projectTitle: {
       placement: 'overlay',
       fontSize: 128,
@@ -107,10 +112,10 @@ test('global project title presentation is included in the front-end settings', 
       textColor: '#654321',
     },
   }
-  const tree = transformDataForTreemap([discipline(1)], [project()], settings)
-  assert.deepEqual(tree.settings?.projectTitle, settings.projectTitle)
-  assert.deepEqual(tree.settings?.storyText, settings.storyText)
-  assert.deepEqual(tree.settings?.projectDescription, settings.projectDescription)
+  const tree = transformDataForTreemap([discipline(1)], [project()], settings, appearance)
+  assert.deepEqual(tree.settings?.projectTitle, appearance.projectTitle)
+  assert.deepEqual(tree.settings?.storyText, appearance.storyText)
+  assert.deepEqual(tree.settings?.projectDescription, appearance.projectDescription)
 })
 
 test('missing and populated hero uploads are handled safely', () => {
@@ -491,13 +496,13 @@ test('the projects overview can be selected as an internal menu destination', ()
   )
 })
 
-test('the project guide menu destination uses its name from global settings', () => {
+test('the project guide menu destination keeps its independently configured menu label', () => {
   const item = {
     title: 'Old menu label',
     type: 'internal' as const,
     internalDestination: 'projects' as const,
   }
-  assert.equal(getMenuItemLabel(item, 'Project Map'), 'Project Map')
+  assert.equal(getMenuItemLabel(item), 'Old menu label')
 })
 
 test('sample endpoint no longer exposes users', async () => {

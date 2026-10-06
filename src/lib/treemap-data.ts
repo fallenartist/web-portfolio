@@ -1,4 +1,4 @@
-import type { Discipline, Media, Project, Setting } from '@/payload-types'
+import type { Appearance, Discipline, Media, Project, Setting } from '@/payload-types'
 import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
 import { getVideoEmbed } from '@/lib/video-embed'
 
@@ -10,6 +10,7 @@ export function transformDataForTreemap(
   disciplines: Discipline[],
   projects: Project[],
   settings: Setting | null = null,
+  appearance: Appearance | null = null,
 ): TreemapData {
   const map = new Map<number, TreemapData>()
   for (const discipline of disciplines) {
@@ -206,22 +207,22 @@ export function transformDataForTreemap(
       autoplayDelay: settings?.autoplayDelay ?? 5000,
       autoplayInterval: settings?.autoplayInterval ?? 3000,
       projectTitle: {
-        placement: settings?.projectTitle?.placement || 'below',
-        fontSize: settings?.projectTitle?.fontSize ?? 112,
-        mobileFontSize: settings?.projectTitle?.mobileFontSize ?? 48,
-        dimColor: settings?.projectTitle?.dimColor || '#000000',
-        dimIntensity: settings?.projectTitle?.dimIntensity ?? 35,
+        placement: appearance?.projectTitle?.placement || 'below',
+        fontSize: appearance?.projectTitle?.fontSize ?? 112,
+        mobileFontSize: appearance?.projectTitle?.mobileFontSize ?? 48,
+        dimColor: appearance?.projectTitle?.dimColor || '#000000',
+        dimIntensity: appearance?.projectTitle?.dimIntensity ?? 35,
       },
       storyText: {
-        width: settings?.storyText?.width ?? 50,
-        fontSize: settings?.storyText?.fontSize ?? 30,
-        quoteFontSize: settings?.storyText?.quoteFontSize ?? 60,
-        textColor: settings?.storyText?.textColor || '#222222',
+        width: appearance?.storyText?.width ?? 50,
+        fontSize: appearance?.storyText?.fontSize ?? 30,
+        quoteFontSize: appearance?.storyText?.quoteFontSize ?? 60,
+        textColor: appearance?.storyText?.textColor || '#222222',
       },
       projectDescription: {
-        fontFamily: settings?.projectDescription?.fontFamily || 'October Condensed',
-        fontSize: settings?.projectDescription?.fontSize ?? 30,
-        textColor: settings?.projectDescription?.textColor || '#222222',
+        fontFamily: appearance?.projectDescription?.fontFamily || 'October Condensed',
+        fontSize: appearance?.projectDescription?.fontSize ?? 30,
+        textColor: appearance?.projectDescription?.textColor || '#222222',
       },
     },
   }

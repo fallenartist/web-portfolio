@@ -1,8 +1,9 @@
 import type { GlobalConfig } from 'payload'
+import { normalizeColour } from '@/lib/colour'
 
-const hexColour = (value: null | string | undefined, example: string) =>
-  Boolean(value && /^#[0-9a-f]{6}$/i.test(value)) ||
-  `Enter a six-digit hex colour, e.g. ${example}.`
+const cssColour = (value: null | string | undefined) =>
+  Boolean(normalizeColour(value)) ||
+  'Enter a CSS colour, such as #f4f4f4, rgba(), hsl(), or oklch().'
 
 export const Appearance: GlobalConfig = {
   slug: 'appearance',
@@ -19,7 +20,7 @@ export const Appearance: GlobalConfig = {
       type: 'text',
       required: true,
       defaultValue: '#f4f4f4',
-      validate: (value: null | string | undefined) => hexColour(value, '#f4f4f4'),
+      validate: cssColour,
       admin: {
         description: 'Used by the main menu and the project guide instruction bar.',
       },
@@ -69,7 +70,7 @@ export const Appearance: GlobalConfig = {
           type: 'text',
           required: true,
           defaultValue: '#000000',
-          validate: (value: null | string | undefined) => hexColour(value, '#000000'),
+          validate: cssColour,
           admin: {
             condition: (_, siblingData) => siblingData?.placement === 'overlay',
           },
@@ -130,7 +131,7 @@ export const Appearance: GlobalConfig = {
           type: 'text',
           required: true,
           defaultValue: '#222222',
-          validate: (value: null | string | undefined) => hexColour(value, '#222222'),
+          validate: cssColour,
         },
       ],
     },
@@ -164,7 +165,7 @@ export const Appearance: GlobalConfig = {
           type: 'text',
           required: true,
           defaultValue: '#222222',
-          validate: (value: null | string | undefined) => hexColour(value, '#222222'),
+          validate: cssColour,
         },
       ],
     },

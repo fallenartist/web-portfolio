@@ -1,17 +1,11 @@
 import type { TextField, TextFieldValidation } from 'payload'
-
-const colourFunction = /^(?:rgb|rgba|hsl|hsla|hwb|lab|lch|oklab|oklch|color)\([^;{}]+\)$/i
-const namedColour = /^[a-z]+$/i
-const hexColour = /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i
+import { normalizeColour } from '@/lib/colour'
 
 export const validateColour: TextFieldValidation = (value) => {
   if (value == null || value === '') return true
   if (typeof value !== 'string' || value.length > 160) return 'Enter a valid CSS colour.'
 
-  const colour = value.trim()
-  return hexColour.test(colour) || colourFunction.test(colour) || namedColour.test(colour)
-    ? true
-    : 'Enter a valid CSS colour.'
+  return normalizeColour(value) ? true : 'Enter a valid CSS colour.'
 }
 
 type ColourPickerFieldOptions = {

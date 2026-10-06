@@ -5,6 +5,7 @@ import { RichText } from '@payloadcms/richtext-lexical/react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
 import { mediaFocalPosition, proportionalMediaSize } from '@/lib/media-image'
+import { normalizeColour } from '@/lib/colour'
 import { projectTextConverters } from '@/lib/project-rich-text'
 import styles from './ProjectStory.module.scss'
 
@@ -25,7 +26,7 @@ type StoryLayoutItem =
   | { kind: 'portraitPair'; blocks: [StoryImageBlock, StoryImageBlock] }
 
 function HeroTitle({ title, settings }: { title: string; settings: ProjectTitleSettings }) {
-  const color = /^#[0-9a-f]{6}$/i.test(settings.dimColor) ? settings.dimColor : '#000000'
+  const color = normalizeColour(settings.dimColor) || '#000000'
   const intensity = Math.min(90, Math.max(0, settings.dimIntensity)) / 100
   const desktopSize = Math.min(240, Math.max(32, settings.fontSize))
   const mobileSize = Math.min(120, Math.max(24, settings.mobileFontSize ?? 48))
@@ -368,15 +369,11 @@ export default function ProjectStory({
     fontSize: 30,
     textColor: '#222222',
   }
-  const textColor = /^#[0-9a-f]{6}$/i.test(textSettings.textColor)
-    ? textSettings.textColor
-    : '#222222'
+  const textColor = normalizeColour(textSettings.textColor) || '#222222'
   const textSize = Math.min(72, Math.max(16, textSettings.fontSize))
   const quoteSize = Math.min(140, Math.max(24, textSettings.quoteFontSize))
   const descriptionSize = Math.min(72, Math.max(16, description.fontSize))
-  const descriptionColor = /^#[0-9a-f]{6}$/i.test(description.textColor)
-    ? description.textColor
-    : '#222222'
+  const descriptionColor = normalizeColour(description.textColor) || '#222222'
   const storyStyle = {
     '--story-text-width': `${Math.min(100, Math.max(30, textSettings.width))}%`,
     '--story-text-min-size': `${(textSize * 19) / 30}px`,

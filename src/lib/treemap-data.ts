@@ -1,5 +1,6 @@
 import type { Appearance, Discipline, Media, Project, Setting } from '@/payload-types'
 import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
+import { normalizeColour } from '@/lib/colour'
 import { getVideoEmbed } from '@/lib/video-embed'
 
 function media(value: number | Media | null | undefined): Media | undefined {
@@ -21,7 +22,7 @@ export function transformDataForTreemap(
       slug: discipline.slug,
       title: discipline.title,
       priority: discipline.priority ?? 100,
-      color: discipline.color,
+      color: normalizeColour(discipline.color),
       thumb: thumbnail?.sizes?.thumbnail?.url || thumbnail?.url,
       children: [],
     })
@@ -155,7 +156,7 @@ export function transformDataForTreemap(
       slug: project.slug,
       title: project.title,
       priority: project.priority ?? 100,
-      color: discipline.color,
+      color: normalizeColour(discipline.color),
       desc: project.description,
       excerpt: project.excerpt || '',
       thumb: media(project.thumbnail)?.url,

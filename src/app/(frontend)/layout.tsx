@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import '@/app/globals.css'
 import '@/styles/lightbox.scss'
 import BreadcrumbProvider from '@/components/BreadcrumbProvider'
+import { normalizeColour } from '@/lib/colour'
 import { getMainMenu, getPortfolio } from '@/lib/site-data'
 
 // CMS content must reflect edits and must not require a database during build.
@@ -24,9 +25,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     settings?.rootLogo && typeof settings.rootLogo === 'object' ? settings.rootLogo.url : undefined
   const upLogo =
     settings?.upLogo && typeof settings.upLogo === 'object' ? settings.upLogo.url : undefined
-  const menuBackgroundColor = /^#[0-9a-f]{6}$/i.test(appearance.menuBackgroundColor)
-    ? appearance.menuBackgroundColor
-    : '#f4f4f4'
+  const menuBackgroundColor = normalizeColour(appearance.menuBackgroundColor) || '#f4f4f4'
   return (
     <html lang="en">
       <head>

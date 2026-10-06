@@ -1,4 +1,5 @@
 import type { Agency, Discipline, Industry, Project, Tag } from '@/payload-types'
+import { normalizeColour } from '@/lib/colour'
 
 export type TangledNodeKind =
   'root' | 'discipline' | 'project' | 'client' | 'agency' | 'industry' | 'tag'
@@ -28,7 +29,7 @@ const FALLBACK_COLORS: Record<TangledNodeKind, string> = {
 }
 
 function validColor(value: null | string | undefined, fallback: string) {
-  return value && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback
+  return normalizeColour(value) || fallback
 }
 
 function relationshipID(value: null | number | { id: number } | undefined) {

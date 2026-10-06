@@ -65,6 +65,20 @@ export type ProjectHero =
       coverSizes?: Media['sizes']
     }
 
+export type ProjectMetadataItem = {
+  title: string
+  slug: string
+  kind: 'client' | 'agency' | 'industry' | 'tag'
+  externalURL?: string
+}
+
+export type ProjectMetadata = {
+  client?: ProjectMetadataItem
+  agency?: ProjectMetadataItem
+  industries: ProjectMetadataItem[]
+  tags: ProjectMetadataItem[]
+}
+
 export interface TreemapData {
   id: string
   slug: string
@@ -81,6 +95,7 @@ export interface TreemapData {
   focalY?: number | null
   alt?: string
   desc?: Project['description']
+  metadata?: ProjectMetadata
   excerpt?: string
   projectHero?: ProjectHero
   story?: ProjectStoryBlock[]
@@ -89,6 +104,7 @@ export interface TreemapData {
   children?: TreemapData[]
   settings?: {
     siteTitle: string
+    projectGuidePath: string
     projectTitle: {
       placement: 'below' | 'overlay'
       fontSize: number

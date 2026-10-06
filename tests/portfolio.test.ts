@@ -300,6 +300,43 @@ test('project content keeps its order and derives presentation from media', () =
   }
 })
 
+test('project metadata links retain map slugs and agency websites', () => {
+  const tree = transformDataForTreemap(
+    [discipline(1)],
+    [
+      project({
+        client: { id: 1, title: 'Client A', slug: 'client-a', createdAt: '', updatedAt: '' },
+        agency: {
+          id: 2,
+          title: 'Agency B',
+          slug: 'agency-b',
+          url: 'https://agency.example',
+          createdAt: '',
+          updatedAt: '',
+        },
+        industries: [
+          { id: 3, title: 'Culture', slug: 'culture', createdAt: '', updatedAt: '' },
+        ],
+        tags: [{ id: 4, title: 'Print', slug: 'print', createdAt: '', updatedAt: '' }],
+      }),
+    ],
+    {
+      id: 1,
+      siteTitle: 'Portfolio',
+      projectGuideTitle: 'Project Map',
+      projectGuideInstruction: 'Select a relationship.',
+      projectsOverviewSlug: 'map',
+    },
+  )
+  const node = tree.children?.[0]?.children?.[0]
+
+  assert.equal(tree.settings?.projectGuidePath, '/map')
+  assert.equal(node?.metadata?.client?.slug, 'client-a')
+  assert.equal(node?.metadata?.agency?.externalURL, 'https://agency.example')
+  assert.equal(node?.metadata?.industries[0]?.slug, 'culture')
+  assert.equal(node?.metadata?.tags[0]?.slug, 'print')
+})
+
 test('only Vimeo links are accepted and normalized for safe responsive embeds', () => {
   const vimeo = getVideoEmbed('https://vimeo.com/76979871', 'background')
   assert.equal(vimeo?.provider, 'vimeo')

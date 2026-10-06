@@ -1,9 +1,16 @@
-import type { Appearance, Discipline, Media, Project, Setting } from '@/payload-types'
+import type { Agency, Appearance, Discipline, Media, Project, Setting } from '@/payload-types'
 import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
 import { normalizeColour } from '@/lib/colour'
+import { getProjectsOverviewPath } from '@/lib/menu-links'
 import { getVideoEmbed } from '@/lib/video-embed'
 
 function media(value: number | Media | null | undefined): Media | undefined {
+  return value && typeof value === 'object' ? value : undefined
+}
+
+function relationship<T extends { slug: string; title: string }>(
+  value: null | number | T | undefined,
+): T | undefined {
   return value && typeof value === 'object' ? value : undefined
 }
 
@@ -151,6 +158,8 @@ export function transformDataForTreemap(
         sizes: image.sizes,
       })
     }
+    const client = relationship(project.client)
+    const agency = relationship<Agency>(project.agency)
     discipline.children!.push({
       id: `project-${project.id}`,
       kind: 'project',
@@ -159,6 +168,31 @@ export function transformDataForTreemap(
       priority: project.priority ?? 100,
       color: normalizeColour(discipline.color),
       desc: project.description,
+      metadata: {
+        client: client
+          ? {
+              kind: 'client',
+              slug: client.slug,
+              title: client.title,
+            }
+          : undefined,
+        agency: agency
+          ? {
+              kind: 'agency',
+              slug: agency.slug,
+              title: agency.title,
+              externalURL: agency.url || undefined,
+            }
+          : undefined,
+        industries: (project.industries || []).flatMap((value) => {
+          const item = relationship(value)
+          return item ? [{ kind: 'industry' as const, slug: item.slug, title: item.title }] : []
+        }),
+        tags: (project.tags || []).flatMap((value) => {
+          const item = relationship(value)
+          return item ? [{ kind: 'tag' as const, slug: item.slug, title: item.title }] : []
+        }),
+      },
       excerpt: project.excerpt || '',
       thumb: media(project.thumbnail)?.url,
       projectHero,
@@ -205,6 +239,7 @@ export function transformDataForTreemap(
     children: wrapper?.children ?? roots,
     settings: {
       siteTitle: settings?.siteTitle || 'Design Portfolio',
+      projectGuidePath: getProjectsOverviewPath(settings?.projectsOverviewSlug),
       projectTitle: {
         placement: appearance?.projectTitle?.placement || 'below',
         fontSize: appearance?.projectTitle?.fontSize ?? 112,

@@ -3,7 +3,13 @@
 import Image from 'next/image'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
+import type {
+  ProjectHero,
+  ProjectMetadata,
+  ProjectMetadataItem,
+  ProjectStoryBlock,
+  TreemapData,
+} from '@/types'
 import { mediaFocalPosition, proportionalMediaSize } from '@/lib/media-image'
 import { normalizeColour } from '@/lib/colour'
 import { projectTextConverters } from '@/lib/project-rich-text'
@@ -25,6 +31,75 @@ type StoryImageBlock = Extract<ProjectStoryBlock, { blockType: 'image' }>
 type StoryLayoutItem =
   | { kind: 'block'; block: ProjectStoryBlock }
   | { kind: 'portraitPair'; blocks: [StoryImageBlock, StoryImageBlock] }
+
+function projectMapHref(projectGuidePath: string, item: ProjectMetadataItem) {
+  return `${projectGuidePath.replace(/\/$/, '')}/${item.kind}/${encodeURIComponent(item.slug)}`
+}
+
+function MetadataValues({
+  items,
+  projectGuidePath,
+}: {
+  items: ProjectMetadataItem[]
+  projectGuidePath: string
+}) {
+  return items.map((item, index) => (
+    <span key={`${item.kind}-${item.slug}`}>
+      {index > 0 && ', '}
+      <a href={projectMapHref(projectGuidePath, item)}>{item.title}</a>
+      {item.kind === 'agency' && item.externalURL && (
+        <a
+          className={styles.externalLink}
+          href={item.externalURL}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Open ${item.title} website in a new window`}
+          title={`Open ${item.title} website`}
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M5 11 12 4M7 4h5v5" />
+          </svg>
+        </a>
+      )}
+    </span>
+  ))
+}
+
+function ProjectMetadataList({
+  metadata,
+  projectGuidePath,
+}: {
+  metadata: ProjectMetadata
+  projectGuidePath: string
+}) {
+  const rows = [
+    metadata.client && { label: 'Client', items: [metadata.client] },
+    metadata.agency && { label: 'Agency', items: [metadata.agency] },
+    metadata.industries.length && {
+      label: metadata.industries.length === 1 ? 'Industry' : 'Industries',
+      items: metadata.industries,
+    },
+    metadata.tags.length && {
+      label: metadata.tags.length === 1 ? 'Tag' : 'Tags',
+      items: metadata.tags,
+    },
+  ].filter(Boolean) as { label: string; items: ProjectMetadataItem[] }[]
+
+  if (!rows.length) return null
+
+  return (
+    <dl className={styles.projectMetadata}>
+      {rows.map((row) => (
+        <div key={row.label}>
+          <dt>{row.label}:</dt>
+          <dd>
+            <MetadataValues items={row.items} projectGuidePath={projectGuidePath} />
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
 
 function HeroTitle({ title, settings }: { title: string; settings: ProjectTitleSettings }) {
   const color = normalizeColour(settings.dimColor) || '#000000'
@@ -352,6 +427,7 @@ export default function ProjectStory({
   titleSettings,
   storyTextSettings,
   descriptionSettings,
+  projectGuidePath = '/projects',
   previousProject,
   nextProject,
   onNavigateProject,
@@ -360,12 +436,18 @@ export default function ProjectStory({
   titleSettings?: ProjectTitleSettings
   storyTextSettings?: StoryTextSettings
   descriptionSettings?: ProjectDescriptionSettings
+  projectGuidePath?: string
   previousProject?: TreemapData | null
   nextProject?: TreemapData | null
   onNavigateProject: (project: TreemapData) => void
 }) {
   const hero = project.projectHero
   const story = project.story || []
+  const metadata = project.metadata
+  const hasMetadata = Boolean(
+    metadata &&
+      (metadata.client || metadata.agency || metadata.industries.length || metadata.tags.length),
+  )
   const storyLayout = arrangeStory(story)
   const settings = titleSettings || {
     placement: 'below',
@@ -443,13 +525,19 @@ export default function ProjectStory({
         />
       )}
 
-      {(!titleOverHero || project.desc) && (
+      {(!titleOverHero || project.desc || hasMetadata) && (
         <header className={styles.introduction} data-title-overlay={titleOverHero}>
           {!titleOverHero && <h1>{project.title}</h1>}
           {project.desc && (
             <div className={styles.description}>
               <RichText converters={projectTextConverters} data={project.desc} />
             </div>
+          )}
+          {metadata && hasMetadata && (
+            <ProjectMetadataList
+              metadata={metadata}
+              projectGuidePath={projectGuidePath}
+            />
           )}
         </header>
       )}

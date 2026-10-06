@@ -425,6 +425,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
             titleSettings={data.settings?.projectTitle}
             storyTextSettings={data.settings?.storyText}
             descriptionSettings={data.settings?.projectDescription}
+            projectGuidePath={data.settings?.projectGuidePath}
             previousProject={storyNeighbors.previous}
             nextProject={storyNeighbors.next}
             onNavigateProject={(project) => navigateProjectRef.current(project)}

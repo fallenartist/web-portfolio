@@ -40,7 +40,7 @@ test('new projects discard temporary document IDs while retaining nested IDs', a
   assert.equal((await stripProjectCreateID({ data, operation: 'update' } as never))?.id, data.id)
 })
 
-test('agency URLs accept web addresses only', () => {
+test('agency and client URLs accept web addresses only', () => {
   assert.equal(validateExternalURL(undefined), true)
   assert.equal(validateExternalURL('https://example.com/studio'), true)
   assert.equal(validateExternalURL('http://example.com'), true)
@@ -301,12 +301,19 @@ test('project content keeps its order and derives presentation from media', () =
   }
 })
 
-test('project metadata links retain map slugs and agency websites', () => {
+test('project metadata links retain map slugs and external websites', () => {
   const tree = transformDataForTreemap(
     [discipline(1)],
     [
       project({
-        client: { id: 1, title: 'Client A', slug: 'client-a', createdAt: '', updatedAt: '' },
+        client: {
+          id: 1,
+          title: 'Client A',
+          slug: 'client-a',
+          url: 'https://client.example',
+          createdAt: '',
+          updatedAt: '',
+        },
         agency: {
           id: 2,
           title: 'Agency B',
@@ -333,6 +340,7 @@ test('project metadata links retain map slugs and agency websites', () => {
 
   assert.equal(tree.settings?.projectGuidePath, '/map')
   assert.equal(node?.metadata?.client?.slug, 'client-a')
+  assert.equal(node?.metadata?.client?.externalURL, 'https://client.example')
   assert.equal(node?.metadata?.agency?.externalURL, 'https://agency.example')
   assert.equal(node?.metadata?.industries[0]?.slug, 'culture')
   assert.equal(node?.metadata?.tags[0]?.slug, 'print')

@@ -47,7 +47,7 @@ function MetadataValues({
     <span key={`${item.kind}-${item.slug}`}>
       {index > 0 && ', '}
       <a href={projectMapHref(projectGuidePath, item)}>{item.title}</a>
-      {item.kind === 'agency' && item.externalURL && (
+      {item.externalURL && (
         <a
           className={styles.externalLink}
           href={item.externalURL}

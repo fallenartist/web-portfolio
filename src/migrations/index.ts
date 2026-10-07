@@ -25,6 +25,7 @@ import * as migration_20261006_140000_agency_url from './20261006_140000_agency_
 import * as migration_20261006_143000_story_image_presentation from './20261006_143000_story_image_presentation'
 import * as migration_20261006_164500_remove_treemap_autoplay from './20261006_164500_remove_treemap_autoplay'
 import * as migration_20261006_173000_appearance_key_colour from './20261006_173000_appearance_key_colour'
+import * as migration_20261007_090000_client_url from './20261007_090000_client_url'
 
 export const migrations = [
   {
@@ -161,5 +162,10 @@ export const migrations = [
     up: migration_20261006_173000_appearance_key_colour.up,
     down: migration_20261006_173000_appearance_key_colour.down,
     name: '20261006_173000_appearance_key_colour',
+  },
+  {
+    up: migration_20261007_090000_client_url.up,
+    down: migration_20261007_090000_client_url.down,
+    name: '20261007_090000_client_url',
   },
 ]

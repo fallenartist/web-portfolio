@@ -1,4 +1,12 @@
-import type { Agency, Appearance, Discipline, Media, Project, Setting } from '@/payload-types'
+import type {
+  Agency,
+  Appearance,
+  Client,
+  Discipline,
+  Media,
+  Project,
+  Setting,
+} from '@/payload-types'
 import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
 import { normalizeColour } from '@/lib/colour'
 import { getProjectsOverviewPath } from '@/lib/menu-links'
@@ -158,7 +166,7 @@ export function transformDataForTreemap(
         sizes: image.sizes,
       })
     }
-    const client = relationship(project.client)
+    const client = relationship<Client>(project.client)
     const agency = relationship<Agency>(project.agency)
     discipline.children!.push({
       id: `project-${project.id}`,
@@ -174,6 +182,7 @@ export function transformDataForTreemap(
               kind: 'client',
               slug: client.slug,
               title: client.title,
+              externalURL: client.url || undefined,
             }
           : undefined,
         agency: agency

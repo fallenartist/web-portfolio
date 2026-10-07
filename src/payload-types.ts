@@ -374,6 +374,10 @@ export interface Client {
   id: number;
   title: string;
   slug: string;
+  /**
+   * Optional client website, including https://
+   */
+  url?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -765,6 +769,7 @@ export interface IndustriesSelect<T extends boolean = true> {
 export interface ClientsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  url?: T;
   updatedAt?: T;
   createdAt?: T;
 }

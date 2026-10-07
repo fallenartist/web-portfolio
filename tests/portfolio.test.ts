@@ -486,6 +486,8 @@ test('project rich text renders the all-small-caps text state', () => {
   assert.match(markup, /font-feature-settings/)
   assert.match(markup, /smcp/)
   assert.match(markup, /c2sc/)
+  assert.match(markup, /font-variant-caps:all-small-caps/)
+  assert.match(markup, /letter-spacing:var\(--small-caps-letter-spacing, 0.04em\)/)
   assert.match(markup, /Selected text/)
 })
 

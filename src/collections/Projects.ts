@@ -2,6 +2,10 @@ import type { CollectionConfig } from 'payload'
 import { lexicalEditor, TextStateFeature } from '@payloadcms/richtext-lexical'
 import { validateVideoURL } from '@/lib/video-embed'
 import { stripProjectCreateID } from '@/collections/hooks/strip-project-create-id'
+import {
+  ALL_SMALL_CAPS_FONT_FEATURES,
+  SMALL_CAPS_LETTER_SPACING,
+} from '@/lib/small-caps'
 
 const projectTextEditor = lexicalEditor({
   features: ({ rootFeatures }) => [
@@ -12,7 +16,9 @@ const projectTextEditor = lexicalEditor({
           allSmallCaps: {
             label: 'All Small Caps',
             css: {
-              'font-feature-settings': '"smcp" 1, "c2sc" 1',
+              'font-feature-settings': ALL_SMALL_CAPS_FONT_FEATURES,
+              'font-variant-caps': 'all-small-caps',
+              'letter-spacing': SMALL_CAPS_LETTER_SPACING,
             },
           },
         },

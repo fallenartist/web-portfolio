@@ -1,7 +1,11 @@
 import { createElement } from 'react'
 import type { JSXConvertersFunction } from '@payloadcms/richtext-lexical/react'
+import {
+  ALL_SMALL_CAPS_FONT_FEATURES,
+  SMALL_CAPS_LETTER_SPACING,
+} from '@/lib/small-caps'
 
-export const ALL_SMALL_CAPS_FONT_FEATURES = '"liga" 1, "onum" 1, "pnum" 1, "smcp" 1, "c2sc" 1'
+export { ALL_SMALL_CAPS_FONT_FEATURES, SMALL_CAPS_LETTER_SPACING }
 
 export const projectTextConverters: JSXConvertersFunction = ({ defaultConverters }) => ({
   ...defaultConverters,
@@ -17,7 +21,13 @@ export const projectTextConverters: JSXConvertersFunction = ({ defaultConverters
     return state?.fontFeatures === 'allSmallCaps'
       ? createElement(
           'span',
-          { style: { fontFeatureSettings: ALL_SMALL_CAPS_FONT_FEATURES } },
+          {
+            style: {
+              fontFeatureSettings: ALL_SMALL_CAPS_FONT_FEATURES,
+              fontVariantCaps: 'all-small-caps',
+              letterSpacing: SMALL_CAPS_LETTER_SPACING,
+            },
+          },
           content,
         )
       : content

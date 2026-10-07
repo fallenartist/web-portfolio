@@ -6,6 +6,7 @@
   --key-color: #cc2929;
   --menu-background: rgb(244 244 244 / 97%);
   --page-gutter: 12px;
+  --small-caps-letter-spacing: 0.04em;
 }
 
 @media (min-width: 768px) {

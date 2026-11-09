@@ -61,6 +61,12 @@ API reference: [PostHog query API](https://posthog.com/docs/api/queries). Cookie
 
 `node --env-file=.env scripts/verify-migrations.mjs` tests the upgrade on temporary PostgreSQL databases. This development check reads the configured local schema and uses the current OS user's local PostgreSQL administrator role through `/tmp` to create/remove only its own test databases.
 
+## Security maintenance — November 2026
+
+Next.js and `eslint-config-next` are pinned to 16.4.6, with Sharp at 0.35.5. Payload remains at 3.90.1, whose declared Next.js peer range includes this release. The update includes the [Next.js 16.4.1 security fixes](https://github.com/vercel/next.js/releases/tag/v16.4.1) and subsequent patches through [16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6).
+
+The production dependency audit on November 9 reported no Next.js advisories and no critical findings. It still reported 27 findings in other dependencies (9 high, 12 moderate, 6 low), including Undici, Happy DOM, source-map-js, fast-uri and deepmerge. These need a separate compatibility and exposure review before going live; this upgrade does not establish that the entire dependency tree is clear. The September notes below describe the earlier upgrade and its audit at that time.
+
 ## Dependency maintenance — September 2026
 
 Payload packages are pinned together at 3.90.1, Next.js / eslint-config-next at 16.3.6, and React / React DOM at 19.3.0. GraphQL stays on the compatible 16.x major. TypeScript stays on 5.9.3. ESLint stays on 9.39.5: ESLint 10 was tested but Next's React/import/accessibility plugins do not support its API yet. Although ESLint 9 is deprecated upstream, it is the compatible version for this toolchain. Do not suppress peer conflicts to force an upgrade.

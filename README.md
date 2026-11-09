@@ -63,9 +63,11 @@ API reference: [PostHog query API](https://posthog.com/docs/api/queries). Cookie
 
 ## Security maintenance — November 2026
 
-Next.js and `eslint-config-next` are pinned to 16.4.6, with Sharp at 0.35.5. Payload remains at 3.90.1, whose declared Next.js peer range includes this release. The update includes the [Next.js 16.4.1 security fixes](https://github.com/vercel/next.js/releases/tag/v16.4.1) and subsequent patches through [16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6).
+Next.js and `eslint-config-next` are pinned to 16.4.6, with Sharp at 0.35.5. Payload packages are pinned together at [3.93.0](https://github.com/payloadcms/payload/releases/tag/v3.93.0), including its Undici 7.30.1 dependency. The update includes the [Next.js 16.4.1 security fixes](https://github.com/vercel/next.js/releases/tag/v16.4.1) and subsequent patches through [16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6).
 
-The production dependency audit on November 9 reported no Next.js advisories and no critical findings. It still reported 27 findings in other dependencies (9 high, 12 moderate, 6 low), including Undici, Happy DOM, source-map-js, fast-uri and deepmerge. These need a separate compatibility and exposure review before going live; this upgrade does not establish that the entire dependency tree is clear. The September notes below describe the earlier upgrade and its audit at that time.
+The lockfile also updates source-map-js to 1.2.2, fast-uri to 3.1.9 and the development toolchain's Zod to 4.6.7. A scoped override selects [Happy DOM 21.0.4](https://github.com/capricorn86/happy-dom/releases/tag/v21.0.4) only for `@lexical/headless@0.50.0`, whose declared range still selects vulnerable 20.x releases. Version 21 disables external stylesheet and iframe loading by default. Rich-text HTML import/export, Polish text, escaping and DOM cleanup are covered by compatibility tests. Remove the override once the supported Lexical dependency range includes the fixed release.
+
+Audits on November 9 report **zero high or critical findings** in both production and development dependencies. Production has one remaining low-severity deepmerge advisory with no published fix. The full tree additionally has one moderate minimatch advisory in ESLint's TypeScript tooling, whose fix requires a new major version outside the current dependency range. Neither finding is suppressed. These remain recorded for follow-up; the September notes below describe the earlier upgrade and its audit at that time.
 
 ## Dependency maintenance — September 2026
 
@@ -78,6 +80,8 @@ Compatibility references: [Payload installation](https://payloadcms.com/docs/get
 ## Database upgrades and deployment
 
 Automatic development schema pushing is disabled. Use reviewed migrations in `src/migrations` and back up the database before applying them.
+
+`20261109_211952_dependency_security_indexes` adds the 11 localized-parent indexes introduced by Payload 3.93.0. Apply it after the language migrations and before serving the upgraded application. Its down migration removes only those indexes. The local database was backed up to `/private/tmp/portfolio-before-payload-security-1794259241151.dump` before applying it; keep a durable copy before relying on this temporary backup.
 
 `20260924_082754_dependency_upgrade` adds Payload session/KV tables and previously unrecorded content fields. It tolerates fields/tables already created by earlier development pushes and preserves legacy columns. Its down operation deliberately refuses to delete tables that may predate the migration; rollback requires the pre-upgrade database backup. Payload may warn about prior development pushes when the migration history contains `dev` / batch `-1`; inspect the pending SQL and backup before proceeding.
 

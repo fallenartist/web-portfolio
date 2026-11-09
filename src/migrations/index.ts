@@ -26,9 +26,9 @@ import * as migration_20261006_143000_story_image_presentation from './20261006_
 import * as migration_20261006_164500_remove_treemap_autoplay from './20261006_164500_remove_treemap_autoplay'
 import * as migration_20261006_173000_appearance_key_colour from './20261006_173000_appearance_key_colour'
 import * as migration_20261007_090000_client_url from './20261007_090000_client_url'
-
 import * as migration_20261109_160000_language_selection from './20261109_160000_language_selection'
 import * as migration_20261109_170000_language_availability from './20261109_170000_language_availability'
+import * as migration_20261109_211952_dependency_security_indexes from './20261109_211952_dependency_security_indexes'
 
 export const migrations = [
   {
@@ -180,5 +180,10 @@ export const migrations = [
     up: migration_20261109_170000_language_availability.up,
     down: migration_20261109_170000_language_availability.down,
     name: '20261109_170000_language_availability',
+  },
+  {
+    up: migration_20261109_211952_dependency_security_indexes.up,
+    down: migration_20261109_211952_dependency_security_indexes.down,
+    name: '20261109_211952_dependency_security_indexes',
   },
 ]

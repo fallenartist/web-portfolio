@@ -1,3 +1,4 @@
+import { stableSlug } from '@/fields/stable-slug'
 import type { CollectionConfig } from 'payload'
 
 import { colourPickerField } from '@/fields/colourPicker'
@@ -16,6 +17,7 @@ export const Disciplines: CollectionConfig = {
     {
       name: 'title',
       type: 'text',
+      localized: true,
       required: true,
     },
     {
@@ -26,17 +28,7 @@ export const Disciplines: CollectionConfig = {
         position: 'sidebar',
       },
       hooks: {
-        beforeValidate: [
-          ({ data }) => {
-            if (!data?.slug && data?.title) {
-              return data.title
-                .toLowerCase()
-                .replace(/[^\w ]+/g, '')
-                .replace(/ +/g, '-')
-            }
-            return data?.slug
-          },
-        ],
+        beforeValidate: [stableSlug],
       },
     },
     colourPickerField({

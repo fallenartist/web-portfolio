@@ -13,6 +13,18 @@ Use Node 22.16+ (22.x) or Node 24.x, and pnpm 9.15.9.
 
 Alternatively, `docker compose up` starts PostgreSQL and the app. Run `docker compose run --rm payload pnpm payload migrate` to initialize the schema before using the app. Compose uses an isolated development database with local-only app port exposure; its example database credentials are not for production.
 
+## English and Polish
+
+The website keeps the same URLs in both languages. On a first visit it uses the browser's preferred supported language, falling back to English. The EN / PL controls beside the menu save an explicit choice in a one-year cookie. Links containing `?lang=en` or `?lang=pl` set that preference and redirect to the same URL with only the language parameter removed; other filters remain intact. Admin, APIs and static assets are excluded from this behavior.
+
+In Payload, choose **English** or **Polski** in the content locale selector to edit translations. Project titles, descriptions, excerpts, story text, captions, media alt text, discipline/industry/tag titles, menu labels and site settings support translation. Images, relationships, slugs, colours, presentation settings and story order are shared. Missing Polish text falls back to English. The admin interface language is independent of the content locale.
+
+Under **Settings → Languages**, enable **Polski** when the translation is ready. Polish is disabled by default, and English stays available. While disabled, the language switcher is hidden and Polish browser preferences, saved choices and `?lang=pl` links all serve English. You can still edit Polish translations in admin. This availability setting is shared across content locales and takes effect on the next page request.
+
+Apply `20261109_160000_language_selection` before running this code against an existing database. Back up first: the migration moves existing text into English locale tables, including nested blocks and menu items. Its rollback restores English and removes Polish translations, so export translations before rolling back.
+
+`node --env-file=.env scripts/verify-localization.mjs /path/to/pre-migration.dump` tests preservation, Payload fallback, independent translation updates and rollback on a disposable copy of a local database backup. It never migrates the source database. The backup argument can be omitted if the configured local database has not yet been migrated.
+
 ## Validation
 
 - `pnpm lint`

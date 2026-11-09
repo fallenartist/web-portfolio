@@ -90,6 +90,7 @@ export const Menus: CollectionConfig = {
         {
           name: 'title',
           type: 'text',
+          localized: true,
           required: true,
           admin: {
             description:
@@ -115,6 +116,7 @@ export const Menus: CollectionConfig = {
             {
               name: 'title',
               type: 'text',
+              localized: true,
               required: true,
               admin: {
                 description:

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import * as d3 from 'd3'
 import { createD3Lightbox } from '@/lib/lightbox'
 import { coverMediaRect, hasOriginalAspectRatio } from '@/lib/media-image'
+import { useLocale } from '@/components/LocaleProvider'
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import ProjectStory from '@/components/ProjectStory/ProjectStory'
 import type { LightboxImage, TreemapData, TreemapNode } from '@/types'
@@ -45,6 +46,7 @@ function imageFor(
 }
 
 export default function Treemap({ data }: { data: TreemapData }) {
+  const { text } = useLocale()
   const svgRef = useRef<SVGSVGElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const navigateRef = useRef<(path: string) => void>(() => {})
@@ -105,6 +107,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       }
     }
     const lightbox = createD3Lightbox({
+      labels: text,
       imagePathPrefix: '',
       transitionDuration: duration ? 400 : 0,
     })
@@ -141,7 +144,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .join('g')
       .attr('class', (d) => `${styles.node} ${styles['level' + level(d)]}`)
       .attr('role', 'button')
-      .attr('aria-label', (d) => d.data.title || d.data.alt || 'View image')
+      .attr('aria-label', (d) => d.data.title || d.data.alt || text.viewImage)
     cells
       .append('rect')
       .attr('id', (d) => `tile-${d.data.id}`)
@@ -240,7 +243,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
           .filter((n) => n.data.kind !== 'image')
           .map((n) => ({ data: { title: n.data.title }, path: pathFor(n) })),
       )
-      document.title = `${node.data.title} — ${data.settings?.siteTitle || 'Design Portfolio'}`
+      document.title = `${node.data.title} — ${data.settings?.siteTitle || text.portfolio}`
       document
         .querySelector('meta[name="description"]')
         ?.setAttribute('content', node.data.excerpt || node.data.title)
@@ -400,7 +403,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       navigateRef.current = () => {}
       navigateProjectRef.current = () => {}
     }
-  }, [data, updateBreadcrumb])
+  }, [data, text, updateBreadcrumb])
 
   useEffect(() => {
     navigateRef.current(pathname)

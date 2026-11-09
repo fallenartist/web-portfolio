@@ -14,3 +14,16 @@
   font-variant-caps: all-small-caps;
   letter-spacing: var(--small-caps-letter-spacing);
 }
+
+#nav-group-Globals .nav-group__content {
+  display: flex;
+  flex-direction: column;
+
+  #nav-menus {
+    order: 1;
+  }
+}
+
+.collections__card-list > li:has(> #card-menus) {
+  order: 1;
+}

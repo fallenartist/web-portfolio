@@ -24,17 +24,20 @@ export const Settings: GlobalConfig = {
     {
       name: 'siteTitle',
       type: 'text',
+      localized: true,
       required: true,
       defaultValue: 'Design Portfolio',
     },
     {
       name: 'metaDescription',
       type: 'textarea',
+      localized: true,
       defaultValue: 'A portfolio of design work',
     },
     {
       name: 'rootDisciplineTitle',
       type: 'text',
+      localized: true,
       defaultValue: 'WORK',
       admin: {
         description: 'Title for the root level displayed in breadcrumb',
@@ -53,6 +56,7 @@ export const Settings: GlobalConfig = {
       name: 'projectGuideTitle',
       label: 'Project guide breadcrumb title',
       type: 'text',
+      localized: true,
       required: true,
       defaultValue: 'Projects',
       admin: {
@@ -76,6 +80,7 @@ export const Settings: GlobalConfig = {
       name: 'projectGuideInstruction',
       label: 'Project guide instruction',
       type: 'textarea',
+      localized: true,
       required: true,
       defaultValue: 'Select a node or connection to explore related projects.',
       admin: {
@@ -99,6 +104,27 @@ export const Settings: GlobalConfig = {
       admin: {
         description: 'Logo shown below the root; clicking it moves up one level',
       },
+    },
+    {
+      name: 'languages',
+      label: 'Languages',
+      type: 'group',
+      admin: {
+        description:
+          'English is always available. Enable translations here when they are ready for visitors. Disabled translations remain editable in admin.',
+      },
+      fields: [
+        {
+          name: 'polishEnabled',
+          label: 'Polski',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: {
+            description:
+              'Shows Polish in the language switcher and allows visitors to view the Polish version. This setting applies to both content locales.',
+          },
+        },
+      ],
     },
   ],
 }

@@ -1,3 +1,4 @@
+import { stableSlug } from '@/fields/stable-slug'
 import type { CollectionConfig } from 'payload'
 
 export const Tags: CollectionConfig = {
@@ -19,6 +20,7 @@ export const Tags: CollectionConfig = {
     {
       name: 'title',
       type: 'text',
+      localized: true,
       required: true,
       index: true,
     },
@@ -30,17 +32,7 @@ export const Tags: CollectionConfig = {
       index: true,
       admin: { position: 'sidebar' },
       hooks: {
-        beforeValidate: [
-          ({ data }) => {
-            if (!data?.slug && data?.title) {
-              return data.title
-                .toLowerCase()
-                .replace(/[^\w ]+/g, '')
-                .replace(/ +/g, '-')
-            }
-            return data?.slug
-          },
-        ],
+        beforeValidate: [stableSlug],
       },
     },
   ],

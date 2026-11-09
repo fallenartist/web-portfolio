@@ -100,7 +100,7 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  fallbackLocale: null;
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'pl') | ('en' | 'pl')[];
   globals: {
     settings: Setting;
     appearance: Appearance;
@@ -109,7 +109,7 @@ export interface Config {
     settings: SettingsSelect<false> | SettingsSelect<true>;
     appearance: AppearanceSelect<false> | AppearanceSelect<true>;
   };
-  locale: null;
+  locale: 'en' | 'pl';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -220,7 +220,7 @@ export interface Project {
     controls?: boolean | null;
   };
   /**
-   * Add images, videos and text in the order they should appear below the introduction
+   * Images and block order are shared across languages. Switch the content locale to translate text and captions.
    */
   story?:
     | (
@@ -282,6 +282,9 @@ export interface Project {
           }
       )[]
     | null;
+  /**
+   * Shared URL slug for both languages.
+   */
   slug: string;
   /**
    * Short description for meta tags and previews
@@ -964,6 +967,15 @@ export interface Setting {
    * Logo shown below the root; clicking it moves up one level
    */
   upLogo?: (number | null) | Media;
+  /**
+   * English is always available. Enable translations here when they are ready for visitors. Disabled translations remain editable in admin.
+   */
+  languages?: {
+    /**
+     * Shows Polish in the language switcher and allows visitors to view the Polish version. This setting applies to both content locales.
+     */
+    polishEnabled?: boolean | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1022,6 +1034,11 @@ export interface SettingsSelect<T extends boolean = true> {
   projectGuideInstruction?: T;
   rootLogo?: T;
   upLogo?: T;
+  languages?:
+    | T
+    | {
+        polishEnabled?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

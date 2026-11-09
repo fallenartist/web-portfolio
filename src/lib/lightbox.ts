@@ -10,9 +10,11 @@
  */
 
 import * as d3 from 'd3'
+import { dictionaries } from '@/lib/locale'
 import type { LightboxOptions, LightboxInterface, LightboxImage } from '../types'
 
 export function createD3Lightbox(options: LightboxOptions = {}): LightboxInterface {
+  const labels = options.labels || dictionaries.en
   // Configuration with defaults
   const config = {
     containerSelector: options.containerSelector || 'body',
@@ -76,6 +78,9 @@ export function createD3Lightbox(options: LightboxOptions = {}): LightboxInterfa
   }
 
   // State variables
+  controls.select('.lightbox-close').attr('aria-label', labels.close)
+  box.select('.lightbox-prev').attr('aria-label', labels.previousImage)
+  box.select('.lightbox-next').attr('aria-label', labels.nextImage)
   let images: LightboxImage[] = []
   let transitioning = false
   let previousFocus: HTMLElement | null = null
@@ -689,7 +694,7 @@ export function createD3Lightbox(options: LightboxOptions = {}): LightboxInterfa
       .classed('active', true)
       .attr('role', 'dialog')
       .attr('aria-modal', 'true')
-      .attr('aria-label', 'Project images')
+      .attr('aria-label', labels.images)
       .attr('aria-hidden', 'false')
       .attr('tabindex', -1)
     box.node()?.focus()

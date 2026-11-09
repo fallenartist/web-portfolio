@@ -69,9 +69,11 @@ export interface Config {
   collections: {
     users: User;
     projects: Project;
-    categories: Category;
+    disciplines: Discipline;
     industries: Industry;
     clients: Client;
+    agencies: Agency;
+    tags: Tag;
     media: Media;
     menus: Menu;
     'payload-kv': PayloadKv;
@@ -83,9 +85,11 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
-    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    disciplines: DisciplinesSelect<false> | DisciplinesSelect<true>;
     industries: IndustriesSelect<false> | IndustriesSelect<true>;
     clients: ClientsSelect<false> | ClientsSelect<true>;
+    agencies: AgenciesSelect<false> | AgenciesSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     menus: MenusSelect<false> | MenusSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -99,9 +103,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     settings: Setting;
+    appearance: Appearance;
   };
   globalsSelect: {
     settings: SettingsSelect<false> | SettingsSelect<true>;
+    appearance: AppearanceSelect<false> | AppearanceSelect<true>;
   };
   locale: null;
   widgets: {
@@ -221,6 +227,10 @@ export interface Project {
         | {
             image: number | Media;
             caption?: string | null;
+            /**
+             * Auto pairs adjacent portrait images. Choose a single layout to keep this image separate.
+             */
+            presentation: 'auto' | 'center' | 'full';
             id?: string | null;
             blockName?: string | null;
             blockType: 'image';
@@ -278,25 +288,29 @@ export interface Project {
    */
   excerpt?: string | null;
   client?: (number | null) | Client;
-  category: number | Category;
   /**
-   * Client industry; used for portfolio filtering and menu links
+   * Studio or agency through which the project was commissioned
    */
-  industry?: (number | null) | Industry;
+  agency?: (number | null) | Agency;
+  discipline: number | Discipline;
+  /**
+   * Client industries; used for portfolio filtering and menu links
+   */
+  industries?: (number | Industry)[] | null;
   /**
    * Higher values appear larger in the treemap (default: 100)
    */
   priority?: number | null;
-  tags?:
-    | {
-        tag?: string | null;
-        id?: string | null;
-      }[]
-    | null;
+  /**
+   * Reusable terms describing the project
+   */
+  tags?: (number | Tag)[] | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Upload files here. public/media is managed storage and files should not be copied into it manually.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
@@ -360,31 +374,52 @@ export interface Client {
   id: number;
   title: string;
   slug: string;
+  /**
+   * Optional client website, including https://
+   */
+  url?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Studios or agencies through which projects were commissioned.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agencies".
+ */
+export interface Agency {
+  id: number;
+  title: string;
+  slug: string;
+  /**
+   * Optional agency website, including https://
+   */
+  url?: string | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories".
+ * via the `definition` "disciplines".
  */
-export interface Category {
+export interface Discipline {
   id: number;
   title: string;
   slug: string;
   /**
-   * Colour used for this category in the treemap and project navigation.
+   * Colour used for this discipline in the treemap and project navigation.
    */
   color?: string | null;
   /**
-   * Optional parent category for hierarchical organization
+   * Optional parent discipline for hierarchical organization
    */
-  parent?: (number | null) | Category;
+  parent?: (number | null) | Discipline;
   /**
    * Higher values appear larger in the treemap (default: 100)
    */
   priority?: number | null;
   /**
-   * Thumbnail image for the category
+   * Thumbnail image for the discipline
    */
   thumbnail?: (number | null) | Media;
   updatedAt: string;
@@ -410,6 +445,19 @@ export interface Industry {
   createdAt: string;
 }
 /**
+ * Reusable project tags.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  title: string;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "menus".
  */
@@ -419,12 +467,16 @@ export interface Menu {
   slug: string;
   items?:
     | {
+        /**
+         * This title is the menu label, including for the Project guide destination.
+         */
         title: string;
-        type: 'internal' | 'external';
+        type: 'internal' | 'external' | 'group';
+        internalDestination?: ('content' | 'projects') | null;
         internalLink?:
           | ({
-              relationTo: 'categories';
-              value: number | Category;
+              relationTo: 'disciplines';
+              value: number | Discipline;
             } | null)
           | ({
               relationTo: 'projects';
@@ -433,9 +485,59 @@ export interface Menu {
           | ({
               relationTo: 'industries';
               value: number | Industry;
+            } | null)
+          | ({
+              relationTo: 'clients';
+              value: number | Client;
+            } | null)
+          | ({
+              relationTo: 'agencies';
+              value: number | Agency;
+            } | null)
+          | ({
+              relationTo: 'tags';
+              value: number | Tag;
             } | null);
         externalLink?: string | null;
         openInNewTab?: boolean | null;
+        subItems?:
+          | {
+              /**
+               * This title is the menu label, including for the Project guide destination.
+               */
+              title: string;
+              type: 'internal' | 'external';
+              internalDestination?: ('content' | 'projects') | null;
+              internalLink?:
+                | ({
+                    relationTo: 'disciplines';
+                    value: number | Discipline;
+                  } | null)
+                | ({
+                    relationTo: 'projects';
+                    value: number | Project;
+                  } | null)
+                | ({
+                    relationTo: 'industries';
+                    value: number | Industry;
+                  } | null)
+                | ({
+                    relationTo: 'clients';
+                    value: number | Client;
+                  } | null)
+                | ({
+                    relationTo: 'agencies';
+                    value: number | Agency;
+                  } | null)
+                | ({
+                    relationTo: 'tags';
+                    value: number | Tag;
+                  } | null);
+              externalLink?: string | null;
+              openInNewTab?: boolean | null;
+              id?: string | null;
+            }[]
+          | null;
         id?: string | null;
       }[]
     | null;
@@ -475,8 +577,8 @@ export interface PayloadLockedDocument {
         value: number | Project;
       } | null)
     | ({
-        relationTo: 'categories';
-        value: number | Category;
+        relationTo: 'disciplines';
+        value: number | Discipline;
       } | null)
     | ({
         relationTo: 'industries';
@@ -485,6 +587,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'clients';
         value: number | Client;
+      } | null)
+    | ({
+        relationTo: 'agencies';
+        value: number | Agency;
+      } | null)
+    | ({
+        relationTo: 'tags';
+        value: number | Tag;
       } | null)
     | ({
         relationTo: 'media';
@@ -589,6 +699,7 @@ export interface ProjectsSelect<T extends boolean = true> {
           | {
               image?: T;
               caption?: T;
+              presentation?: T;
               id?: T;
               blockName?: T;
             };
@@ -617,23 +728,19 @@ export interface ProjectsSelect<T extends boolean = true> {
   slug?: T;
   excerpt?: T;
   client?: T;
-  category?: T;
-  industry?: T;
+  agency?: T;
+  discipline?: T;
+  industries?: T;
   priority?: T;
-  tags?:
-    | T
-    | {
-        tag?: T;
-        id?: T;
-      };
+  tags?: T;
   updatedAt?: T;
   createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories_select".
+ * via the `definition` "disciplines_select".
  */
-export interface CategoriesSelect<T extends boolean = true> {
+export interface DisciplinesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   color?: T;
@@ -660,6 +767,28 @@ export interface IndustriesSelect<T extends boolean = true> {
  * via the `definition` "clients_select".
  */
 export interface ClientsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  url?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agencies_select".
+ */
+export interface AgenciesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  url?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   updatedAt?: T;
@@ -739,9 +868,21 @@ export interface MenusSelect<T extends boolean = true> {
     | {
         title?: T;
         type?: T;
+        internalDestination?: T;
         internalLink?: T;
         externalLink?: T;
         openInNewTab?: T;
+        subItems?:
+          | T
+          | {
+              title?: T;
+              type?: T;
+              internalDestination?: T;
+              internalLink?: T;
+              externalLink?: T;
+              openInNewTab?: T;
+              id?: T;
+            };
         id?: T;
       };
   updatedAt?: T;
@@ -798,11 +939,23 @@ export interface Setting {
   /**
    * Title for the root level displayed in breadcrumb
    */
-  rootCategoryTitle?: string | null;
+  rootDisciplineTitle?: string | null;
   /**
    * URL slug for the root level (use lowercase letters, no spaces or special characters)
    */
-  rootCategorySlug?: string | null;
+  rootDisciplineSlug?: string | null;
+  /**
+   * Used in the breadcrumb for the project relationship diagram.
+   */
+  projectGuideTitle: string;
+  /**
+   * URL segment for the project guide, without a leading slash.
+   */
+  projectsOverviewSlug: string;
+  /**
+   * Shown in the light grey area above the diagram.
+   */
+  projectGuideInstruction: string;
   /**
    * Logo shown at the root of the portfolio
    */
@@ -811,6 +964,23 @@ export interface Setting {
    * Logo shown below the root; clicking it moves up one level
    */
   upLogo?: (number | null) | Media;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appearance".
+ */
+export interface Appearance {
+  id: number;
+  /**
+   * Used for links, navigation logos and Project Map VIEW buttons.
+   */
+  keyColor: string;
+  /**
+   * Used by the main menu and the project guide instruction bar.
+   */
+  menuBackgroundColor: string;
   projectTitle: {
     placement: 'below' | 'overlay';
     fontSize?: number | null;
@@ -835,9 +1005,6 @@ export interface Setting {
     fontSize: number;
     textColor: string;
   };
-  enableAutoplay?: boolean | null;
-  autoplayDelay?: number | null;
-  autoplayInterval?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -848,10 +1015,24 @@ export interface Setting {
 export interface SettingsSelect<T extends boolean = true> {
   siteTitle?: T;
   metaDescription?: T;
-  rootCategoryTitle?: T;
-  rootCategorySlug?: T;
+  rootDisciplineTitle?: T;
+  rootDisciplineSlug?: T;
+  projectGuideTitle?: T;
+  projectsOverviewSlug?: T;
+  projectGuideInstruction?: T;
   rootLogo?: T;
   upLogo?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appearance_select".
+ */
+export interface AppearanceSelect<T extends boolean = true> {
+  keyColor?: T;
+  menuBackgroundColor?: T;
   projectTitle?:
     | T
     | {
@@ -876,9 +1057,6 @@ export interface SettingsSelect<T extends boolean = true> {
         fontSize?: T;
         textColor?: T;
       };
-  enableAutoplay?: T;
-  autoplayDelay?: T;
-  autoplayInterval?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

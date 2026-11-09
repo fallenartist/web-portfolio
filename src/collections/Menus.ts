@@ -1,4 +1,51 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Field } from 'payload'
+
+const linkTypeOptions = [
+  { label: 'Internal Link', value: 'internal' },
+  { label: 'External Link', value: 'external' },
+]
+
+const destinationFields = (): Field[] => [
+  {
+    name: 'internalDestination',
+    label: 'Destination',
+    type: 'select',
+    defaultValue: 'content',
+    required: true,
+    options: [
+      { label: 'Content item', value: 'content' },
+      { label: 'Project guide (URL from Settings)', value: 'projects' },
+    ],
+    admin: {
+      condition: (_, siblingData) => siblingData.type === 'internal',
+    },
+  },
+  {
+    name: 'internalLink',
+    type: 'relationship',
+    relationTo: ['disciplines', 'projects', 'industries', 'clients', 'agencies', 'tags'],
+    admin: {
+      condition: (_, siblingData) =>
+        siblingData.type === 'internal' &&
+        (!siblingData.internalDestination || siblingData.internalDestination === 'content'),
+    },
+  },
+  {
+    name: 'externalLink',
+    type: 'text',
+    admin: {
+      condition: (_, siblingData) => siblingData.type === 'external',
+    },
+  },
+  {
+    name: 'openInNewTab',
+    type: 'checkbox',
+    defaultValue: false,
+    admin: {
+      condition: (_, siblingData) => siblingData.type === 'external',
+    },
+  },
+]
 
 export const Menus: CollectionConfig = {
   slug: 'menus',
@@ -44,45 +91,45 @@ export const Menus: CollectionConfig = {
           name: 'title',
           type: 'text',
           required: true,
+          admin: {
+            description:
+              'This title is the menu label, including for the Project guide destination.',
+          },
         },
         {
           name: 'type',
           type: 'select',
-          options: [
-            {
-              label: 'Internal Link',
-              value: 'internal',
-            },
-            {
-              label: 'External Link',
-              value: 'external',
-            },
-          ],
+          options: [...linkTypeOptions, { label: 'Group heading (no link)', value: 'group' }],
           defaultValue: 'internal',
           required: true,
         },
+        ...destinationFields(),
         {
-          name: 'internalLink',
-          type: 'relationship',
-          relationTo: ['categories', 'projects', 'industries'],
+          name: 'subItems',
+          label: 'Submenu items',
+          type: 'array',
           admin: {
-            condition: (data, siblingData) => siblingData.type === 'internal',
+            initCollapsed: true,
           },
-        },
-        {
-          name: 'externalLink',
-          type: 'text',
-          admin: {
-            condition: (data, siblingData) => siblingData.type === 'external',
-          },
-        },
-        {
-          name: 'openInNewTab',
-          type: 'checkbox',
-          defaultValue: false,
-          admin: {
-            condition: (data, siblingData) => siblingData.type === 'external',
-          },
+          fields: [
+            {
+              name: 'title',
+              type: 'text',
+              required: true,
+              admin: {
+                description:
+                  'This title is the menu label, including for the Project guide destination.',
+              },
+            },
+            {
+              name: 'type',
+              type: 'select',
+              options: linkTypeOptions,
+              defaultValue: 'internal',
+              required: true,
+            },
+            ...destinationFields(),
+          ],
         },
       ],
     },

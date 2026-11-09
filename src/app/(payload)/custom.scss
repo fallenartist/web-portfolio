@@ -1,0 +1,16 @@
+@import url('https://webfonts.typotheque.com/WF-004891-002394.css');
+
+:root {
+  --small-caps-letter-spacing: 0.04em;
+}
+
+.rich-text-lexical .ContentEditable__root {
+  font-family: 'October Condensed', sans-serif;
+  font-feature-settings: 'liga' 1, 'onum' 1, 'pnum' 1;
+}
+
+.rich-text-lexical [data-font-features='allSmallCaps'] {
+  font-feature-settings: 'liga' 1, 'onum' 1, 'pnum' 1, 'smcp' 1, 'c2sc' 1;
+  font-variant-caps: all-small-caps;
+  letter-spacing: var(--small-caps-letter-spacing);
+}

@@ -3,8 +3,17 @@
 import Image from 'next/image'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
-import { proportionalMediaSize } from '@/lib/media-image'
+import type {
+  ProjectHero,
+  ProjectMetadata,
+  ProjectMetadataItem,
+  ProjectStoryBlock,
+  TreemapData,
+} from '@/types'
+import { mediaFocalPosition, proportionalMediaSize } from '@/lib/media-image'
+import { normalizeColour } from '@/lib/colour'
+import { projectTextConverters } from '@/lib/project-rich-text'
+import { enableVimeoControls } from '@/lib/video-embed'
 import styles from './ProjectStory.module.scss'
 
 type ResponsiveImage = {
@@ -23,8 +32,77 @@ type StoryLayoutItem =
   | { kind: 'block'; block: ProjectStoryBlock }
   | { kind: 'portraitPair'; blocks: [StoryImageBlock, StoryImageBlock] }
 
+function projectMapHref(projectGuidePath: string, item: ProjectMetadataItem) {
+  return `${projectGuidePath.replace(/\/$/, '')}/${item.kind}/${encodeURIComponent(item.slug)}`
+}
+
+function MetadataValues({
+  items,
+  projectGuidePath,
+}: {
+  items: ProjectMetadataItem[]
+  projectGuidePath: string
+}) {
+  return items.map((item, index) => (
+    <span key={`${item.kind}-${item.slug}`}>
+      {index > 0 && ', '}
+      <a href={projectMapHref(projectGuidePath, item)}>{item.title}</a>
+      {item.externalURL && (
+        <a
+          className={styles.externalLink}
+          href={item.externalURL}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Open ${item.title} website in a new window`}
+          title={`Open ${item.title} website`}
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M5 11 12 4M7 4h5v5" />
+          </svg>
+        </a>
+      )}
+    </span>
+  ))
+}
+
+function ProjectMetadataList({
+  metadata,
+  projectGuidePath,
+}: {
+  metadata: ProjectMetadata
+  projectGuidePath: string
+}) {
+  const rows = [
+    metadata.client && { label: 'Client', items: [metadata.client] },
+    metadata.agency && { label: 'Agency', items: [metadata.agency] },
+    metadata.industries.length && {
+      label: metadata.industries.length === 1 ? 'Industry' : 'Industries',
+      items: metadata.industries,
+    },
+    metadata.tags.length && {
+      label: metadata.tags.length === 1 ? 'Tag' : 'Tags',
+      items: metadata.tags,
+    },
+  ].filter(Boolean) as { label: string; items: ProjectMetadataItem[] }[]
+
+  if (!rows.length) return null
+
+  return (
+    <dl className={styles.projectMetadata}>
+      {rows.map((row) => (
+        <div key={row.label}>
+          <dt>{row.label}:</dt>
+          <dd>
+            <MetadataValues items={row.items} projectGuidePath={projectGuidePath} />
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
 function HeroTitle({ title, settings }: { title: string; settings: ProjectTitleSettings }) {
-  const color = /^#[0-9a-f]{6}$/i.test(settings.dimColor) ? settings.dimColor : '#000000'
+  const color = normalizeColour(settings.dimColor) || '#000000'
   const intensity = Math.min(90, Math.max(0, settings.dimIntensity)) / 100
   const desktopSize = Math.min(240, Math.max(32, settings.fontSize))
   const mobileSize = Math.min(120, Math.max(24, settings.mobileFontSize ?? 48))
@@ -72,12 +150,16 @@ function isPortraitImage(block: ProjectStoryBlock): block is StoryImageBlock {
   return height > width
 }
 
+function isAutomaticPortrait(block: ProjectStoryBlock): block is StoryImageBlock {
+  return isPortraitImage(block) && block.presentation === 'auto'
+}
+
 function arrangeStory(story: ProjectStoryBlock[]): StoryLayoutItem[] {
   const items: StoryLayoutItem[] = []
   for (let index = 0; index < story.length; index += 1) {
     const block = story[index]
     const next = story[index + 1]
-    if (isPortraitImage(block) && next && isPortraitImage(next)) {
+    if (isAutomaticPortrait(block) && next && isAutomaticPortrait(next)) {
       items.push({ kind: 'portraitPair', blocks: [block, next] })
       index += 1
     } else {
@@ -88,6 +170,7 @@ function arrangeStory(story: ProjectStoryBlock[]): StoryLayoutItem[] {
 }
 
 function StoryImage({ block, paired = false }: { block: StoryImageBlock; paired?: boolean }) {
+  const presentation = block.presentation
   const source = imageSource({
     image: block.image,
     width: block.imageWidth,
@@ -99,13 +182,19 @@ function StoryImage({ block, paired = false }: { block: StoryImageBlock; paired?
   return (
     <figure
       className={paired ? styles.imageBlock : `${styles.contentBlock} ${styles.imageBlock}`}
+      data-paired={paired || undefined}
       data-portrait={portrait}
+      data-presentation={paired ? 'auto' : presentation}
     >
       <Image
         src={source.src}
         width={source.width}
         height={source.height}
-        sizes={portrait ? '(max-width: 720px) 100vw, 50vw' : '100vw'}
+        sizes={
+          presentation === 'full' || (!portrait && presentation === 'auto')
+            ? '100vw'
+            : '(max-width: 720px) 100vw, 50vw'
+        }
         alt={block.alt}
         unoptimized
       />
@@ -140,7 +229,11 @@ function HeroVideo({
       ? hero.coverWidth / hero.coverHeight
       : cover.width / cover.height
   const [videoRatio, setVideoRatio] = useState(coverRatio)
+  const videoURL = fit === 'contain' ? enableVimeoControls(hero.url) : hero.url
   const heroStyle = { '--hero-ratio': videoRatio } as CSSProperties
+  const coverStyle = {
+    objectPosition: mediaFocalPosition(hero.coverFocalX, hero.coverFocalY),
+  }
 
   useEffect(() => {
     if (!started || !iframeRef.current) return
@@ -148,28 +241,30 @@ function HeroVideo({
     let active = true
     const iframe = iframeRef.current
 
-    void import('@vimeo/player').then(async ({ default: Player }) => {
-      const player = new Player(iframe)
-      try {
-        await player.ready()
-        const [width, height] = await Promise.all([
-          player.getVideoWidth(),
-          player.getVideoHeight(),
-        ])
-        if (active && width > 0 && height > 0) setVideoRatio(width / height)
-      } catch {
-        // Retain the original cover ratio when Vimeo metadata is unavailable.
-      } finally {
+    void import('@vimeo/player')
+      .then(async ({ default: Player }) => {
+        const player = new Player(iframe)
+        try {
+          await player.ready()
+          const [width, height] = await Promise.all([
+            player.getVideoWidth(),
+            player.getVideoHeight(),
+          ])
+          if (active && width > 0 && height > 0) setVideoRatio(width / height)
+        } catch {
+          // Retain the original cover ratio when Vimeo metadata is unavailable.
+        } finally {
+          if (active) setLoaded(true)
+        }
+      })
+      .catch(() => {
         if (active) setLoaded(true)
-      }
-    }).catch(() => {
-      if (active) setLoaded(true)
-    })
+      })
 
     return () => {
       active = false
     }
-  }, [started])
+  }, [started, videoURL])
 
   return (
     <figure className={styles.hero} data-video-fit={fit} style={heroStyle}>
@@ -183,13 +278,14 @@ function HeroVideo({
           alt={hero.coverAlt}
           priority
           unoptimized
+          style={coverStyle}
         />
       )}
       {started && (
         <iframe
           ref={iframeRef}
           className={loaded ? styles.videoLoaded : undefined}
-          src={hero.url}
+          src={videoURL}
           title={`${title} Vimeo video`}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen
@@ -212,6 +308,9 @@ function HeroVideo({
         type="button"
         onClick={() => {
           const next = fit === 'cover' ? 'contain' : 'cover'
+          if (started && (next === 'contain' ? enableVimeoControls(hero.url) : hero.url) !== videoURL) {
+            setLoaded(false)
+          }
           setFit(next)
           onFitChange(next)
         }}
@@ -287,18 +386,37 @@ function ProjectPreview({ project }: { project: TreemapData }) {
   const hero = project.children?.find((item) => item.kind === 'image' && item.hero)
   const heroPreview = hero?.sizes?.thumbnail?.url || hero?.sizes?.small?.url || hero?.image
   const previewStyle = {
-    '--preview-category-color': project.color || 'transparent',
+    '--preview-discipline-color': project.color || 'transparent',
   } as CSSProperties
+  const previewImageStyle = {
+    objectPosition: mediaFocalPosition(hero?.focalX, hero?.focalY),
+  }
 
   return (
     <span className={styles.preview} style={previewStyle}>
       {heroPreview ? (
-        <Image className={styles.previewHero} src={heroPreview} width={320} height={200} sizes="(max-width: 720px) 45vw, 260px" alt="" unoptimized />
+        <Image
+          className={styles.previewHero}
+          src={heroPreview}
+          width={320}
+          height={200}
+          sizes="(max-width: 720px) 45vw, 260px"
+          alt=""
+          unoptimized
+          style={previewImageStyle}
+        />
       ) : (
         <span className={styles.previewPlaceholder} />
       )}
       {project.thumb && (
-        <Image className={styles.previewThumbnail} src={project.thumb} width={80} height={80} alt="" unoptimized />
+        <Image
+          className={styles.previewThumbnail}
+          src={project.thumb}
+          width={80}
+          height={80}
+          alt=""
+          unoptimized
+        />
       )}
     </span>
   )
@@ -309,6 +427,7 @@ export default function ProjectStory({
   titleSettings,
   storyTextSettings,
   descriptionSettings,
+  projectGuidePath = '/projects',
   previousProject,
   nextProject,
   onNavigateProject,
@@ -317,12 +436,18 @@ export default function ProjectStory({
   titleSettings?: ProjectTitleSettings
   storyTextSettings?: StoryTextSettings
   descriptionSettings?: ProjectDescriptionSettings
+  projectGuidePath?: string
   previousProject?: TreemapData | null
   nextProject?: TreemapData | null
   onNavigateProject: (project: TreemapData) => void
 }) {
   const hero = project.projectHero
   const story = project.story || []
+  const metadata = project.metadata
+  const hasMetadata = Boolean(
+    metadata &&
+      (metadata.client || metadata.agency || metadata.industries.length || metadata.tags.length),
+  )
   const storyLayout = arrangeStory(story)
   const settings = titleSettings || {
     placement: 'below',
@@ -342,15 +467,11 @@ export default function ProjectStory({
     fontSize: 30,
     textColor: '#222222',
   }
-  const textColor = /^#[0-9a-f]{6}$/i.test(textSettings.textColor)
-    ? textSettings.textColor
-    : '#222222'
+  const textColor = normalizeColour(textSettings.textColor) || '#222222'
   const textSize = Math.min(72, Math.max(16, textSettings.fontSize))
   const quoteSize = Math.min(140, Math.max(24, textSettings.quoteFontSize))
   const descriptionSize = Math.min(72, Math.max(16, description.fontSize))
-  const descriptionColor = /^#[0-9a-f]{6}$/i.test(description.textColor)
-    ? description.textColor
-    : '#222222'
+  const descriptionColor = normalizeColour(description.textColor) || '#222222'
   const storyStyle = {
     '--story-text-width': `${Math.min(100, Math.max(30, textSettings.width))}%`,
     '--story-text-min-size': `${(textSize * 19) / 30}px`,
@@ -371,21 +492,29 @@ export default function ProjectStory({
   )
 
   const titleOverHero =
-    settings.placement === 'overlay' &&
-    Boolean(hero) &&
-    !(hero?.type === 'video' && videoContained)
+    settings.placement === 'overlay' && Boolean(hero) && !(hero?.type === 'video' && videoContained)
 
   return (
     <article className={styles.story} style={storyStyle} aria-label={project.title}>
-      {hero?.type === 'image' && (() => {
-        const source = imageSource(hero)
-        return (
-          <figure className={styles.hero}>
-            <Image src={source.src} width={source.width} height={source.height} sizes="100vw" alt={hero.alt} priority unoptimized />
-            {titleOverHero && <HeroTitle title={project.title} settings={settings} />}
-          </figure>
-        )
-      })()}
+      {hero?.type === 'image' &&
+        (() => {
+          const source = imageSource(hero)
+          return (
+            <figure className={styles.hero}>
+              <Image
+                src={source.src}
+                width={source.width}
+                height={source.height}
+                sizes="100vw"
+                alt={hero.alt}
+                priority
+                unoptimized
+                style={{ objectPosition: mediaFocalPosition(hero.focalX, hero.focalY) }}
+              />
+              {titleOverHero && <HeroTitle title={project.title} settings={settings} />}
+            </figure>
+          )
+        })()}
       {hero?.type === 'video' && (
         <HeroVideo
           hero={hero}
@@ -396,12 +525,22 @@ export default function ProjectStory({
         />
       )}
 
-      {(!titleOverHero || project.desc) && (
+      {(!titleOverHero || project.desc || hasMetadata) && (
         <header className={styles.introduction} data-title-overlay={titleOverHero}>
           {!titleOverHero && <h1>{project.title}</h1>}
-          {project.desc && (
-            <div className={styles.description}>
-              <RichText data={project.desc} />
+          {(project.desc || hasMetadata) && (
+            <div className={styles.projectDetails}>
+              {project.desc && (
+                <div className={styles.description}>
+                  <RichText converters={projectTextConverters} data={project.desc} />
+                </div>
+              )}
+              {metadata && hasMetadata && (
+                <ProjectMetadataList
+                  metadata={metadata}
+                  projectGuidePath={projectGuidePath}
+                />
+              )}
             </div>
           )}
         </header>
@@ -428,7 +567,7 @@ export default function ProjectStory({
                 className={`${styles.contentBlock} ${styles.textBlock} ${block.quote ? styles.quoteBlock : ''}`}
                 key={block.id}
               >
-                <RichText data={block.content} />
+                <RichText converters={projectTextConverters} data={block.content} />
               </section>
             )
           }
@@ -440,15 +579,31 @@ export default function ProjectStory({
       {(previousProject || nextProject) && (
         <nav className={styles.projectNavigation} aria-label="Adjacent projects">
           {previousProject ? (
-            <button className={`${styles.projectLink} ${styles.previousProject}`} type="button" onClick={() => onNavigateProject(previousProject)}>
+            <button
+              className={`${styles.projectLink} ${styles.previousProject}`}
+              type="button"
+              onClick={() => onNavigateProject(previousProject)}
+            >
               <ProjectPreview project={previousProject} />
-              <span className={styles.projectLinkLabel}><small>Previous project</small><strong>{previousProject.title}</strong></span>
+              <span className={styles.projectLinkLabel}>
+                <small>Previous project</small>
+                <strong>{previousProject.title}</strong>
+              </span>
             </button>
-          ) : <span />}
+          ) : (
+            <span />
+          )}
           {nextProject && (
-            <button className={`${styles.projectLink} ${styles.nextProject}`} type="button" onClick={() => onNavigateProject(nextProject)}>
+            <button
+              className={`${styles.projectLink} ${styles.nextProject}`}
+              type="button"
+              onClick={() => onNavigateProject(nextProject)}
+            >
               <ProjectPreview project={nextProject} />
-              <span className={styles.projectLinkLabel}><small>Next project</small><strong>{nextProject.title}</strong></span>
+              <span className={styles.projectLinkLabel}>
+                <small>Next project</small>
+                <strong>{nextProject.title}</strong>
+              </span>
             </button>
           )}
         </nav>

@@ -1,71 +1,123 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { RichText } from '@payloadcms/richtext-lexical/react'
 import { getAdminThumbnail } from '../src/collections/Media'
-import { proportionalMediaSize } from '../src/lib/media-image'
-import type { Category, Industry, Project, Media, Setting } from '../src/payload-types'
-import { getInternalLinkHref } from '../src/lib/menu-links'
+import { coverMediaRect, mediaFocalPosition, proportionalMediaSize } from '../src/lib/media-image'
+import { projectTextConverters } from '../src/lib/project-rich-text'
+import type {
+  Agency,
+  Appearance,
+  Discipline,
+  Industry,
+  Project,
+  Media,
+  Setting,
+  Tag,
+} from '../src/payload-types'
+import { getInternalLinkHref, getMenuItemHref, getMenuItemLabel } from '../src/lib/menu-links'
 import { findTreemapNode, transformDataForTreemap } from '../src/lib/treemap-data'
 import { fetchTreemapData } from '../src/lib/transformers'
 import { selectMainMenu } from '../src/lib/site-data'
-import { getVideoEmbed, validateVideoURL } from '../src/lib/video-embed'
+import { enableVimeoControls, getVideoEmbed, validateVideoURL } from '../src/lib/video-embed'
+import { validateExternalURL } from '../src/lib/external-url'
+import { stripProjectCreateID } from '../src/collections/hooks/strip-project-create-id'
 import { GET } from '../src/app/my-route/route'
 import type { Payload } from 'payload'
 
-const category = (id: number, extra: Partial<Category> = {}): Category => ({
+test('new projects discard temporary document IDs while retaining nested IDs', async () => {
+  const storyID = '6ac4da655c8f6d251c5802b8'
+  const data = {
+    id: '6ac4da655c8f6d251c5802b9',
+    title: 'Project',
+    story: [{ id: storyID, blockType: 'image' }],
+  }
+  const result = await stripProjectCreateID({ data, operation: 'create' } as never)
+
+  assert.equal(result?.id, undefined)
+  assert.equal(result?.story?.[0]?.id, storyID)
+  assert.equal((await stripProjectCreateID({ data, operation: 'update' } as never))?.id, data.id)
+})
+
+test('agency and client URLs accept web addresses only', () => {
+  assert.equal(validateExternalURL(undefined), true)
+  assert.equal(validateExternalURL('https://example.com/studio'), true)
+  assert.equal(validateExternalURL('http://example.com'), true)
+  assert.equal(typeof validateExternalURL('example.com'), 'string')
+  assert.equal(typeof validateExternalURL('javascript:alert(1)'), 'string')
+})
+
+const discipline = (id: number, extra: Partial<Discipline> = {}): Discipline => ({
   id,
-  title: `Category ${id}`,
-  slug: `category-${id}`,
+  title: `Discipline ${id}`,
+  slug: `discipline-${id}`,
   createdAt: '',
   updatedAt: '',
   ...extra,
 })
-const image: Media = { id: 9, url: '/api/media/file/example.jpg', createdAt: '', updatedAt: '' }
+const image: Media = {
+  id: 9,
+  url: '/api/media/file/example.jpg',
+  focalX: 25,
+  focalY: 70,
+  createdAt: '',
+  updatedAt: '',
+}
 const project = (extra: Partial<Project> = {}): Project => ({
   id: 2,
   slug: 'project',
   title: 'Project',
-  category: 1,
+  discipline: 1,
   createdAt: '',
   updatedAt: '',
   hero: { type: 'image', image },
   ...extra,
 })
 
-test('numeric and populated category relationships produce the same project tree', () => {
-  const categories = [category(1, { color: '#123456' })]
-  const numeric = transformDataForTreemap(categories, [project()])
-  const populated = transformDataForTreemap(categories, [project({ category: categories[0] })])
+test('numeric and populated discipline relationships produce the same project tree', () => {
+  const disciplines = [discipline(1, { color: '#123456' })]
+  const numeric = transformDataForTreemap(disciplines, [project()])
+  const populated = transformDataForTreemap(disciplines, [project({ discipline: disciplines[0] })])
   assert.deepEqual(numeric, populated)
-  const projectNode = findTreemapNode(numeric, ['category-1', 'project'])
+  const projectNode = findTreemapNode(numeric, ['discipline-1', 'project'])
   assert.equal(projectNode?.children?.[0].image, image.url)
   assert.equal(projectNode?.color, '#123456')
 })
 
-test('full paths are validated; projects cannot be addressed beneath an unrelated category', () => {
-  const tree = transformDataForTreemap([category(1), category(3)], [project()])
-  assert.equal(findTreemapNode(tree, ['category-3', 'project']), undefined)
+test('full paths are validated; projects cannot be addressed beneath an unrelated discipline', () => {
+  const tree = transformDataForTreemap([discipline(1), discipline(3)], [project()])
+  assert.equal(findTreemapNode(tree, ['discipline-3', 'project']), undefined)
   assert.equal(findTreemapNode(tree, ['garbage', 'project']), undefined)
-  assert.equal(findTreemapNode(tree, ['category-1', 'project', 'image-0']), undefined)
+  assert.equal(findTreemapNode(tree, ['discipline-1', 'project', 'image-0']), undefined)
 })
 
-test('nested categories work and cyclic parents cannot create a circular tree', () => {
+test('nested disciplines work and cyclic parents cannot create a circular tree', () => {
   const tree = transformDataForTreemap(
-    [category(1), category(3, { parent: 1 })],
-    [project({ category: 3 })],
+    [discipline(1), discipline(3, { parent: 1 })],
+    [project({ discipline: 3 })],
   )
-  assert.equal(findTreemapNode(tree, ['category-1', 'category-3', 'project'])?.title, 'Project')
+  assert.equal(findTreemapNode(tree, ['discipline-1', 'discipline-3', 'project'])?.title, 'Project')
   const cycle = transformDataForTreemap(
-    [category(1, { parent: 3 }), category(3, { parent: 1 })],
+    [discipline(1, { parent: 3 }), discipline(3, { parent: 1 })],
     [],
   )
   assert.doesNotThrow(() => JSON.stringify(cycle))
   assert.equal(cycle.children?.length, 2)
 })
 
-test('global project title presentation is included in the front-end settings', () => {
+test('Appearance presentation values are included in the front-end settings', () => {
   const settings: Setting = {
     id: 1,
     siteTitle: 'Portfolio',
+    projectGuideTitle: 'Project Guide',
+    projectGuideInstruction: 'Choose a relationship.',
+    projectsOverviewSlug: 'projects',
+  }
+  const appearance: Appearance = {
+    id: 1,
+    keyColor: '#cc2929',
+    menuBackgroundColor: '#f4f4f4',
     projectTitle: {
       placement: 'overlay',
       fontSize: 128,
@@ -85,15 +137,15 @@ test('global project title presentation is included in the front-end settings', 
       textColor: '#654321',
     },
   }
-  const tree = transformDataForTreemap([category(1)], [project()], settings)
-  assert.deepEqual(tree.settings?.projectTitle, settings.projectTitle)
-  assert.deepEqual(tree.settings?.storyText, settings.storyText)
-  assert.deepEqual(tree.settings?.projectDescription, settings.projectDescription)
+  const tree = transformDataForTreemap([discipline(1)], [project()], settings, appearance)
+  assert.deepEqual(tree.settings?.projectTitle, appearance.projectTitle)
+  assert.deepEqual(tree.settings?.storyText, appearance.storyText)
+  assert.deepEqual(tree.settings?.projectDescription, appearance.projectDescription)
 })
 
 test('missing and populated hero uploads are handled safely', () => {
   const tree = transformDataForTreemap(
-    [category(1)],
+    [discipline(1)],
     [
       project({ hero: { type: 'image', image: 9 } }),
       project({ id: 3, hero: { type: 'image', image } }),
@@ -101,6 +153,26 @@ test('missing and populated hero uploads are handled safely', () => {
   )
   assert.equal(tree.children![0].children![0].children?.length, 0)
   assert.equal(tree.children![0].children![1].children?.[0].hero, true)
+  assert.equal(tree.children![0].children![1].children?.[0].focalX, 25)
+  assert.equal(tree.children![0].children![1].children?.[0].focalY, 70)
+  const transformedHero = tree.children![0].children![1].projectHero
+  assert.equal(transformedHero?.type === 'image' && transformedHero.focalX, 25)
+})
+
+test('hero crops use Payload focal points', () => {
+  assert.equal(mediaFocalPosition(25, 70), '25% 70%')
+  assert.equal(mediaFocalPosition(null, undefined), '50% 50%')
+  const crop = coverMediaRect(1000, 500, 1000, 1000, 25, 70)
+  assert.deepEqual(crop, {
+    x: 0,
+    y: -350,
+    width: 1000,
+    height: 1000,
+  })
+  assert.equal(crop.width / crop.height, 1)
+
+  const portraitCrop = coverMediaRect(1200, 700, 625, 832, 50, 50)
+  assert.ok(Math.abs(portraitCrop.width / portraitCrop.height - 625 / 832) < 0.000001)
 })
 
 test('project thumbnail and hero image remain independent', () => {
@@ -116,7 +188,7 @@ test('project thumbnail and hero image remain independent', () => {
     sizes: { thumbnail: { url: '/api/media/file/hero-400.jpg', width: 400, height: 400 } },
   }
   const tree = transformDataForTreemap(
-    [category(1)],
+    [discipline(1)],
     [
       project({
         thumbnail,
@@ -132,7 +204,7 @@ test('project thumbnail and hero image remain independent', () => {
 
 test('Vimeo heroes use their cover for the treemap transition and preserve playback options', () => {
   const tree = transformDataForTreemap(
-    [category(1)],
+    [discipline(1)],
     [
       project({
         hero: {
@@ -155,6 +227,8 @@ test('Vimeo heroes use their cover for the treemap transition and preserve playb
   if (projectNode.projectHero?.type === 'video') {
     assert.equal(projectNode.projectHero.fit, 'contain')
     assert.equal(projectNode.projectHero.muted, true)
+    assert.equal(projectNode.projectHero.coverFocalX, 25)
+    assert.equal(projectNode.projectHero.coverFocalY, 70)
     assert.match(projectNode.projectHero.url, /^https:\/\/player\.vimeo\.com\/video\/76979871\?/)
     assert.match(projectNode.projectHero.url, /autoplay=1/)
   }
@@ -178,13 +252,14 @@ test('project content keeps its order and derives presentation from media', () =
     },
   }
   const tree = transformDataForTreemap(
-    [category(1)],
+    [discipline(1)],
     [
       project({
         story: [
           {
             blockType: 'image',
             image,
+            presentation: 'center',
           },
           {
             blockType: 'text',
@@ -210,6 +285,10 @@ test('project content keeps its order and derives presentation from media', () =
     projectNode.story?.map((block) => block.blockType),
     ['image', 'text', 'video'],
   )
+  assert.equal(
+    projectNode.story?.[0]?.blockType === 'image' && projectNode.story[0].presentation,
+    'center',
+  )
   assert.equal(projectNode.story?.[1].blockType === 'text' && projectNode.story[1].quote, true)
   const video = projectNode.story?.[2]
   assert.equal(video?.blockType, 'video')
@@ -222,6 +301,51 @@ test('project content keeps its order and derives presentation from media', () =
   }
 })
 
+test('project metadata links retain map slugs and external websites', () => {
+  const tree = transformDataForTreemap(
+    [discipline(1)],
+    [
+      project({
+        client: {
+          id: 1,
+          title: 'Client A',
+          slug: 'client-a',
+          url: 'https://client.example',
+          createdAt: '',
+          updatedAt: '',
+        },
+        agency: {
+          id: 2,
+          title: 'Agency B',
+          slug: 'agency-b',
+          url: 'https://agency.example',
+          createdAt: '',
+          updatedAt: '',
+        },
+        industries: [
+          { id: 3, title: 'Culture', slug: 'culture', createdAt: '', updatedAt: '' },
+        ],
+        tags: [{ id: 4, title: 'Print', slug: 'print', createdAt: '', updatedAt: '' }],
+      }),
+    ],
+    {
+      id: 1,
+      siteTitle: 'Portfolio',
+      projectGuideTitle: 'Project Map',
+      projectGuideInstruction: 'Select a relationship.',
+      projectsOverviewSlug: 'map',
+    },
+  )
+  const node = tree.children?.[0]?.children?.[0]
+
+  assert.equal(tree.settings?.projectGuidePath, '/map')
+  assert.equal(node?.metadata?.client?.slug, 'client-a')
+  assert.equal(node?.metadata?.client?.externalURL, 'https://client.example')
+  assert.equal(node?.metadata?.agency?.externalURL, 'https://agency.example')
+  assert.equal(node?.metadata?.industries[0]?.slug, 'culture')
+  assert.equal(node?.metadata?.tags[0]?.slug, 'print')
+})
+
 test('only Vimeo links are accepted and normalized for safe responsive embeds', () => {
   const vimeo = getVideoEmbed('https://vimeo.com/76979871', 'background')
   assert.equal(vimeo?.provider, 'vimeo')
@@ -230,6 +354,23 @@ test('only Vimeo links are accepted and normalized for safe responsive embeds', 
   assert.match(vimeo?.embedURL || '', /muted=1/)
   assert.equal(validateVideoURL('https://youtu.be/M7lc1UVf-VE'), 'Enter a valid Vimeo video URL.')
   assert.equal(validateVideoURL('https://example.com/video'), 'Enter a valid Vimeo video URL.')
+})
+
+test('full-view Vimeo heroes enable controls without changing other embed options', () => {
+  const background = getVideoEmbed('https://vimeo.com/123456', {
+    autoplay: true,
+    controls: false,
+    loop: true,
+  })
+  assert.ok(background)
+  const controlled = new URL(enableVimeoControls(background.embedURL))
+  assert.equal(controlled.searchParams.get('controls'), '1')
+  assert.equal(controlled.searchParams.get('autoplay'), '1')
+  assert.equal(controlled.searchParams.get('loop'), '1')
+
+  const standard = getVideoEmbed('https://vimeo.com/123456', { controls: true })
+  assert.ok(standard)
+  assert.equal(enableVimeoControls(standard.embedURL), standard.embedURL)
 })
 
 test('media admin thumbnail falls back to the original SVG', () => {
@@ -300,8 +441,54 @@ test('Lexical content stays structured rather than being assigned to innerHTML',
       ],
     },
   }
-  const tree = transformDataForTreemap([category(1)], [project({ description })])
+  const tree = transformDataForTreemap([discipline(1)], [project({ description })])
   assert.deepEqual(tree.children![0].children![0].desc, description)
+})
+
+test('project rich text renders the all-small-caps text state', () => {
+  const description = {
+    root: {
+      type: 'root',
+      version: 1,
+      direction: null,
+      format: '',
+      indent: 0,
+      children: [
+        {
+          type: 'paragraph',
+          version: 1,
+          direction: null,
+          format: '',
+          indent: 0,
+          textFormat: 0,
+          textStyle: '',
+          children: [
+            {
+              type: 'text',
+              version: 1,
+              detail: 0,
+              format: 0,
+              mode: 'normal',
+              style: '',
+              text: 'Selected text',
+              $: { fontFeatures: 'allSmallCaps' },
+            },
+          ],
+        },
+      ],
+    },
+  } as unknown as NonNullable<Project['description']>
+
+  const markup = renderToStaticMarkup(
+    createElement(RichText, { converters: projectTextConverters, data: description }),
+  )
+
+  assert.match(markup, /font-feature-settings/)
+  assert.match(markup, /smcp/)
+  assert.match(markup, /c2sc/)
+  assert.match(markup, /font-variant-caps:all-small-caps/)
+  assert.match(markup, /letter-spacing:var\(--small-caps-letter-spacing, 0.04em\)/)
+  assert.match(markup, /Selected text/)
 })
 
 test('CMS queries disable default pagination and enforce public read access', async () => {
@@ -317,7 +504,7 @@ test('CMS queries disable default pagination and enforce public read access', as
   assert.deepEqual(
     calls.map((c) => [c.collection, c.pagination, c.overrideAccess]),
     [
-      ['categories', false, false],
+      ['disciplines', false, false],
       ['projects', false, false],
       ['industries', false, false],
     ],
@@ -350,19 +537,81 @@ test('industry menu links open the industry-filtered portfolio', () => {
   )
 })
 
+test('agency and tag menu links open their filtered portfolios', () => {
+  const agency: Agency = {
+    id: 7,
+    title: 'Studio One',
+    slug: 'studio-one',
+    createdAt: '',
+    updatedAt: '',
+  }
+  const tag: Tag = {
+    id: 8,
+    title: 'Wayfinding',
+    slug: 'wayfinding',
+    createdAt: '',
+    updatedAt: '',
+  }
+
+  assert.equal(
+    getInternalLinkHref({ relationTo: 'agencies', value: agency }),
+    '/?agency=studio-one',
+  )
+  assert.equal(getInternalLinkHref({ relationTo: 'tags', value: tag }), '/?tag=wayfinding')
+})
+
+test('the projects overview can be selected as an internal menu destination', () => {
+  assert.equal(
+    getMenuItemHref({
+      title: 'Selected work',
+      type: 'internal',
+      internalDestination: 'projects',
+    }),
+    '/projects',
+  )
+  assert.equal(
+    getMenuItemHref(
+      {
+        title: 'Diagram',
+        type: 'internal',
+        internalDestination: 'projects',
+      },
+      undefined,
+      'project-map',
+    ),
+    '/project-map',
+  )
+  assert.equal(
+    getMenuItemHref({
+      title: 'Grouped links',
+      type: 'group',
+    }),
+    '#',
+  )
+})
+
+test('the project guide menu destination keeps its independently configured menu label', () => {
+  const item = {
+    title: 'Old menu label',
+    type: 'internal' as const,
+    internalDestination: 'projects' as const,
+  }
+  assert.equal(getMenuItemLabel(item), 'Old menu label')
+})
+
 test('sample endpoint no longer exposes users', async () => {
   const response = GET()
   assert.equal(response.status, 404)
   assert.deepEqual(await response.json(), { error: 'Not found' })
 })
 
-test('imported WORK root opens directly on categories and preserves nested projects', () => {
+test('imported WORK root opens directly on disciplines and preserves nested projects', () => {
   const tree = transformDataForTreemap(
-    [category(10, { slug: 'root', title: 'WORK' }), category(1, { parent: 10 })],
+    [discipline(10, { slug: 'root', title: 'WORK' }), discipline(1, { parent: 10 })],
     [project()],
   )
   assert.equal(tree.legacyRootSlug, 'root')
-  assert.equal(tree.children?.[0].slug, 'category-1')
-  assert.equal(findTreemapNode(tree, ['category-1', 'project'])?.title, 'Project')
+  assert.equal(tree.children?.[0].slug, 'discipline-1')
+  assert.equal(findTreemapNode(tree, ['discipline-1', 'project'])?.title, 'Project')
   assert.equal(findTreemapNode(tree, ['root']), undefined)
 })

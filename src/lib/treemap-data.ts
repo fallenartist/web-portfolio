@@ -1,34 +1,52 @@
-import type { Category, Media, Project, Setting } from '@/payload-types'
+import type {
+  Agency,
+  Appearance,
+  Client,
+  Discipline,
+  Media,
+  Project,
+  Setting,
+} from '@/payload-types'
 import type { ProjectHero, ProjectStoryBlock, TreemapData } from '@/types'
+import { normalizeColour } from '@/lib/colour'
+import { getProjectsOverviewPath } from '@/lib/menu-links'
 import { getVideoEmbed } from '@/lib/video-embed'
 
 function media(value: number | Media | null | undefined): Media | undefined {
   return value && typeof value === 'object' ? value : undefined
 }
 
+function relationship<T extends { slug: string; title: string }>(
+  value: null | number | T | undefined,
+): T | undefined {
+  return value && typeof value === 'object' ? value : undefined
+}
+
 export function transformDataForTreemap(
-  categories: Category[],
+  disciplines: Discipline[],
   projects: Project[],
   settings: Setting | null = null,
+  appearance: Appearance | null = null,
 ): TreemapData {
   const map = new Map<number, TreemapData>()
-  for (const category of categories) {
-    const thumbnail = media(category.thumbnail)
-    map.set(category.id, {
-      id: `category-${category.id}`,
-      kind: 'category',
-      slug: category.slug,
-      title: category.title,
-      priority: category.priority ?? 100,
-      color: category.color,
+  for (const discipline of disciplines) {
+    const thumbnail = media(discipline.thumbnail)
+    map.set(discipline.id, {
+      id: `discipline-${discipline.id}`,
+      kind: 'discipline',
+      slug: discipline.slug,
+      title: discipline.title,
+      priority: discipline.priority ?? 100,
+      color: normalizeColour(discipline.color),
       thumb: thumbnail?.sizes?.thumbnail?.url || thumbnail?.url,
       children: [],
     })
   }
   for (const project of projects) {
-    const categoryID = typeof project.category === 'object' ? project.category.id : project.category
-    const category = map.get(categoryID)
-    if (!category) continue
+    const disciplineID =
+      typeof project.discipline === 'object' ? project.discipline.id : project.discipline
+    const discipline = map.get(disciplineID)
+    if (!discipline) continue
     const children: TreemapData[] = []
     let projectHero: ProjectHero | undefined
     if (project.hero.type === 'video' && project.hero.videoURL) {
@@ -44,6 +62,8 @@ export function transformDataForTreemap(
           image: cover.url,
           width: cover.width,
           height: cover.height,
+          focalX: cover.focalX,
+          focalY: cover.focalY,
           sizes: cover.sizes,
           hero: true,
           priority: 100,
@@ -63,6 +83,8 @@ export function transformDataForTreemap(
           coverAlt: cover.alt || project.title,
           coverWidth: cover.width,
           coverHeight: cover.height,
+          coverFocalX: cover.focalX,
+          coverFocalY: cover.focalY,
           coverSizes: cover.sizes,
         }
       }
@@ -78,6 +100,8 @@ export function transformDataForTreemap(
           image: image.url,
           width: image.width,
           height: image.height,
+          focalX: image.focalX,
+          focalY: image.focalY,
           sizes: image.sizes,
           hero: true,
           priority: 100,
@@ -88,6 +112,8 @@ export function transformDataForTreemap(
           alt: image.alt || project.title,
           width: image.width,
           height: image.height,
+          focalX: image.focalX,
+          focalY: image.focalY,
           sizes: image.sizes,
         }
       }
@@ -134,19 +160,48 @@ export function transformDataForTreemap(
         image: image.url,
         alt: image.alt || block.caption || project.title,
         caption: block.caption || undefined,
+        presentation: block.presentation || 'auto',
         imageWidth: image.width,
         imageHeight: image.height,
         sizes: image.sizes,
       })
     }
-    category.children!.push({
+    const client = relationship<Client>(project.client)
+    const agency = relationship<Agency>(project.agency)
+    discipline.children!.push({
       id: `project-${project.id}`,
       kind: 'project',
       slug: project.slug,
       title: project.title,
       priority: project.priority ?? 100,
-      color: category.color,
+      color: normalizeColour(discipline.color),
       desc: project.description,
+      metadata: {
+        client: client
+          ? {
+              kind: 'client',
+              slug: client.slug,
+              title: client.title,
+              externalURL: client.url || undefined,
+            }
+          : undefined,
+        agency: agency
+          ? {
+              kind: 'agency',
+              slug: agency.slug,
+              title: agency.title,
+              externalURL: agency.url || undefined,
+            }
+          : undefined,
+        industries: (project.industries || []).flatMap((value) => {
+          const item = relationship(value)
+          return item ? [{ kind: 'industry' as const, slug: item.slug, title: item.title }] : []
+        }),
+        tags: (project.tags || []).flatMap((value) => {
+          const item = relationship(value)
+          return item ? [{ kind: 'tag' as const, slug: item.slug, title: item.title }] : []
+        }),
+      },
       excerpt: project.excerpt || '',
       thumb: media(project.thumbnail)?.url,
       projectHero,
@@ -157,13 +212,16 @@ export function transformDataForTreemap(
   // Relationships can be numeric IDs or populated documents. Ignore broken/cyclic
   // parents rather than producing a cyclic object that cannot be serialized.
   const parents = new Map(
-    categories.map((c) => [c.id, typeof c.parent === 'object' ? c.parent?.id : c.parent]),
+    disciplines.map((item) => [
+      item.id,
+      typeof item.parent === 'object' ? item.parent?.id : item.parent,
+    ]),
   )
   const roots: TreemapData[] = []
-  for (const category of categories) {
-    const node = map.get(category.id)!
-    const parentID = parents.get(category.id)
-    const seen = new Set([category.id])
+  for (const discipline of disciplines) {
+    const node = map.get(discipline.id)!
+    const parentID = parents.get(discipline.id)
+    const seen = new Set([discipline.id])
     let cursor = parentID
     let cycle = false
     while (cursor != null && map.has(cursor)) {
@@ -177,39 +235,37 @@ export function transformDataForTreemap(
     if (!cycle && parentID != null && map.has(parentID)) map.get(parentID)!.children!.push(node)
     else roots.push(node)
   }
-  // Imported content may already contain the portfolio's root category.
-  const rootSlug = settings?.rootCategorySlug || 'work'
+  // Imported content may already contain the portfolio's root discipline.
+  const rootSlug = settings?.rootDisciplineSlug || 'work'
   const wrapper =
     roots.length === 1 && ['root', rootSlug].includes(roots[0].slug) ? roots[0] : undefined
   return {
     id: 'root',
     legacyRootSlug: wrapper?.slug,
     kind: 'root',
-    slug: settings?.rootCategorySlug || 'work',
-    title: settings?.rootCategoryTitle || 'WORK',
+    slug: settings?.rootDisciplineSlug || 'work',
+    title: settings?.rootDisciplineTitle || 'WORK',
     children: wrapper?.children ?? roots,
     settings: {
       siteTitle: settings?.siteTitle || 'Design Portfolio',
-      enableAutoplay: settings?.enableAutoplay !== false,
-      autoplayDelay: settings?.autoplayDelay ?? 5000,
-      autoplayInterval: settings?.autoplayInterval ?? 3000,
+      projectGuidePath: getProjectsOverviewPath(settings?.projectsOverviewSlug),
       projectTitle: {
-        placement: settings?.projectTitle?.placement || 'below',
-        fontSize: settings?.projectTitle?.fontSize ?? 112,
-        mobileFontSize: settings?.projectTitle?.mobileFontSize ?? 48,
-        dimColor: settings?.projectTitle?.dimColor || '#000000',
-        dimIntensity: settings?.projectTitle?.dimIntensity ?? 35,
+        placement: appearance?.projectTitle?.placement || 'below',
+        fontSize: appearance?.projectTitle?.fontSize ?? 112,
+        mobileFontSize: appearance?.projectTitle?.mobileFontSize ?? 48,
+        dimColor: appearance?.projectTitle?.dimColor || '#000000',
+        dimIntensity: appearance?.projectTitle?.dimIntensity ?? 35,
       },
       storyText: {
-        width: settings?.storyText?.width ?? 50,
-        fontSize: settings?.storyText?.fontSize ?? 30,
-        quoteFontSize: settings?.storyText?.quoteFontSize ?? 60,
-        textColor: settings?.storyText?.textColor || '#222222',
+        width: appearance?.storyText?.width ?? 50,
+        fontSize: appearance?.storyText?.fontSize ?? 30,
+        quoteFontSize: appearance?.storyText?.quoteFontSize ?? 60,
+        textColor: appearance?.storyText?.textColor || '#222222',
       },
       projectDescription: {
-        fontFamily: settings?.projectDescription?.fontFamily || 'October Condensed',
-        fontSize: settings?.projectDescription?.fontSize ?? 30,
-        textColor: settings?.projectDescription?.textColor || '#222222',
+        fontFamily: appearance?.projectDescription?.fontFamily || 'October Condensed',
+        fontSize: appearance?.projectDescription?.fontSize ?? 30,
+        textColor: appearance?.projectDescription?.textColor || '#222222',
       },
     },
   }

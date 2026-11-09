@@ -8,6 +8,7 @@ export type ProjectStoryBlock =
       image: string
       alt: string
       caption?: string
+      presentation: 'auto' | 'center' | 'full'
       imageWidth?: number | null
       imageHeight?: number | null
       sizes?: Media['sizes']
@@ -42,6 +43,8 @@ export type ProjectHero =
       alt: string
       width?: number | null
       height?: number | null
+      focalX?: number | null
+      focalY?: number | null
       sizes?: Media['sizes']
     }
   | {
@@ -57,14 +60,30 @@ export type ProjectHero =
       coverAlt: string
       coverWidth?: number | null
       coverHeight?: number | null
+      coverFocalX?: number | null
+      coverFocalY?: number | null
       coverSizes?: Media['sizes']
     }
+
+export type ProjectMetadataItem = {
+  title: string
+  slug: string
+  kind: 'client' | 'agency' | 'industry' | 'tag'
+  externalURL?: string
+}
+
+export type ProjectMetadata = {
+  client?: ProjectMetadataItem
+  agency?: ProjectMetadataItem
+  industries: ProjectMetadataItem[]
+  tags: ProjectMetadataItem[]
+}
 
 export interface TreemapData {
   id: string
   slug: string
   title: string
-  kind: 'root' | 'category' | 'project' | 'image'
+  kind: 'root' | 'discipline' | 'project' | 'image'
   legacyRootSlug?: string
   priority?: number
   color?: string | null
@@ -72,20 +91,20 @@ export interface TreemapData {
   image?: string
   width?: number | null
   height?: number | null
+  focalX?: number | null
+  focalY?: number | null
   alt?: string
   desc?: Project['description']
+  metadata?: ProjectMetadata
   excerpt?: string
   projectHero?: ProjectHero
   story?: ProjectStoryBlock[]
   hero?: boolean
-  featured?: boolean
   sizes?: Media['sizes']
   children?: TreemapData[]
   settings?: {
-    enableAutoplay: boolean
-    autoplayDelay: number
-    autoplayInterval: number
     siteTitle: string
+    projectGuidePath: string
     projectTitle: {
       placement: 'below' | 'overlay'
       fontSize: number

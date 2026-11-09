@@ -1,5 +1,23 @@
+import {
+  converter,
+  formatCss,
+  formatHex,
+  formatHex8,
+  formatHsl,
+  formatRgb,
+  parse,
+  toGamut,
+  type Color,
+  type Oklch,
+} from 'culori'
+
 export type RGB = { b: number; g: number; r: number }
 export type HSB = { b: number; h: number; s: number }
+export type ColourFormat = 'css' | 'hex' | 'hsl' | 'oklch' | 'rgb'
+
+const toRgb = converter('rgb')
+const toOklch = converter('oklch')
+const mapToSrgb = toGamut('rgb', 'oklch')
 
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(maximum, Math.max(minimum, Math.round(value)))
@@ -64,30 +82,84 @@ export const hsbToRgb = ({ h, s, b }: HSB): RGB => {
   }
 }
 
-export const parseColour = (value?: null | string): RGB | null => {
+export const parseCssColour = (value?: null | string): Color | null => {
   if (!value) return null
-  const hex = hexToRgb(value)
-  if (hex) return hex
+  return parse(value.trim()) ?? null
+}
 
-  const rgb = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*[, ]\s*(\d+(?:\.\d+)?)\s*[, ]\s*(\d+(?:\.\d+)?)/i.exec(
-    value,
-  )
-  if (rgb)
-    return {
-      r: clamp(Number(rgb[1]), 0, 255),
-      g: clamp(Number(rgb[2]), 0, 255),
-      b: clamp(Number(rgb[3]), 0, 255),
-    }
+export const detectColourFormat = (value?: null | string): ColourFormat => {
+  const colour = value?.trim().toLowerCase() ?? ''
+  if (colour.startsWith('#')) return 'hex'
+  if (colour.startsWith('rgb')) return 'rgb'
+  if (colour.startsWith('hsl')) return 'hsl'
+  if (colour.startsWith('oklch')) return 'oklch'
+  return 'css'
+}
 
-  if (typeof document !== 'undefined' && CSS.supports('color', value)) {
-    const canvas = document.createElement('canvas')
-    const context = canvas.getContext('2d')
-    if (context) {
-      context.fillStyle = '#000000'
-      context.fillStyle = value
-      return hexToRgb(context.fillStyle)
-    }
+export const toSrgbColour = (colour: Color): Color => {
+  const rgb = toRgb(colour)
+  if (rgb && rgb.r >= 0 && rgb.r <= 1 && rgb.g >= 0 && rgb.g <= 1 && rgb.b >= 0 && rgb.b <= 1) {
+    return rgb
   }
+  return mapToSrgb(colour)
+}
 
-  return null
+export const toSrgbCss = (colour: Color) => formatRgb(toSrgbColour(colour))
+
+export const colourToRgb = (colour: Color): RGB => {
+  const rgb = toRgb(toSrgbColour(colour))
+  return {
+    r: clamp((rgb?.r ?? 0) * 255, 0, 255),
+    g: clamp((rgb?.g ?? 0) * 255, 0, 255),
+    b: clamp((rgb?.b ?? 0) * 255, 0, 255),
+  }
+}
+
+export const colourToOklch = (colour: Color): Oklch =>
+  toOklch(colour) ?? { mode: 'oklch', l: 0, c: 0, h: 0 }
+
+export const colourAlpha = (colour: Color) => colour.alpha ?? 1
+
+export const withAlpha = (colour: Color, alpha: number): Color => ({
+  ...colour,
+  alpha: Math.min(1, Math.max(0, alpha)),
+})
+
+export const rgbColour = (rgb: RGB, alpha = 1): Color => ({
+  mode: 'rgb',
+  r: Math.min(255, Math.max(0, rgb.r)) / 255,
+  g: Math.min(255, Math.max(0, rgb.g)) / 255,
+  b: Math.min(255, Math.max(0, rgb.b)) / 255,
+  alpha,
+})
+
+const withoutOpaqueAlpha = (colour: Color): Color => {
+  if (colour.alpha === undefined || colour.alpha < 1) return colour
+  const { alpha: _alpha, ...opaque } = colour
+  return opaque as Color
+}
+
+export const formatColour = (colour: Color, format: ColourFormat): string => {
+  if (format === 'hex') {
+    const fallback = toSrgbColour(colour)
+    return colourAlpha(colour) < 1 ? formatHex8(fallback) : formatHex(fallback)
+  }
+  if (format === 'rgb') return formatRgb(toSrgbColour(colour))
+  if (format === 'hsl') return formatHsl(toSrgbColour(colour))
+  if (format === 'oklch') return formatCss(withoutOpaqueAlpha(colourToOklch(colour)))
+  return formatCss(withoutOpaqueAlpha(colour))
+}
+
+export const colourKey = (value?: Color | null | string): string | null => {
+  const colour = typeof value === 'string' ? parseCssColour(value) : value
+  if (!colour) return null
+  const oklch = colourToOklch(colour)
+  return [oklch.l, oklch.c, oklch.h ?? 0, colourAlpha(oklch)]
+    .map((channel) => channel.toFixed(6))
+    .join(':')
+}
+
+export const parseColour = (value?: null | string): RGB | null => {
+  const colour = parseCssColour(value)
+  return colour ? colourToRgb(colour) : null
 }

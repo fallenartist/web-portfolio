@@ -2,8 +2,8 @@ import type { CollectionConfig } from 'payload'
 
 import { colourPickerField } from '@/fields/colourPicker'
 
-export const Categories: CollectionConfig = {
-  slug: 'categories',
+export const Disciplines: CollectionConfig = {
+  slug: 'disciplines',
   admin: {
     defaultColumns: ['title', 'color', 'parent', 'updatedAt'],
     group: 'Content',
@@ -40,15 +40,15 @@ export const Categories: CollectionConfig = {
       },
     },
     colourPickerField({
-      description: 'Colour used for this category in the treemap and project navigation.',
+      description: 'Colour used for this discipline in the treemap and project navigation.',
     }),
     {
       name: 'parent',
       type: 'relationship',
-      relationTo: 'categories',
+      relationTo: 'disciplines',
       admin: {
         position: 'sidebar',
-        description: 'Optional parent category for hierarchical organization',
+        description: 'Optional parent discipline for hierarchical organization',
       },
     },
     {
@@ -65,7 +65,7 @@ export const Categories: CollectionConfig = {
       type: 'upload',
       relationTo: 'media',
       admin: {
-        description: 'Thumbnail image for the category',
+        description: 'Thumbnail image for the discipline',
       },
     },
   ],

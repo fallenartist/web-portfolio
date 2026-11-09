@@ -70,3 +70,14 @@ export function getVideoEmbed(
 export function validateVideoURL(value: null | string | undefined): true | string {
   return !value || getVideoEmbed(value) ? true : 'Enter a valid Vimeo video URL.'
 }
+
+export function enableVimeoControls(value: string): string {
+  try {
+    const url = new URL(value)
+    if (url.hostname !== 'player.vimeo.com' || url.searchParams.get('controls') !== '0') return value
+    url.searchParams.set('controls', '1')
+    return url.toString()
+  } catch {
+    return value
+  }
+}

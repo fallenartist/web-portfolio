@@ -25,28 +25,30 @@ await check(css, 200)
 await check('/admin', 200)
 await check('/my-route', 404)
 await check('/api/users', 403)
-const write = await fetch(new URL('/api/categories', base), {
+const write = await fetch(new URL('/api/disciplines', base), {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: '{}',
 })
 assert.ok([401, 403].includes(write.status), `Anonymous write status: ${write.status}`)
-const categories = await (await check('/api/categories?limit=100&depth=1', 200)).json()
+const disciplines = await (await check('/api/disciplines?limit=100&depth=1', 200)).json()
 const projects = await (await check('/api/projects?limit=100&depth=2', 200)).json()
 const project = projects.docs[0]
 if (project) {
-  const categoryID = typeof project.category === 'object' ? project.category.id : project.category
-  let category = categories.docs.find((c) => c.id === categoryID)
+  const disciplineID =
+    typeof project.discipline === 'object' ? project.discipline.id : project.discipline
+  let discipline = disciplines.docs.find((item) => item.id === disciplineID)
   const slugs = [project.slug]
   const seen = new Set()
-  while (category && !seen.has(category.id)) {
-    seen.add(category.id)
-    slugs.unshift(category.slug)
-    const parentID = typeof category.parent === 'object' ? category.parent?.id : category.parent
-    category = categories.docs.find((c) => c.id === parentID)
+  while (discipline && !seen.has(discipline.id)) {
+    seen.add(discipline.id)
+    slugs.unshift(discipline.slug)
+    const parentID =
+      typeof discipline.parent === 'object' ? discipline.parent?.id : discipline.parent
+    discipline = disciplines.docs.find((item) => item.id === parentID)
   }
   await check('/' + slugs.map(encodeURIComponent).join('/'), 200)
-  await check('/wrong-category/' + encodeURIComponent(project.slug), 404)
+  await check('/wrong-discipline/' + encodeURIComponent(project.slug), 404)
 }
 const media = await (await check('/api/media?limit=1', 200)).json()
 if (media.docs[0]?.url) {

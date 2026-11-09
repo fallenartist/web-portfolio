@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import * as d3 from 'd3'
 import { createD3Lightbox } from '@/lib/lightbox'
-import { hasOriginalAspectRatio } from '@/lib/media-image'
+import { coverMediaRect, hasOriginalAspectRatio } from '@/lib/media-image'
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import ProjectStory from '@/components/ProjectStory/ProjectStory'
 import type { LightboxImage, TreemapData, TreemapNode } from '@/types'
@@ -87,7 +87,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
       if (node.data.kind === 'project') projectNodes.push(node)
     })
     let current = root
-    let projectMode = false
     let disposed = false
     const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600
     const timers = new Set<ReturnType<typeof setTimeout>>()
@@ -119,13 +118,23 @@ export default function Treemap({ data }: { data: TreemapData }) {
     const color = d3
       .scaleOrdinal<string, string>()
       .range(['rgb(250, 200, 0)', 'rgb(50, 0, 250)', 'rgb(250, 0, 50)'])
-    const level = (d: TreemapNode) => ({ root: 0, category: 1, project: 2, image: 3 })[d.data.kind]
+    const level = (d: TreemapNode) =>
+      ({ root: 0, discipline: 1, project: 2, image: 3 })[d.data.kind]
     const fill = (d: TreemapNode) => {
       let ancestor: TreemapNode | null = d
-      while (ancestor && ancestor.data.kind !== 'category') ancestor = ancestor.parent
+      while (ancestor && ancestor.data.kind !== 'discipline') ancestor = ancestor.parent
       const slug = ancestor?.data.slug || d.data.slug
       return ancestor?.data.color || livePalette.get(slug) || color(slug)
     }
+    const heroCrop = (d: TreemapNode, containerWidth: number, containerHeight: number) =>
+      coverMediaRect(
+        containerWidth,
+        containerHeight,
+        d.data.width,
+        d.data.height,
+        d.data.focalX,
+        d.data.focalY,
+      )
     const cells = svg
       .selectAll<SVGGElement, TreemapNode>('g')
       .data(root.descendants(), (d) => d.data.id)
@@ -169,8 +178,14 @@ export default function Treemap({ data }: { data: TreemapData }) {
           : d.data.sizes?.thumbnail?.url || d.data.image || null,
       )
       .attr('class', styles.lores)
-      .attr('width', '100%')
-      .attr('height', '100%')
+      .attr('x', (d) => (d.data.hero ? heroCrop(d, d.x1 - d.x0, d.y1 - d.y0).x : 0))
+      .attr('y', (d) => (d.data.hero ? heroCrop(d, d.x1 - d.x0, d.y1 - d.y0).y : 0))
+      .attr('width', (d) =>
+        d.data.hero ? heroCrop(d, d.x1 - d.x0, d.y1 - d.y0).width : d.x1 - d.x0,
+      )
+      .attr('height', (d) =>
+        d.data.hero ? heroCrop(d, d.x1 - d.x0, d.y1 - d.y0).height : d.y1 - d.y0,
+      )
       .attr('preserveAspectRatio', 'xMidYMid slice')
     const titlePresentation = data.settings?.projectTitle
     const heroDimColor = /^#[0-9a-f]{6}$/i.test(titlePresentation?.dimColor || '')
@@ -187,7 +202,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .attr('clip-path', (d) => `url(#clip-${d.data.id})`)
       .style('fill', heroDimColor)
       .style('fill-opacity', 0)
-    // Preserve overlay stacking: category labels above projects above gallery images.
+    // Preserve overlay stacking: discipline labels above projects above gallery images.
     cells.sort((a, b) => b.depth - a.depth)
 
     function zoom(
@@ -198,7 +213,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
     ) {
       if (disposed) return
       const isProject = node.data.kind === 'project'
-      projectMode = isProject
       if (isProject) {
         const projectIndex = projectNodes.indexOf(node)
         setStoryNeighbors({
@@ -249,9 +263,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .transition(transition)
         .attr('width', innerW)
         .attr('height', innerH)
-        .style('fill-opacity', (d) =>
-          isProject && d.parent === node ? heroDimOpacity : 0,
-        )
+        .style('fill-opacity', (d) => (isProject && d.parent === node ? heroDimOpacity : 0))
       cells
         .select('text')
         .transition(transition)
@@ -276,6 +288,12 @@ export default function Treemap({ data }: { data: TreemapData }) {
               : imageFor(d.data, innerW(d), innerH(d))
             : d.data.sizes?.thumbnail?.url || d.data.image || null,
         )
+        .attr('preserveAspectRatio', 'xMidYMid slice')
+        .transition(transition)
+        .attr('x', (d) => (d.data.hero ? heroCrop(d, innerW(d), innerH(d)).x : 0))
+        .attr('y', (d) => (d.data.hero ? heroCrop(d, innerW(d), innerH(d)).y : 0))
+        .attr('width', (d) => (d.data.hero ? heroCrop(d, innerW(d), innerH(d)).width : innerW(d)))
+        .attr('height', (d) => (d.data.hero ? heroCrop(d, innerW(d), innerH(d)).height : innerH(d)))
       if (isProject && !preserveStory) {
         const revealStory = () => {
           container!.scrollTop = 0
@@ -310,10 +328,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       const stepDuration = duration || 0
 
       steps.forEach((step, index) => {
-        schedule(
-          () => zoom(step, step === target, false, stepDuration),
-          index * stepDuration,
-        )
+        schedule(() => zoom(step, step === target, false, stepDuration), index * stepDuration)
       })
     }
     navigateProjectRef.current = animateToProject
@@ -373,38 +388,12 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .find((n) => n.data.kind !== 'image' && pathFor(n) === window.location.pathname) || root,
     )
 
-    // Keep autoplay opt-in settings, but cancel every scheduled step on activity/unmount.
-    const featured = root.descendants().filter((n) => n.data.featured && n.data.kind === 'image')
-    let autoplayTimer: ReturnType<typeof setTimeout> | undefined
-    let index = 0
-    function play() {
-      if (projectMode) return
-      const node = featured[index++ % featured.length]
-      if (!node) return
-      zoom(node, false)
-      autoplayTimer = schedule(() => {
-        if (node.parent) zoom(node.parent, false)
-        autoplayTimer = schedule(play, data.settings?.autoplayInterval ?? 3000)
-      }, data.settings?.autoplayInterval ?? 3000)
-    }
-    function resetIdle() {
-      clearTimer(autoplayTimer)
-      if (data.settings?.enableAutoplay && featured.length && duration && !document.hidden) {
-        autoplayTimer = schedule(play, data.settings.autoplayDelay)
-      }
-    }
-    const activity = ['pointermove', 'pointerdown', 'keydown', 'scroll'] as const
-    for (const event of activity) window.addEventListener(event, resetIdle, { passive: true })
-    document.addEventListener('visibilitychange', resetIdle)
-    resetIdle()
     return () => {
       disposed = true
       observer.disconnect()
       for (const timer of timers) clearTimeout(timer)
       window.removeEventListener('breadcrumb-click', onBreadcrumb)
       window.removeEventListener('popstate', onPopState)
-      for (const event of activity) window.removeEventListener(event, resetIdle)
-      document.removeEventListener('visibilitychange', resetIdle)
       svg.interrupt()
       svg.selectAll('*').interrupt().remove()
       lightbox.destroy()
@@ -436,6 +425,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
             titleSettings={data.settings?.projectTitle}
             storyTextSettings={data.settings?.storyText}
             descriptionSettings={data.settings?.projectDescription}
+            projectGuidePath={data.settings?.projectGuidePath}
             previousProject={storyNeighbors.previous}
             nextProject={storyNeighbors.next}
             onNavigateProject={(project) => navigateProjectRef.current(project)}

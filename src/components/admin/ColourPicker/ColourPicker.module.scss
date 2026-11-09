@@ -68,18 +68,61 @@
   border-top: 1px solid var(--theme-elevation-150);
 }
 
-.preview {
-  width: 100%;
-  min-height: 150px;
+.previews {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   margin-bottom: var(--base);
+}
+
+.preview {
+  min-width: 0;
+  margin: 0;
+  background-color: var(--theme-elevation-50);
+  background-image:
+    linear-gradient(45deg, var(--theme-elevation-150) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--theme-elevation-150) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--theme-elevation-150) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--theme-elevation-150) 75%);
+  background-position:
+    0 0,
+    0 6px,
+    6px -6px,
+    -6px 0;
+  background-size: 12px 12px;
   border: 1px solid var(--theme-elevation-300);
+
+  figcaption {
+    padding: 5px 7px;
+    background: var(--theme-elevation-0);
+    color: var(--theme-elevation-700);
+    font-size: 11px;
+  }
+}
+
+.previewColour {
+  height: 72px;
   transition: background-color 80ms linear;
 }
 
 .sliders {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: calc(var(--base) * 1.5);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--base);
+}
+
+.sliderGroup {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: 5px;
+    color: var(--theme-elevation-700);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
 }
 
 .sliderRow {
@@ -91,22 +134,8 @@
   font-size: 13px;
 }
 
-.sliderRow:nth-child(4) {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.sliderRow:nth-child(5) {
-  grid-column: 2;
-  grid-row: 2;
-}
-
-.sliderRow:nth-child(6) {
-  grid-column: 2;
-  grid-row: 3;
-}
-
-.sliderRow input[type='range'] {
+.sliderRow input[type='range'],
+.alphaRow input[type='range'] {
   width: 100%;
   height: 12px;
   margin: 0;
@@ -116,7 +145,8 @@
   cursor: pointer;
 }
 
-.sliderRow input[type='range']::-webkit-slider-thumb {
+.sliderRow input[type='range']::-webkit-slider-thumb,
+.alphaRow input[type='range']::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   appearance: none;
@@ -126,7 +156,8 @@
   box-shadow: 0 0 0 1px var(--theme-elevation-800);
 }
 
-.sliderRow input[type='range']::-moz-range-thumb {
+.sliderRow input[type='range']::-moz-range-thumb,
+.alphaRow input[type='range']::-moz-range-thumb {
   width: 13px;
   height: 13px;
   border: 2px solid var(--theme-elevation-0);
@@ -135,9 +166,19 @@
   box-shadow: 0 0 0 1px var(--theme-elevation-800);
 }
 
-.sliderRow output {
+.sliderRow output,
+.alphaRow output {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.alphaRow {
+  display: grid;
+  grid-template-columns: 42px minmax(100px, 1fr) 40px;
+  align-items: center;
+  gap: 8px;
+  margin-top: calc(var(--base) * 0.75);
+  font-size: 13px;
 }
 
 .footer {
@@ -148,19 +189,27 @@
   margin-top: var(--base);
 }
 
-.hexField {
+.cssField,
+.formatField {
   display: grid;
   gap: 6px;
   color: var(--theme-elevation-800);
   font-size: 13px;
 }
 
-.hexInputWrap {
-  display: flex;
-  align-items: center;
-  width: 112px;
+.cssField {
+  flex: 1 1 300px;
+}
+
+.formatField {
+  flex: 0 0 150px;
+}
+
+.cssField input,
+.formatField select {
+  width: 100%;
   height: 36px;
-  padding-left: 10px;
+  padding: 0 10px;
   border: 1px solid var(--theme-elevation-300);
   border-radius: var(--style-radius-s);
   background: var(--theme-input-bg);
@@ -168,23 +217,13 @@
   font: inherit;
 }
 
-.hexInputWrap input {
-  width: 82px;
-  height: 100%;
-  padding: 0 10px 0 2px;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-transform: uppercase;
-}
-
-.hexInputWrap:has(input[aria-invalid='true']) {
+.cssField input[aria-invalid='true'] {
   border-color: var(--theme-error-500);
 }
 
-.hexInputWrap:focus-within {
+.cssField input:focus,
+.formatField select:focus {
+  outline: 0;
   border-color: var(--theme-elevation-800);
 }
 
@@ -217,14 +256,13 @@
     grid-template-columns: 1fr;
   }
 
-  .sliderRow:nth-child(n) {
-    grid-column: 1;
-    grid-row: auto;
-  }
-
   .footer {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .formatField {
+    flex-basis: auto;
   }
 
   .actions {

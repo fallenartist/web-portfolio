@@ -1,5 +1,31 @@
 import type { CollectionConfig } from 'payload'
+import { lexicalEditor, TextStateFeature } from '@payloadcms/richtext-lexical'
 import { validateVideoURL } from '@/lib/video-embed'
+import { stripProjectCreateID } from '@/collections/hooks/strip-project-create-id'
+import {
+  ALL_SMALL_CAPS_FONT_FEATURES,
+  SMALL_CAPS_LETTER_SPACING,
+} from '@/lib/small-caps'
+
+const projectTextEditor = lexicalEditor({
+  features: ({ rootFeatures }) => [
+    ...rootFeatures,
+    TextStateFeature({
+      state: {
+        fontFeatures: {
+          allSmallCaps: {
+            label: 'All Small Caps',
+            css: {
+              'font-feature-settings': ALL_SMALL_CAPS_FONT_FEATURES,
+              'font-variant-caps': 'all-small-caps',
+              'letter-spacing': SMALL_CAPS_LETTER_SPACING,
+            },
+          },
+        },
+      },
+    }),
+  ],
+})
 
 const videoOptions = [
   {
@@ -20,14 +46,18 @@ export const Projects: CollectionConfig = {
   admin: {
     group: 'Content',
     useAsTitle: 'title',
-    defaultColumns: ['title', 'client', 'category', 'industry', 'priority', 'updatedAt'],
+    defaultColumns: ['title', 'client', 'discipline', 'industries', 'priority', 'updatedAt'],
   },
   access: { read: () => true },
+  hooks: {
+    beforeValidate: [stripProjectCreateID],
+  },
   fields: [
     { name: 'title', type: 'text', required: true, index: true },
     {
       name: 'description',
       type: 'richText',
+      editor: projectTextEditor,
       admin: { description: 'Shown below the hero, alongside the project title' },
     },
     {
@@ -110,7 +140,8 @@ export const Projects: CollectionConfig = {
           ...field,
           admin: {
             ...field.admin,
-            condition: (_: unknown, siblingData: { type?: string }) => siblingData?.type === 'video',
+            condition: (_: unknown, siblingData: { type?: string }) =>
+              siblingData?.type === 'video',
           },
         })),
       ],
@@ -131,6 +162,22 @@ export const Projects: CollectionConfig = {
           fields: [
             { name: 'image', type: 'upload', relationTo: 'media', required: true },
             { name: 'caption', type: 'text' },
+            {
+              name: 'presentation',
+              label: 'Presentation',
+              type: 'select',
+              defaultValue: 'auto',
+              required: true,
+              options: [
+                { label: 'Auto', value: 'auto' },
+                { label: 'Single centred', value: 'center' },
+                { label: 'Single full width', value: 'full' },
+              ],
+              admin: {
+                description:
+                  'Auto pairs adjacent portrait images. Choose a single layout to keep this image separate.',
+              },
+            },
           ],
         },
         {
@@ -163,7 +210,7 @@ export const Projects: CollectionConfig = {
           slug: 'text',
           labels: { singular: 'Text', plural: 'Text blocks' },
           fields: [
-            { name: 'content', type: 'richText', required: true },
+            { name: 'content', type: 'richText', required: true, editor: projectTextEditor },
             {
               name: 'quote',
               label: 'Display as quote',
@@ -210,20 +257,30 @@ export const Projects: CollectionConfig = {
       admin: { position: 'sidebar' },
     },
     {
-      name: 'category',
+      name: 'agency',
       type: 'relationship',
-      relationTo: 'categories',
+      relationTo: 'agencies',
+      admin: {
+        position: 'sidebar',
+        description: 'Studio or agency through which the project was commissioned',
+      },
+    },
+    {
+      name: 'discipline',
+      type: 'relationship',
+      relationTo: 'disciplines',
       required: true,
       admin: { position: 'sidebar' },
     },
     {
-      name: 'industry',
-      label: 'Industry',
+      name: 'industries',
+      label: 'Industries',
       type: 'relationship',
       relationTo: 'industries',
+      hasMany: true,
       admin: {
         position: 'sidebar',
-        description: 'Client industry; used for portfolio filtering and menu links',
+        description: 'Client industries; used for portfolio filtering and menu links',
       },
     },
     {
@@ -237,9 +294,13 @@ export const Projects: CollectionConfig = {
     },
     {
       name: 'tags',
-      type: 'array',
-      fields: [{ name: 'tag', type: 'text' }],
-      admin: { position: 'sidebar' },
+      type: 'relationship',
+      relationTo: 'tags',
+      hasMany: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Reusable terms describing the project',
+      },
     },
   ],
 }

@@ -2,15 +2,21 @@
 
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import styles from './Header.module.scss'
 import { usePathname } from 'next/navigation'
 import type { Menu } from '@/payload-types'
 import type { BreadcrumbItem } from '@/types'
-import { getInternalLinkHref } from '@/lib/menu-links'
+import {
+  getMenuItemHref,
+  getMenuItemLabel,
+  getProjectsOverviewPath,
+  type MenuEntry,
+} from '@/lib/menu-links'
 
 interface HeaderProps {
   legacyRootSlug?: string
+  projectsOverviewSlug?: string
+  projectGuideTitle?: string
   title?: string
   menu?: Menu | null
   breadcrumb?: BreadcrumbItem[]
@@ -24,6 +30,8 @@ export default function Header({
   title = 'Design Portfolio',
   menu = null,
   legacyRootSlug,
+  projectsOverviewSlug,
+  projectGuideTitle = 'Projects',
   breadcrumb = [],
   rootLogo,
   upLogo,
@@ -38,6 +46,41 @@ export default function Header({
   const menuOpen = openPath === pathname
   const atRoot = breadcrumb.length <= 1
   const logo = atRoot ? rootLogo : upLogo
+  const logoStyle = logo
+    ? {
+        maskImage: `url(${JSON.stringify(logo)})`,
+        WebkitMaskImage: `url(${JSON.stringify(logo)})`,
+      }
+    : undefined
+  const projectsOverviewPath = getProjectsOverviewPath(projectsOverviewSlug)
+  const menuEntries = menu?.items?.flatMap((item) => [item, ...(item.subItems || [])]) || []
+  const hasProjectsLink = menuEntries.some(
+    (item) => getMenuItemHref(item, legacyRootSlug, projectsOverviewSlug) === projectsOverviewPath,
+  )
+
+  const renderMenuEntry = (item: MenuEntry) => {
+    if (item.type === 'group') return <span className={styles.menuLabel}>{item.title}</span>
+    if (item.type === 'internal') {
+      return (
+        <Link
+          href={getMenuItemHref(item, legacyRootSlug, projectsOverviewSlug)}
+          onClick={() => setOpenPath(null)}
+        >
+          {getMenuItemLabel(item)}
+        </Link>
+      )
+    }
+    return (
+      <a
+        href={item.externalLink || '#'}
+        target={item.openInNewTab ? '_blank' : undefined}
+        rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
+        onClick={() => setOpenPath(null)}
+      >
+        {item.title}
+      </a>
+    )
+  }
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -90,7 +133,7 @@ export default function Header({
         onClick={onLogoClick}
       >
         {logo ? (
-          <Image src={logo} width={40} height={40} alt="" unoptimized />
+          <span className={styles.customLogo} style={logoStyle} aria-hidden="true" />
         ) : atRoot ? (
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img">
             <path
@@ -174,30 +217,35 @@ export default function Header({
         {menu && menu.items && menu.items.length > 0 ? (
           <ul>
             {menu.items.map((item, index: number) => (
-              <li key={`menu-item-${index}`}>
-                {item.type === 'internal' && item.internalLink ? (
-                  <Link
-                    href={getInternalLinkHref(item.internalLink, legacyRootSlug)}
-                    onClick={() => setOpenPath(null)}
-                  >
-                    {item.title}
-                  </Link>
-                ) : (
-                  <a
-                    href={item.externalLink || '#'}
-                    target={item.openInNewTab ? '_blank' : undefined}
-                    rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
-                    onClick={() => setOpenPath(null)}
-                  >
-                    {item.title}
-                  </a>
+              <li className={styles.menuItem} key={item.id || `menu-item-${index}`}>
+                {renderMenuEntry(item)}
+                {item.subItems && item.subItems.length > 0 && (
+                  <ul className={styles.submenu}>
+                    {item.subItems.map((subItem, subIndex) => (
+                      <li key={subItem.id || `submenu-item-${index}-${subIndex}`}>
+                        {renderMenuEntry(subItem)}
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </li>
             ))}
+            {!hasProjectsLink && (
+              <li>
+                <Link href={projectsOverviewPath} onClick={() => setOpenPath(null)}>
+                  {projectGuideTitle}
+                </Link>
+              </li>
+            )}
           </ul>
         ) : (
-          // If no menu items, show empty nav
-          <ul></ul>
+          <ul>
+            <li>
+              <Link href={projectsOverviewPath} onClick={() => setOpenPath(null)}>
+                {projectGuideTitle}
+              </Link>
+            </li>
+          </ul>
         )}
       </nav>
     </header>

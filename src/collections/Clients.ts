@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { validateExternalURL } from '@/lib/external-url'
 
 export const Clients: CollectionConfig = {
   slug: 'clients',
@@ -9,7 +10,7 @@ export const Clients: CollectionConfig = {
   admin: {
     group: 'Content',
     useAsTitle: 'title',
-    defaultColumns: ['title', 'updatedAt'],
+    defaultColumns: ['title', 'url', 'updatedAt'],
   },
   access: {
     read: () => true,
@@ -42,6 +43,16 @@ export const Clients: CollectionConfig = {
             return data?.slug
           },
         ],
+      },
+    },
+    {
+      name: 'url',
+      label: 'Website URL',
+      type: 'text',
+      validate: validateExternalURL,
+      admin: {
+        description: 'Optional client website, including https://',
+        position: 'sidebar',
       },
     },
   ],

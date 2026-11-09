@@ -40,7 +40,7 @@ Automatic development schema pushing is disabled. Use reviewed migrations in `sr
 
 The local database was backed up to `/private/tmp/portfolio-pre-upgrade-20260924/database.dump` before this upgrade. All original collection/global record counts were checked after migration. Keep a durable copy of this backup before relying on it for rollback; `/private/tmp` is temporary storage.
 
-Frontend content is rendered dynamically, so CMS edits appear on the next request and builds do not connect to PostgreSQL. Database failures remain server errors rather than being disguised as missing projects. Full category/project paths are validated. The old `/my-route` sample now returns 404 and never reads users.
+Frontend content is rendered dynamically, so CMS edits appear on the next request and builds do not connect to PostgreSQL. Database failures remain server errors rather than being disguised as missing projects. Full discipline/project paths are validated. The old `/my-route` sample now returns 404 and never reads users.
 
 `pnpm build` emits standalone output for the Dockerfile. `pnpm start` runs that output locally, links the existing static/media assets, and reads `.env`; set `PORT` to choose a port. The image needs `DATABASE_URI` and `PAYLOAD_SECRET` at runtime and a persistent `/app/public/media` volume. Run migrations separately before serving traffic. The repo has no production email adapter; configure one before relying on password-reset email delivery.
 

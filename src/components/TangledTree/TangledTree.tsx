@@ -199,9 +199,7 @@ export default function TangledTree({
     const root = layout.nodes.find((node) => node.kind === 'root')
     if (!root) return 0
     const rootHeight = nodeSize + root.height
-    const labelTop = mobile
-      ? root.y - rootHeight / 2 - 38
-      : root.y - rootHeight / 2 - 17
+    const labelTop = mobile ? root.y - rootHeight / 2 - 38 : root.y - rootHeight / 2 - 17
     return Math.max(0, labelTop - (mobile ? 18 : 24))
   }, [layout.nodes, mobile, nodeSize])
   const diagramHeight = Math.max(1, layout.height - diagramTop)
@@ -399,8 +397,7 @@ export default function TangledTree({
     <section className={styles.page} aria-label={guideTitle?.trim() || 'Project guide'}>
       <header className={styles.header}>
         <p>
-          {guideInstruction?.trim() ||
-            'Select a node or connection to explore related projects.'}
+          {guideInstruction?.trim() || 'Select a node or connection to explore related projects.'}
         </p>
       </header>
 
@@ -410,155 +407,171 @@ export default function TangledTree({
         onClick={clearSelection}
         onMouseLeave={() => setActiveNode(null)}
       >
-        <svg
-          className={styles.canvas}
-          width={layout.width}
-          height={diagramHeight}
-          viewBox={`0 ${diagramTop} ${layout.width} ${diagramHeight}`}
-          role="img"
-          aria-label="Bundled connections between disciplines, projects, industries, clients, agencies and tags"
+        <div className={styles.stickyHeadingBackground} aria-hidden="true" />
+        <div
+          className={styles.diagram}
           style={{
+            width: layout.width,
+            height: diagramHeight,
             visibility: hasMeasuredContainer ? 'visible' : 'hidden',
-            width: `${layout.width}px`,
           }}
         >
-          <g className={styles.links} ref={linksRef} aria-hidden="true">
-            {layout.links.map((link) => (
-              <path
-                className={active && !active.linkIds.has(link.id) ? styles.mutedLink : undefined}
-                data-visible-link="true"
-                d={tangledLinkPath(link)}
-                key={link.id}
-                stroke={linkColor(link, displayColors)}
-              />
-            ))}
-          </g>
+          <svg
+            className={styles.canvas}
+            width={layout.width}
+            height={diagramHeight}
+            viewBox={`0 ${diagramTop} ${layout.width} ${diagramHeight}`}
+            role="img"
+            aria-label="Bundled connections between disciplines, projects, industries, clients, agencies and tags"
+            style={{
+              visibility: hasMeasuredContainer ? 'visible' : 'hidden',
+              width: `${layout.width}px`,
+            }}
+          >
+            <g className={styles.links} ref={linksRef} aria-hidden="true">
+              {layout.links.map((link) => (
+                <path
+                  className={active && !active.linkIds.has(link.id) ? styles.mutedLink : undefined}
+                  data-visible-link="true"
+                  d={tangledLinkPath(link)}
+                  key={link.id}
+                  stroke={linkColor(link, displayColors)}
+                />
+              ))}
+            </g>
 
-          <g className={styles.linkTargets}>
-            {layout.links.map((link) => (
-              <path
-                aria-label={`Select ${link.source.kind === 'project' ? link.source.title : link.target.title} relationship`}
-                d={tangledLinkPath(link)}
-                key={link.id}
-                onClick={(event) => handleLinkClick(event, link)}
-                onKeyDown={(event) => handleLinkKeyDown(event, link)}
-                onFocus={() => setActiveNode(link.projectId)}
-                onBlur={() => setActiveNode(null)}
-                onMouseEnter={() => setActiveNode(link.projectId)}
-                onMouseLeave={() => setActiveNode(null)}
-                role="button"
-                tabIndex={0}
-              />
-            ))}
-          </g>
-
-          <g className={styles.bandLabels} aria-hidden="true">
-            {primaryHeadings.map((node) => (
-              <text x={node.x + nodeSize} y={node.y - node.height / 2 - 36} key={node.kind}>
-                {KIND_LABELS[node.kind]}
-              </text>
-            ))}
-          </g>
-
-          <g className={styles.bandLabels} aria-hidden="true">
-            {bandStarts.map((node) => (
-              <text
-                key={node.kind}
-                x={node.x + nodeSize}
-                y={node.y - node.height / 2 - 36}
-              >
-                {KIND_LABELS[node.kind]}
-              </text>
-            ))}
-          </g>
-
-          <g className={styles.nodes}>
-            {layout.nodes.map((node) => {
-              const muted = Boolean(active && !active.nodeIds.has(node.id))
-              const relationshipSelected = Boolean(selectedNodeId && active?.nodeIds.has(node.id))
-              const selected = selectedNodeId === node.id
-              const showView = Boolean(
-                selectedNodeId &&
-                relationshipSelected &&
-                (node.kind === 'root' || node.kind === 'discipline' || node.kind === 'project'),
-              )
-              const nodeHeight = nodeSize + node.height
-              const targetHeight = mobile
-                ? Math.max(44, nodeHeight + 8)
-                : Math.max(28, nodeHeight + 8)
-              const labelHeight = mobile ? 38 : 24
-              const labelWidth = Math.max(28, node.columnWidth - nodeSize - 8)
-              const labelX = node.x + nodeSize / 2 + 5
-              const labelY = mobile
-                ? node.y - nodeHeight / 2 - labelHeight - 4
-                : node.y - nodeHeight / 2 - 17
-              return (
-                <g
-                  aria-label={`Select ${KIND_BREADCRUMBS[node.kind]} ${node.title}`}
-                  aria-pressed={selected}
-                  className={`${styles.node} ${node.kind === 'project' ? styles.projectNode : ''} ${muted ? styles.mutedNode : ''}`}
-                  key={node.id}
-                  onClick={(event) => handleNodeClick(event, node)}
-                  onKeyDown={(event) => handleNodeKeyDown(event, node)}
-                  onFocus={() => setActiveNode(node.id)}
+            <g className={styles.linkTargets}>
+              {layout.links.map((link) => (
+                <path
+                  aria-label={`Select ${link.source.kind === 'project' ? link.source.title : link.target.title} relationship`}
+                  d={tangledLinkPath(link)}
+                  key={link.id}
+                  onClick={(event) => handleLinkClick(event, link)}
+                  onKeyDown={(event) => handleLinkKeyDown(event, link)}
+                  onFocus={() => setActiveNode(link.projectId)}
                   onBlur={() => setActiveNode(null)}
-                  onMouseEnter={() => setActiveNode(node.id)}
+                  onMouseEnter={() => setActiveNode(link.projectId)}
                   onMouseLeave={() => setActiveNode(null)}
                   role="button"
                   tabIndex={0}
-                >
-                  <title>{`${KIND_BREADCRUMBS[node.kind]}: ${node.title}`}</title>
-                  <rect
-                    className={styles.nodeOuter}
-                    fill={selected ? '#111111' : (displayColors.get(node.id) ?? node.color)}
-                    height={nodeHeight}
-                    rx={nodeSize / 2}
-                    width={nodeSize}
-                    x={node.x - nodeSize / 2}
-                    y={node.y - nodeHeight / 2}
-                  />
-                  <rect
-                    className={styles.nodeInner}
-                    height={Math.max(2, nodeHeight - 4)}
-                    rx={(nodeSize - 4) / 2}
-                    width={nodeSize - 4}
-                    x={node.x - (nodeSize - 4) / 2}
-                    y={node.y - nodeHeight / 2 + 2}
-                    style={{ fill: selected ? '#111111' : '#ffffff' }}
-                  />
-                  <rect
-                    className={styles.hitArea}
-                    height={targetHeight}
-                    width={Math.max(44, node.columnWidth - 4)}
-                    x={node.x - 22}
-                    y={node.y - targetHeight / 2}
-                  />
-                  <foreignObject
-                    className={`${styles.nodeLabel} ${showView ? styles.selectedLabel : ''}`}
-                    height={labelHeight}
-                    width={labelWidth}
-                    x={labelX}
-                    y={labelY}
+                />
+              ))}
+            </g>
+
+            <g className={styles.nodes}>
+              {layout.nodes.map((node) => {
+                const muted = Boolean(active && !active.nodeIds.has(node.id))
+                const relationshipSelected = Boolean(selectedNodeId && active?.nodeIds.has(node.id))
+                const selected = selectedNodeId === node.id
+                const showView = Boolean(
+                  selectedNodeId &&
+                  relationshipSelected &&
+                  (node.kind === 'root' || node.kind === 'discipline' || node.kind === 'project'),
+                )
+                const nodeHeight = nodeSize + node.height
+                const targetHeight = mobile
+                  ? Math.max(44, nodeHeight + 8)
+                  : Math.max(28, nodeHeight + 8)
+                const labelHeight = mobile ? 38 : 24
+                const labelWidth = Math.max(28, node.columnWidth - nodeSize - 8)
+                const labelX = node.x + nodeSize / 2 + 5
+                const labelY = mobile
+                  ? node.y - nodeHeight / 2 - labelHeight - 4
+                  : node.y - nodeHeight / 2 - 17
+                return (
+                  <g
+                    aria-label={`Select ${KIND_BREADCRUMBS[node.kind]} ${node.title}`}
+                    aria-pressed={selected}
+                    className={`${styles.node} ${node.kind === 'project' ? styles.projectNode : ''} ${muted ? styles.mutedNode : ''}`}
+                    key={node.id}
+                    onClick={(event) => handleNodeClick(event, node)}
+                    onKeyDown={(event) => handleNodeKeyDown(event, node)}
+                    onFocus={() => setActiveNode(node.id)}
+                    onBlur={() => setActiveNode(null)}
+                    onMouseEnter={() => setActiveNode(node.id)}
+                    onMouseLeave={() => setActiveNode(null)}
+                    role="button"
+                    tabIndex={0}
                   >
-                    <div className={styles.labelRow}>
-                      <span className={styles.labelText}>{node.title}</span>
-                      {showView && node.href.startsWith('/') ? (
-                        <a
-                          aria-label={`View ${node.title}`}
-                          className={styles.viewLink}
-                          href={node.href}
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          View
-                        </a>
-                      ) : null}
-                    </div>
-                  </foreignObject>
-                </g>
+                    <title>{`${KIND_BREADCRUMBS[node.kind]}: ${node.title}`}</title>
+                    <rect
+                      className={styles.nodeOuter}
+                      fill={selected ? '#111111' : (displayColors.get(node.id) ?? node.color)}
+                      height={nodeHeight}
+                      rx={nodeSize / 2}
+                      width={nodeSize}
+                      x={node.x - nodeSize / 2}
+                      y={node.y - nodeHeight / 2}
+                    />
+                    <rect
+                      className={styles.nodeInner}
+                      height={Math.max(2, nodeHeight - 4)}
+                      rx={(nodeSize - 4) / 2}
+                      width={nodeSize - 4}
+                      x={node.x - (nodeSize - 4) / 2}
+                      y={node.y - nodeHeight / 2 + 2}
+                      style={{ fill: selected ? '#111111' : '#ffffff' }}
+                    />
+                    <rect
+                      className={styles.hitArea}
+                      height={targetHeight}
+                      width={Math.max(44, node.columnWidth - 4)}
+                      x={node.x - 22}
+                      y={node.y - targetHeight / 2}
+                    />
+                    <foreignObject
+                      className={`${styles.nodeLabel} ${showView ? styles.selectedLabel : ''}`}
+                      height={labelHeight}
+                      width={labelWidth}
+                      x={labelX}
+                      y={labelY}
+                    >
+                      <div className={styles.labelRow}>
+                        <span className={styles.labelText}>{node.title}</span>
+                        {showView && node.href.startsWith('/') ? (
+                          <a
+                            aria-label={`View ${node.title}`}
+                            className={styles.viewLink}
+                            href={node.href}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            View
+                          </a>
+                        ) : null}
+                      </div>
+                    </foreignObject>
+                  </g>
+                )
+              })}
+            </g>
+          </svg>
+          <div className={styles.headingOverlay} aria-hidden="true">
+            {[...primaryHeadings, ...bandStarts].map((node) => {
+              // Include the label's padding above the original SVG text baseline.
+              const top = node.y - node.height / 2 - 55 - diagramTop
+              const nextBand = bandStarts[bandStarts.indexOf(node) + 1]
+              const bottom =
+                METADATA_KINDS.includes(node.kind as MetadataKind) && nextBand
+                  ? nextBand.y - nextBand.height / 2 - 55 - diagramTop
+                  : diagramHeight
+
+              return (
+                <div
+                  className={styles.headingTrack}
+                  key={node.kind}
+                  style={{
+                    top,
+                    left: node.x + nodeSize - 10,
+                    width: node.columnWidth,
+                    height: bottom - top,
+                  }}
+                >
+                  <span className={styles.bandLabel}>{KIND_LABELS[node.kind]}</span>
+                </div>
               )
             })}
-          </g>
-        </svg>
+          </div>
+        </div>
       </div>
     </section>
   )

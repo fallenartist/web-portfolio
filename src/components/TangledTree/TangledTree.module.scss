@@ -39,6 +39,24 @@
   overscroll-behavior: contain;
 }
 
+.diagram {
+  position: relative;
+}
+
+.stickyHeadingBackground {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: calc(100% + var(--page-gutter));
+  height: 30px;
+  margin-bottom: -30px;
+  margin-left: calc(-1 * var(--page-gutter));
+  background: rgb(255 255 255 / 85%);
+  backdrop-filter: blur(5px);
+  pointer-events: none;
+}
+
 .canvas {
   display: block;
   max-width: none;
@@ -70,12 +88,28 @@
   }
 }
 
-.bandLabels {
-  fill: #222;
+.headingOverlay {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+}
+
+.headingTrack {
+  position: absolute;
+}
+
+.bandLabel {
+  position: sticky;
+  top: 0;
+  display: block;
+  width: max-content;
+  padding: 8px 10px;
+  color: rgb(34 34 34 / 60%);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.09em;
-  opacity: 0.48;
+  line-height: 14px;
   text-transform: uppercase;
 }
 

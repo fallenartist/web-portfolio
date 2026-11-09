@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { useLocale } from '@/components/LocaleProvider'
+import { trackEvent, trackPageView } from '@/lib/analytics'
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import type { TangledNodeKind, TangledTreeData, TangledTreeNode } from '@/lib/tangled-tree-data'
 import {
@@ -100,6 +101,10 @@ export default function TangledTree({
   const [hasMeasuredContainer, setHasMeasuredContainer] = useState(false)
   const [activeNode, setActiveNode] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initialSelectedId ?? null)
+
+  useEffect(() => {
+    trackPageView(overviewPath, guideTitle?.trim() || text.guide, 'project-map')
+  }, [guideTitle, overviewPath, text.guide])
 
   useEffect(() => {
     const element = containerRef.current
@@ -331,11 +336,18 @@ export default function TangledTree({
     [layout.nodes],
   )
 
-  const selectNode = (node: TangledTreeNode) => {
+  const selectNode = (node: TangledTreeNode, source = 'node') => {
     setSelectedNodeId(node.id)
     setActiveNode(null)
     const nextPath = nodePermalink(overviewPath, node)
-    if (window.location.pathname !== nextPath) window.history.pushState(null, '', nextPath)
+    if (window.location.pathname !== nextPath) {
+      trackEvent('map_node_selected', {
+        node_kind: node.kind,
+        node_slug: node.slug,
+        selection_source: source,
+      })
+      window.history.pushState(null, '', nextPath)
+    }
   }
 
   const clearSelection = () => {
@@ -361,14 +373,14 @@ export default function TangledTree({
     event.preventDefault()
     event.stopPropagation()
     const project = nodesById.get(link.projectId)
-    if (project) selectNode(project)
+    if (project) selectNode(project, 'connection')
   }
 
   const handleLinkKeyDown = (event: React.KeyboardEvent, link: TangledLayoutLink) => {
     if (event.key !== 'Enter' && event.key !== ' ') return
     event.preventDefault()
     const project = nodesById.get(link.projectId)
-    if (project) selectNode(project)
+    if (project) selectNode(project, 'connection')
   }
 
   if (!data.levels[1].length) {

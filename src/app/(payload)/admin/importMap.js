@@ -25,6 +25,7 @@ import { InlineToolbarFeatureClient as InlineToolbarFeatureClient_e70f5e05f09f93
 import { ColourPickerCell as ColourPickerCell_7c927c8aff1efa6040fdfd35c947e8fe } from '../../../components/admin/ColourPicker/ColourPickerCell'
 import { ColourPickerField as ColourPickerField_265080479015e0f02c9ae3dc332c4354 } from '../../../components/admin/ColourPicker/ColourPickerField'
 import { MediaUpload as MediaUpload_e819bc1f9811a14cc657d05c5153b703 } from '../../../components/admin/Media/MediaUpload'
+import { default as default_4cde239469e5949c78af5eda0a10841b } from '../../../components/admin/Analytics/AnalyticsWidget'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -56,5 +57,6 @@ export const importMap = {
   "/components/admin/ColourPicker/ColourPickerCell#ColourPickerCell": ColourPickerCell_7c927c8aff1efa6040fdfd35c947e8fe,
   "/components/admin/ColourPicker/ColourPickerField#ColourPickerField": ColourPickerField_265080479015e0f02c9ae3dc332c4354,
   "/components/admin/Media/MediaUpload#MediaUpload": MediaUpload_e819bc1f9811a14cc657d05c5153b703,
+  "/components/admin/Analytics/AnalyticsWidget#default": default_4cde239469e5949c78af5eda0a10841b,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

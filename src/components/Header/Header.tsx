@@ -6,6 +6,7 @@ import styles from './Header.module.scss'
 import { usePathname } from 'next/navigation'
 import { useLocale } from '@/components/LocaleProvider'
 import { languageSwitchURL } from '@/lib/locale'
+import { trackEvent } from '@/lib/analytics'
 import type { Menu } from '@/payload-types'
 import type { BreadcrumbItem } from '@/types'
 import {
@@ -199,9 +200,11 @@ export default function Header({
               lang={language}
               aria-label={language === 'pl' ? 'Polski' : 'English'}
               aria-pressed={locale === language}
-              onClick={() =>
+              onClick={() => {
+                if (locale !== language)
+                  trackEvent('language_changed', { from_language: locale, to_language: language })
                 window.location.assign(languageSwitchURL(window.location.href, language).href)
-              }
+              }}
             >
               {language.toUpperCase()}
             </button>

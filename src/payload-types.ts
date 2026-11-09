@@ -111,6 +111,7 @@ export interface Config {
   };
   locale: 'en' | 'pl';
   widgets: {
+    'website-activity': WebsiteActivityWidget;
     collections: CollectionsWidget;
   };
   user: User;
@@ -1077,6 +1078,16 @@ export interface AppearanceSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "website-activity_widget".
+ */
+export interface WebsiteActivityWidget {
+  data?: {
+    period?: ('7' | '30' | '90') | null;
+  };
+  width: 'full';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

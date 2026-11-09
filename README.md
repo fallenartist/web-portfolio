@@ -25,6 +25,31 @@ Apply `20261109_160000_language_selection` before running this code against an e
 
 `node --env-file=.env scripts/verify-localization.mjs /path/to/pre-migration.dump` tests preservation, Payload fallback, independent translation updates and rollback on a disposable copy of a local database backup. It never migrates the source database. The backup argument can be omitted if the configured local database has not yet been migrated.
 
+## Analytics
+
+Website analytics use PostHog. The frontend captures cookieless page views and explicit events; the Payload Dashboard displays a native **Website activity** widget above the collection cards. Reporting stays behind admin authentication, and the personal API key is only used on the server. The open Dashboard refreshes automatically every five minutes while visible and resumes when you return to the tab. Successful summaries are cached for five minutes; expired requests await fresh data. Available periods are 7, 30 and 90 days. Queries have a 30-second timeout with separate connection/timeout messages. Refresh/Retry allows manual recovery; a failed refresh retains the last successful report for the same period, with a visible warning and its original update time.
+
+To connect an account:
+
+1. Create a PostHog project in the EU region (or set `POSTHOG_REGION=us` for a US project).
+2. In PostHog **Settings → Project → Web analytics**, enable **Cookieless tracking**. The SDK uses `cookieless_mode: 'always'`; PostHog discards cookieless events unless this project setting is enabled. Visitor estimates reset daily and cannot identify returning visitors across days.
+3. Set runtime environment variables from `.env.example`: `POSTHOG_PROJECT_TOKEN` (the public project token), `POSTHOG_PROJECT_ID` (the numeric ID) and `POSTHOG_PERSONAL_API_KEY` (a personal key restricted to this project with **Query Read** permission). The private key must never use a `NEXT_PUBLIC_` prefix or be entered in public CMS content.
+4. Set `POSTHOG_ENABLED=true` when ready to collect events. The widget can read historical data while tracking is disabled. Restart the app after changing environment variables.
+5. Set product spending limits in PostHog billing before enabling tracking. Session replay, autocapture, performance capture, exceptions, heatmaps, surveys and feature flag requests are disabled in this integration. These can be introduced deliberately later; this code does not change billing or enforce account spending limits.
+6. If a previously saved Dashboard layout does not show the new widget, open **Dashboard → Edit Dashboard → Add → Website activity**, or reset the layout.
+
+The SDK is only loaded on public pages. Development, localhost and browsers with an admin authentication cookie are excluded. Local testing can be explicitly enabled using `POSTHOG_TRACK_DEVELOPMENT=true` and `POSTHOG_TRACK_LOCALHOST=true`; keep these off in normal use. Do Not Track is respected. Query strings and URL fragments are removed from captured URL properties; contact events record the method, not email addresses or phone numbers.
+
+Verify live capture in a private browser window so the admin-cookie exclusion does not apply. Local smoke checks can be run against a production preview with `node --env-file=.env --import tsx scripts/smoke-analytics.mjs http://127.0.0.1:3104`.
+
+Events: `$pageview`, `$pageleave`, `project_opened`, `map_node_selected`, `outbound_link_clicked`, `contact_clicked`, `video_started`, `video_progress`, `video_completed`, `video_left` and `language_changed`. Explicit events include the actual served language. Page views are emitted by the D3 navigation and map components rather than the SDK's History API autocapture, so resizing does not count another view and map selections do not inflate project-open counts. Page-view traffic sources use the external referrer hostname or Direct. The Dashboard uses UTC dates; the current period includes today's partial data.
+
+**Video engagement** appears below the project/source breakdowns, with the top 12 videos by starts. Vimeo player events confirm actual playback, including autoplay, rather than play-button clicks. A random in-memory viewing ID groups cumulative snapshots; resumes and loops retain the same viewing. The widget shows manual/autoplay starts, completions and completion rate, average percentage watched (unique coverage), and recorded early exits with their average playback position. Coverage merges watched intervals, excludes seeking and hidden-tab playback, and counts replayed sections once. Watch time includes replays, so it can exceed video duration. Completion requires reaching the end (or a loop boundary) with at least 90% coverage. Milestones fire once per viewing, with additional snapshots on pause/background and best-effort exits on navigation/pagehide. No per-second analytics events are sent. Ongoing viewings are represented by their latest received snapshot; exits can be lost if the browser terminates. Viewings must start in the selected UTC period. Earlier `video_played` button-click events are excluded; historical playback cannot be reconstructed. Only Vimeo IDs, project paths and labels are sent, never private embed hashes or full video URLs.
+
+Sessions, average session duration and bounce rate come from PostHog's native `sessions` table, for sessions containing at least one page view and starting in the selected period. Session duration is displayed in seconds, minutes or hours; bounce comparisons use percentage points. Page-leave tracking is enabled to record time on the final page without enabling general click autocapture or recordings. Older sessions captured before this addition may understate duration, and active sessions continue changing as events arrive. Missing session measurements display a dash rather than a misleading zero.
+
+API reference: [PostHog query API](https://posthog.com/docs/api/queries). Cookieless setup: [PostHog cookieless tracking](https://posthog.com/tutorials/cookieless-tracking).
+
 ## Validation
 
 - `pnpm lint`

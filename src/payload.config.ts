@@ -30,6 +30,33 @@ export default buildConfig({
     fallback: true,
   },
   admin: {
+    dashboard: {
+      widgets: [
+        {
+          slug: 'website-activity',
+          label: 'Website activity',
+          Component: '/components/admin/Analytics/AnalyticsWidget#default',
+          minWidth: 'full',
+          maxWidth: 'full',
+          fields: [
+            {
+              name: 'period',
+              type: 'select',
+              defaultValue: '30',
+              options: [
+                { label: 'Last 7 days', value: '7' },
+                { label: 'Last 30 days', value: '30' },
+                { label: 'Last 90 days', value: '90' },
+              ],
+            },
+          ],
+        },
+      ],
+      defaultLayout: [
+        { widgetSlug: 'website-activity', width: 'full' },
+        { widgetSlug: 'collections', width: 'full' },
+      ],
+    },
     user: Users.slug,
     autoRefresh: process.env.NODE_ENV === 'development',
     importMap: {

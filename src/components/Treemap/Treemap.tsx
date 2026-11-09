@@ -8,6 +8,7 @@ import { coverMediaRect, hasOriginalAspectRatio } from '@/lib/media-image'
 import { useLocale } from '@/components/LocaleProvider'
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import ProjectStory from '@/components/ProjectStory/ProjectStory'
+import { trackPageView } from '@/lib/analytics'
 import type { LightboxImage, TreemapData, TreemapNode } from '@/types'
 import styles from './Treemap.module.scss'
 
@@ -244,6 +245,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
           .map((n) => ({ data: { title: n.data.title }, path: pathFor(n) })),
       )
       document.title = `${node.data.title} — ${data.settings?.siteTitle || text.portfolio}`
+      trackPageView(pathFor(node), node.data.title, node.data.kind, node.data.slug)
       document
         .querySelector('meta[name="description"]')
         ?.setAttribute('content', node.data.excerpt || node.data.title)

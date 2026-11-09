@@ -2,8 +2,9 @@
 
 import Image from 'next/image'
 import { useLocale } from '@/components/LocaleProvider'
+import { useVideoAnalytics } from '@/components/Analytics/useVideoAnalytics'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import type {
   ProjectHero,
   ProjectMetadata,
@@ -221,7 +222,13 @@ function HeroVideo({
   const [started, setStarted] = useState(hero.autoplay)
   const [loaded, setLoaded] = useState(false)
   const [fit, setFit] = useState(hero.fit)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const iframeRef = useVideoAnalytics({
+    url: hero.url,
+    enabled: started,
+    autoplay: hero.autoplay,
+    placement: 'hero',
+    label: `${title} — Hero`,
+  })
   const cover = imageSource({
     image: hero.cover,
     width: hero.coverWidth,
@@ -268,7 +275,7 @@ function HeroVideo({
     return () => {
       active = false
     }
-  }, [started, videoURL])
+  }, [started, videoURL, iframeRef])
 
   return (
     <figure className={styles.hero} data-video-fit={fit} style={heroStyle}>
@@ -300,7 +307,9 @@ function HeroVideo({
         <button
           className={styles.heroPlay}
           type="button"
-          onClick={() => setStarted(true)}
+          onClick={() => {
+            setStarted(true)
+          }}
           aria-label={`${text.play}: ${title}`}
         >
           <span className={styles.playButton} aria-hidden="true" />
@@ -336,9 +345,25 @@ function HeroVideo({
   )
 }
 
-function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 'video' }> }) {
+function StoryVideo({
+  block,
+  title,
+  index,
+}: {
+  block: Extract<ProjectStoryBlock, { blockType: 'video' }>
+  title: string
+  index: number
+}) {
   const { text } = useLocale()
   const [started, setStarted] = useState(block.autoplay || !block.poster)
+  const iframeRef = useVideoAnalytics({
+    url: block.url,
+    enabled: started,
+    autoplay: block.autoplay,
+    placement: 'story',
+    label: `${title} — ${block.caption || `Video ${index + 1}`}`,
+    blockID: block.id,
+  })
   const poster = block.poster
     ? imageSource({
         image: block.poster,
@@ -357,6 +382,7 @@ function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 
       <div className={styles.videoFrame} style={frameStyle}>
         {started ? (
           <iframe
+            ref={iframeRef}
             src={block.url}
             title={block.caption || text.vimeoVideo}
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -368,7 +394,9 @@ function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 
           <button
             className={styles.videoPoster}
             type="button"
-            onClick={() => setStarted(true)}
+            onClick={() => {
+              setStarted(true)
+            }}
             aria-label={`${text.play}: ${block.caption || text.video}`}
           >
             {poster && (
@@ -553,7 +581,7 @@ export default function ProjectStory({
       )}
 
       <div className={styles.content}>
-        {storyLayout.map((item) => {
+        {storyLayout.map((item, index) => {
           if (item.kind === 'portraitPair') {
             return (
               <div
@@ -577,7 +605,8 @@ export default function ProjectStory({
               </section>
             )
           }
-          if (block.blockType === 'video') return <StoryVideo block={block} key={block.id} />
+          if (block.blockType === 'video')
+            return <StoryVideo block={block} title={project.title} index={index} key={block.id} />
           return <StoryImage block={block} key={block.id} />
         })}
       </div>

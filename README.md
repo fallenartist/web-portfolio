@@ -4,14 +4,18 @@ Next.js 16 / React 19 portfolio with an SVG D3 treemap and Payload 3 admin at `/
 
 ## Local development
 
-Use Node 22.16+ (22.x) or Node 24.x, and pnpm 9.15.9.
+Use Node 26.x and pnpm 9.15.9. `.nvmrc` and the Docker configurations default to Node 26. The supported fallback versions are Node 22.23.4+ (22.x) and Node 24.22.1+ (24.x), matching the installed Payload requirements.
+
+Node 26 no longer bundles Corepack. Install pnpm explicitly with `npm install --global pnpm@9.15.9` (use a user-owned npm prefix on shared hosting), or install Corepack separately if you prefer it. Select Node 26 for both the MyDevil website and SSH build/migration commands, and use the **Production** environment for `test.lenart.pl`.
+
+Node 26.5.0 was checked locally with frozen-lockfile installation, lint, all 67 tests, the production build/server, read-only page/admin/media checks, migration status, and an in-memory Sharp thumbnail conversion. MyDevil's Passenger startup and FreeBSD image-processing support still need to be verified on the test server. The Docker configuration has not been built locally.
 
 1. `pnpm install --frozen-lockfile`
 2. Copy `.env.example` to `.env`, set `DATABASE_URI` and a strong `PAYLOAD_SECRET`.
 3. `pnpm payload migrate`
 4. `pnpm dev`
 
-Alternatively, `docker compose up` starts PostgreSQL and the app. Run `docker compose run --rm payload pnpm payload migrate` to initialize the schema before using the app. Compose uses an isolated development database with local-only app port exposure; its example database credentials are not for production.
+Alternatively, `docker compose up` starts PostgreSQL and the app. Once the app container is running and pnpm is installed, run `docker compose exec payload pnpm payload migrate` to initialize the schema before using the app. Compose uses an isolated development database with local-only app port exposure; its example database credentials are not for production.
 
 ## English and Polish
 

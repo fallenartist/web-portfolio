@@ -1,13 +1,13 @@
 services:
   payload:
-    image: node:22-alpine
+    image: node:26-alpine
     ports:
       - '127.0.0.1:3000:3000'
     volumes:
       - .:/home/node/app
       - node_modules:/home/node/app/node_modules
     working_dir: /home/node/app
-    command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm dev"
+    command: sh -c "npm install --global pnpm@9.15.9 && pnpm install --frozen-lockfile && pnpm dev"
     depends_on:
       postgres:
         condition: service_healthy

@@ -16,6 +16,7 @@ import { mediaFocalPosition, proportionalMediaSize } from '@/lib/media-image'
 import { normalizeColour } from '@/lib/colour'
 import { projectTextConverters } from '@/lib/project-rich-text'
 import { enableVimeoControls } from '@/lib/video-embed'
+import { storyTextStyle } from '@/lib/story-typography'
 import styles from './ProjectStory.module.scss'
 
 type ResponsiveImage = {
@@ -504,20 +505,15 @@ export default function ProjectStory({
     fontSize: 30,
     textColor: '#222222',
   }
-  const textColor = normalizeColour(textSettings.textColor) || '#222222'
-  const textSize = Math.min(72, Math.max(16, textSettings.fontSize))
   const quoteSize = Math.min(140, Math.max(24, textSettings.quoteFontSize))
   const descriptionSize = Math.min(72, Math.max(16, description.fontSize))
   const descriptionColor = normalizeColour(description.textColor) || '#222222'
   const storyStyle = {
+    ...storyTextStyle(textSettings),
     '--story-text-width': `${Math.min(100, Math.max(30, textSettings.width))}%`,
-    '--story-text-min-size': `${(textSize * 19) / 30}px`,
-    '--story-text-fluid-size': `${(textSize * 1.75) / 30}vw`,
-    '--story-text-size': `${textSize}px`,
     '--story-quote-min-size': `${quoteSize / 2}px`,
     '--story-quote-fluid-size': `${(quoteSize * 3.25) / 60}vw`,
     '--story-quote-size': `${quoteSize}px`,
-    '--story-text-color': textColor,
     '--project-description-font': description.fontFamily.trim() || 'October Condensed',
     '--project-description-min-size': `${(descriptionSize * 19) / 30}px`,
     '--project-description-fluid-size': `${(descriptionSize * 1.75) / 30}vw`,

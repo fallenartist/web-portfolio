@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    pages: Page;
     projects: Project;
     disciplines: Discipline;
     industries: Industry;
@@ -84,6 +85,7 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     disciplines: DisciplinesSelect<false> | DisciplinesSelect<true>;
     industries: IndustriesSelect<false> | IndustriesSelect<true>;
@@ -164,6 +166,160 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * Standalone pages with text, images and Vimeo videos. Add published pages to Menus to display them in navigation.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  /**
+   * Turn off to supply your own heading in the content. The title remains available in menus, breadcrumbs and browser/search titles.
+   */
+  showTitle?: boolean | null;
+  /**
+   * Shared URL for both languages, e.g. about-me. Project and system URLs are reserved.
+   */
+  slug: string;
+  metaDescription?: string | null;
+  /**
+   * Add and reorder text, images and Vimeo videos. Images and block order are shared; text and captions can be translated.
+   */
+  content?:
+    | (
+        | {
+            /**
+             * Use the + menu (or type / and choose Upload) to insert an image between paragraphs. Edit the image to choose full width or wrap text left/right. Image placement and captions here follow the text language.
+             */
+            text: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            };
+            width?: ('content' | 'half') | null;
+            /**
+             * Consecutive left/right half-width blocks share a row. Centre uses a separate row. The column gap is excluded from the half width.
+             */
+            alignment?: ('left' | 'center' | 'right') | null;
+            /**
+             * Text flows between columns. Half-width blocks and small screens always use one column.
+             */
+            columns?: ('two' | 'one') | null;
+            /**
+             * Moves whole paragraphs to the next column when possible. Columns may be uneven; very long paragraphs can still split.
+             */
+            keepParagraphsTogether?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'pageText';
+          }
+        | {
+            image: number | Media;
+            /**
+             * Optional override of the image’s alternative text in Media.
+             */
+            alt?: string | null;
+            caption?: string | null;
+            width?: ('content' | 'wide' | 'half') | null;
+            /**
+             * Consecutive left/right half-width blocks share a row. Centre uses a separate row. The column gap is excluded from the half width.
+             */
+            alignment?: ('left' | 'center' | 'right') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'pageImage';
+          }
+        | {
+            /**
+             * Paste a Vimeo share URL. Videos use standard playback controls.
+             */
+            url: string;
+            caption?: string | null;
+            width?: ('content' | 'wide' | 'half') | null;
+            /**
+             * Consecutive left/right half-width blocks share a row. Centre uses a separate row. The column gap is excluded from the half width.
+             */
+            alignment?: ('left' | 'center' | 'right') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'pageVideo';
+          }
+      )[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Upload files here. public/media is managed storage and files should not be copied into it manually.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  /**
+   * Alternative text for accessibility
+   */
+  alt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    small?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    medium?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    large?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -313,64 +469,6 @@ export interface Project {
   createdAt: string;
 }
 /**
- * Upload files here. public/media is managed storage and files should not be copied into it manually.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  /**
-   * Alternative text for accessibility
-   */
-  alt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-  sizes?: {
-    thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    small?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    medium?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    large?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "clients".
  */
@@ -479,6 +577,10 @@ export interface Menu {
         internalDestination?: ('content' | 'projects') | null;
         internalLink?:
           | ({
+              relationTo: 'pages';
+              value: number | Page;
+            } | null)
+          | ({
               relationTo: 'disciplines';
               value: number | Discipline;
             } | null)
@@ -513,6 +615,10 @@ export interface Menu {
               type: 'internal' | 'external';
               internalDestination?: ('content' | 'projects') | null;
               internalLink?:
+                | ({
+                    relationTo: 'pages';
+                    value: number | Page;
+                  } | null)
                 | ({
                     relationTo: 'disciplines';
                     value: number | Discipline;
@@ -575,6 +681,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
       } | null)
     | ({
         relationTo: 'projects';
@@ -673,6 +783,55 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  showTitle?: T;
+  slug?: T;
+  metaDescription?: T;
+  content?:
+    | T
+    | {
+        pageText?:
+          | T
+          | {
+              text?: T;
+              width?: T;
+              alignment?: T;
+              columns?: T;
+              keepParagraphsTogether?: T;
+              id?: T;
+              blockName?: T;
+            };
+        pageImage?:
+          | T
+          | {
+              image?: T;
+              alt?: T;
+              caption?: T;
+              width?: T;
+              alignment?: T;
+              id?: T;
+              blockName?: T;
+            };
+        pageVideo?:
+          | T
+          | {
+              url?: T;
+              caption?: T;
+              width?: T;
+              alignment?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

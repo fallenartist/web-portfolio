@@ -17,7 +17,7 @@ export function useVideoAnalytics({
   url: string
   enabled: boolean
   autoplay: boolean
-  placement: 'hero' | 'story'
+  placement: 'hero' | 'story' | 'page'
   label: string
   blockID?: string
 }) {

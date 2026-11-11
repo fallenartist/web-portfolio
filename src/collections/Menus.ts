@@ -23,7 +23,7 @@ const destinationFields = (): Field[] => [
   {
     name: 'internalLink',
     type: 'relationship',
-    relationTo: ['disciplines', 'projects', 'industries', 'clients', 'agencies', 'tags'],
+    relationTo: ['pages', 'disciplines', 'projects', 'industries', 'clients', 'agencies', 'tags'],
     admin: {
       condition: (_, siblingData) =>
         siblingData.type === 'internal' &&

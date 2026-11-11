@@ -1,0 +1,38 @@
+@mixin title {
+  font-family: inherit;
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 400;
+  line-height: 1.05;
+}
+
+@mixin body {
+  font-size: clamp(
+    var(--story-text-min-size, 19px),
+    var(--story-text-fluid-size, 1.75vw),
+    var(--story-text-size, 30px)
+  );
+  line-height: 1.4;
+}
+
+@mixin headings {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: inherit;
+    font-weight: 400;
+    line-height: 1.15;
+    margin: 1.2em 0 0.5em;
+    break-after: avoid-column;
+  }
+  h1 {
+    @include title;
+  }
+  h2 {
+    font-size: clamp(32px, 4.5vw, 52px);
+    line-height: 1.1;
+  }
+  h3 {
+    font-size: clamp(26px, 3.2vw, 38px);
+  }
+}

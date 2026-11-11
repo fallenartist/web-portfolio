@@ -320,6 +320,18 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
 
 // Mobile specific styles
 @media (max-width: 767px) {
+  .nav {
+    > ul {
+      align-items: stretch;
+      padding-inline: var(--page-gutter);
+    }
+
+    .menuItem {
+      min-width: 0;
+      text-align: left;
+    }
+  }
+
   .breadcrumb {
     h1,
     .measureItem,

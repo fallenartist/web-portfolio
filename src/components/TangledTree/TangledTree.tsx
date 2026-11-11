@@ -170,7 +170,7 @@ export default function TangledTree({
       bandGap: mobile ? 54 : 48,
       nodeMarkerWidth: nodeSize,
       padding: nodeSize / 2,
-      rootColumnWidth: mobile ? 48 : 88,
+      rootColumnWidth: mobile ? 72 : 88,
     }
     const initial = constructTangledTreeLayout(data.levels, options)
     if (initial.height >= containerSize.height) return initial
@@ -190,6 +190,7 @@ export default function TangledTree({
     return Math.max(0, labelTop - (mobile ? 18 : 24))
   }, [layout.nodes, mobile, nodeSize])
   const diagramHeight = Math.max(1, layout.height - diagramTop)
+  const guidePositions = [...new Set(layout.nodes.map((node) => node.x))]
 
   useEffect(() => {
     const onBreadcrumb = (event: Event) => {
@@ -399,7 +400,6 @@ export default function TangledTree({
         onClick={clearSelection}
         onMouseLeave={() => setActiveNode(null)}
       >
-        <div className={styles.stickyHeadingBackground} aria-hidden="true" />
         <div
           className={styles.diagram}
           style={{
@@ -408,6 +408,17 @@ export default function TangledTree({
             visibility: hasMeasuredContainer ? 'visible' : 'hidden',
           }}
         >
+          <div className={styles.stickyHeadingBackground} aria-hidden="true">
+            <svg
+              className={`${styles.columnGuides} ${styles.stickyGuides}`}
+              width={layout.width}
+              height="100%"
+            >
+              {guidePositions.map((x) => (
+                <line key={x} x1={x} x2={x} y1={0} y2="100%" />
+              ))}
+            </svg>
+          </div>
           <svg
             className={styles.canvas}
             width={layout.width}
@@ -420,6 +431,11 @@ export default function TangledTree({
               width: `${layout.width}px`,
             }}
           >
+            <g className={styles.columnGuides} aria-hidden="true">
+              {guidePositions.map((x) => (
+                <line key={x} x1={x} x2={x} y1={diagramTop} y2={diagramTop + diagramHeight} />
+              ))}
+            </g>
             <g className={styles.links} ref={linksRef} aria-hidden="true">
               {layout.links.map((link) => (
                 <path
@@ -512,7 +528,7 @@ export default function TangledTree({
                       y={node.y - targetHeight / 2}
                     />
                     <foreignObject
-                      className={`${styles.nodeLabel} ${showView ? styles.selectedLabel : ''}`}
+                      className={`${styles.nodeLabel} ${node.kind === 'root' ? styles.rootLabel : ''} ${showView ? styles.selectedLabel : ''}`}
                       height={labelHeight}
                       width={labelWidth}
                       x={labelX}

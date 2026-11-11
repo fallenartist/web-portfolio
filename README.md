@@ -105,6 +105,8 @@ Compatibility references: [Payload installation](https://payloadcms.com/docs/get
 
 ## Database upgrades and deployment
 
+MyDevil test deployment, persistent storage, preview access and FreeBSD build notes are documented in [docs/mydevil.md](docs/mydevil.md).
+
 Automatic development schema pushing is disabled. Use reviewed migrations in `src/migrations` and back up the database before applying them.
 
 `20261109_211952_dependency_security_indexes` adds the 11 localized-parent indexes introduced by Payload 3.93.0. Apply it after the language migrations and before serving the upgraded application. Its down migration removes only those indexes. The local database was backed up to `/private/tmp/portfolio-before-payload-security-1794259241151.dump` before applying it; keep a durable copy before relying on this temporary backup.

@@ -105,8 +105,12 @@ test('language selection leaves admin, APIs and assets alone', () => {
   ]) {
     assert.equal(
       unstable_doesMiddlewareMatch({ config, url: `https://example.com${path}?lang=pl` }),
-      false,
+      true,
       path,
+    )
+    assert.equal(
+      proxy(new NextRequest(`https://example.com${path}?lang=pl`)).headers.get('location'),
+      null,
     )
   }
   for (const path of ['/', '/projects', '/design/project', '/api-design', '/administration']) {

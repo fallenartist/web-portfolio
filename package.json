@@ -17,22 +17,23 @@
     "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
-    "@payloadcms/db-postgres": "3.90.1",
-    "@payloadcms/next": "3.90.1",
-    "@payloadcms/richtext-lexical": "3.90.1",
-    "@payloadcms/ui": "3.90.1",
+    "@payloadcms/db-postgres": "3.93.0",
+    "@payloadcms/next": "3.93.0",
+    "@payloadcms/richtext-lexical": "3.93.0",
+    "@payloadcms/ui": "3.93.0",
     "@tailwindcss/postcss": "4.3.3",
     "@vimeo/player": "2.30.4",
     "cross-env": "10.1.0",
     "culori": "4.0.2",
     "d3": "^7.9.0",
     "graphql": "16.14.2",
-    "next": "16.3.6",
-    "payload": "3.90.1",
+    "next": "16.4.6",
+    "payload": "3.93.0",
     "postcss": "8.5.28",
+    "posthog-js": "1.447.4",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "sharp": "0.35.4",
+    "sharp": "0.35.5",
     "tailwindcss": "4.3.3"
   },
   "devDependencies": {
@@ -42,7 +43,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
-    "eslint-config-next": "16.3.6",
+    "eslint-config-next": "16.4.6",
     "prettier": "3.9.9",
     "sass": "1.105.0",
     "tsx": "4.23.15",
@@ -60,7 +61,8 @@
       "unrs-resolver"
     ],
     "overrides": {
-      "@esbuild-kit/core-utils>esbuild": "^0.25.0"
+      "@esbuild-kit/core-utils>esbuild": "^0.25.0",
+      "@lexical/headless@0.50.0>happy-dom": "21.0.4"
     }
   },
   "packageManager": "pnpm@9.15.9"

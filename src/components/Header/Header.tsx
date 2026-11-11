@@ -4,6 +4,9 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import Link from 'next/link'
 import styles from './Header.module.scss'
 import { usePathname } from 'next/navigation'
+import { useLocale } from '@/components/LocaleProvider'
+import { languageSwitchURL } from '@/lib/locale'
+import { trackEvent } from '@/lib/analytics'
 import type { Menu } from '@/payload-types'
 import type { BreadcrumbItem } from '@/types'
 import {
@@ -38,6 +41,7 @@ export default function Header({
   onLogoClick,
   onBreadcrumbClick,
 }: HeaderProps) {
+  const { locale, available, text } = useLocale()
   const [openPath, setOpenPath] = useState<string | null>(null)
   const [abbreviateBreadcrumb, setAbbreviateBreadcrumb] = useState(false)
   const breadcrumbRef = useRef<HTMLElement>(null)
@@ -128,7 +132,7 @@ export default function Header({
       <button
         type="button"
         className={styles.logo}
-        aria-label={atRoot ? title : 'Go up one level'}
+        aria-label={atRoot ? title : text.up}
         disabled={atRoot}
         onClick={onLogoClick}
       >
@@ -155,7 +159,7 @@ export default function Header({
       <nav
         ref={breadcrumbRef}
         className={`${styles.breadcrumb} ${abbreviateBreadcrumb ? styles.abbreviated : ''}`}
-        aria-label="Breadcrumb"
+        aria-label={text.breadcrumb}
       >
         <div className={styles.breadcrumbItems}>
           {breadcrumb.map((item, index) => (
@@ -187,13 +191,34 @@ export default function Header({
         </div>
       </nav>
 
+      {available.length > 1 && (
+        <div className={styles.languageSwitcher} role="group" aria-label={text.language}>
+          {available.map((language) => (
+            <button
+              key={language}
+              type="button"
+              lang={language}
+              aria-label={language === 'pl' ? 'Polski' : 'English'}
+              aria-pressed={locale === language}
+              onClick={() => {
+                if (locale !== language)
+                  trackEvent('language_changed', { from_language: locale, to_language: language })
+                window.location.assign(languageSwitchURL(window.location.href, language).href)
+              }}
+            >
+              {language.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Hamburger Menu Button */}
       <button
         className={`${styles.hamburger} ${menuOpen ? styles.active : ''}`}
         onClick={() => setOpenPath(menuOpen ? null : pathname)}
         aria-expanded={menuOpen}
         aria-controls="main-navigation"
-        aria-label="Toggle Menu"
+        aria-label={text.toggleMenu}
       >
         <svg
           width="24"
@@ -212,7 +237,7 @@ export default function Header({
       <nav
         id="main-navigation"
         className={`${styles.nav} ${menuOpen ? styles.open : ''}`}
-        aria-label="Main Navigation"
+        aria-label={text.navigation}
       >
         {menu && menu.items && menu.items.length > 0 ? (
           <ul>

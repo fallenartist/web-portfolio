@@ -4,6 +4,8 @@ import { easeCubicOut, schemeCategory10, schemeDark2, schemeTableau10, select } 
 import { useRouter } from 'next/navigation'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
+import { useLocale } from '@/components/LocaleProvider'
+import { trackEvent, trackPageView } from '@/lib/analytics'
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import type { TangledNodeKind, TangledTreeData, TangledTreeNode } from '@/lib/tangled-tree-data'
 import {
@@ -18,26 +20,6 @@ const MOBILE_BREAKPOINT = 768
 type MetadataKind = Extract<TangledNodeKind, 'industry' | 'client' | 'agency' | 'tag'>
 
 const METADATA_KINDS: MetadataKind[] = ['industry', 'client', 'agency', 'tag']
-
-const KIND_LABELS = {
-  root: 'Work',
-  discipline: 'Discipline',
-  project: 'Project',
-  industry: 'Industry',
-  client: 'Client',
-  agency: 'Agency',
-  tag: 'Tag',
-} as const
-
-const KIND_BREADCRUMBS: Record<TangledNodeKind, string> = {
-  root: 'Work',
-  discipline: 'Discipline',
-  project: 'Project',
-  industry: 'Industry',
-  client: 'Client',
-  agency: 'Agency',
-  tag: 'Tag',
-}
 
 function linkColor(link: TangledLayoutLink, colors: Map<string, string>) {
   const taxonomy = link.source.kind === 'project' ? link.target : link.source
@@ -107,6 +89,7 @@ export default function TangledTree({
   initialSelectedId?: string
   overviewPath: string
 }) {
+  const { text } = useLocale()
   const router = useRouter()
   const { updateBreadcrumb } = useBreadcrumb()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -118,6 +101,10 @@ export default function TangledTree({
   const [hasMeasuredContainer, setHasMeasuredContainer] = useState(false)
   const [activeNode, setActiveNode] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initialSelectedId ?? null)
+
+  useEffect(() => {
+    trackPageView(overviewPath, guideTitle?.trim() || text.guide, 'project-map')
+  }, [guideTitle, overviewPath, text.guide])
 
   useEffect(() => {
     const element = containerRef.current
@@ -183,7 +170,7 @@ export default function TangledTree({
       bandGap: mobile ? 54 : 48,
       nodeMarkerWidth: nodeSize,
       padding: nodeSize / 2,
-      rootColumnWidth: mobile ? 48 : 88,
+      rootColumnWidth: mobile ? 72 : 88,
     }
     const initial = constructTangledTreeLayout(data.levels, options)
     if (initial.height >= containerSize.height) return initial
@@ -203,6 +190,7 @@ export default function TangledTree({
     return Math.max(0, labelTop - (mobile ? 18 : 24))
   }, [layout.nodes, mobile, nodeSize])
   const diagramHeight = Math.max(1, layout.height - diagramTop)
+  const guidePositions = [...new Set(layout.nodes.map((node) => node.x))]
 
   useEffect(() => {
     const onBreadcrumb = (event: Event) => {
@@ -225,23 +213,23 @@ export default function TangledTree({
 
   useEffect(() => {
     const breadcrumbs = [
-      { data: { title: 'WORK' }, path: '/' },
-      { data: { title: guideTitle?.trim() || 'Projects' }, path: overviewPath },
+      { data: { title: text.kinds.root.toUpperCase() }, path: '/' },
+      { data: { title: guideTitle?.trim() || text.projects }, path: overviewPath },
     ]
     if (selectedNode) {
       if (selectedNode.kind !== 'root') {
         breadcrumbs.push({
-          data: { title: KIND_BREADCRUMBS[selectedNode.kind] },
+          data: { title: text.kinds[selectedNode.kind] },
           path: overviewPath,
         })
       }
       breadcrumbs.push({
-        data: { title: selectedNode.kind === 'root' ? 'All' : selectedNode.title },
+        data: { title: selectedNode.kind === 'root' ? text.all : selectedNode.title },
         path: nodePermalink(overviewPath, selectedNode),
       })
     }
     updateBreadcrumb(breadcrumbs)
-  }, [guideTitle, overviewPath, selectedNode, updateBreadcrumb])
+  }, [guideTitle, overviewPath, selectedNode, text, updateBreadcrumb])
 
   useEffect(() => {
     const syncSelectionFromHistory = () => {
@@ -349,11 +337,18 @@ export default function TangledTree({
     [layout.nodes],
   )
 
-  const selectNode = (node: TangledTreeNode) => {
+  const selectNode = (node: TangledTreeNode, source = 'node') => {
     setSelectedNodeId(node.id)
     setActiveNode(null)
     const nextPath = nodePermalink(overviewPath, node)
-    if (window.location.pathname !== nextPath) window.history.pushState(null, '', nextPath)
+    if (window.location.pathname !== nextPath) {
+      trackEvent('map_node_selected', {
+        node_kind: node.kind,
+        node_slug: node.slug,
+        selection_source: source,
+      })
+      window.history.pushState(null, '', nextPath)
+    }
   }
 
   const clearSelection = () => {
@@ -379,26 +374,24 @@ export default function TangledTree({
     event.preventDefault()
     event.stopPropagation()
     const project = nodesById.get(link.projectId)
-    if (project) selectNode(project)
+    if (project) selectNode(project, 'connection')
   }
 
   const handleLinkKeyDown = (event: React.KeyboardEvent, link: TangledLayoutLink) => {
     if (event.key !== 'Enter' && event.key !== ' ') return
     event.preventDefault()
     const project = nodesById.get(link.projectId)
-    if (project) selectNode(project)
+    if (project) selectNode(project, 'connection')
   }
 
   if (!data.levels[1].length) {
-    return <p className={styles.empty}>No projects are available for the overview.</p>
+    return <p className={styles.empty}>{text.empty}</p>
   }
 
   return (
-    <section className={styles.page} aria-label={guideTitle?.trim() || 'Project guide'}>
+    <section className={styles.page} aria-label={guideTitle?.trim() || text.guide}>
       <header className={styles.header}>
-        <p>
-          {guideInstruction?.trim() || 'Select a node or connection to explore related projects.'}
-        </p>
+        <p>{guideInstruction?.trim() || text.instruction}</p>
       </header>
 
       <div
@@ -407,7 +400,6 @@ export default function TangledTree({
         onClick={clearSelection}
         onMouseLeave={() => setActiveNode(null)}
       >
-        <div className={styles.stickyHeadingBackground} aria-hidden="true" />
         <div
           className={styles.diagram}
           style={{
@@ -416,18 +408,34 @@ export default function TangledTree({
             visibility: hasMeasuredContainer ? 'visible' : 'hidden',
           }}
         >
+          <div className={styles.stickyHeadingBackground} aria-hidden="true">
+            <svg
+              className={`${styles.columnGuides} ${styles.stickyGuides}`}
+              width={layout.width}
+              height="100%"
+            >
+              {guidePositions.map((x) => (
+                <line key={x} x1={x} x2={x} y1={0} y2="100%" />
+              ))}
+            </svg>
+          </div>
           <svg
             className={styles.canvas}
             width={layout.width}
             height={diagramHeight}
             viewBox={`0 ${diagramTop} ${layout.width} ${diagramHeight}`}
             role="img"
-            aria-label="Bundled connections between disciplines, projects, industries, clients, agencies and tags"
+            aria-label={text.diagram}
             style={{
               visibility: hasMeasuredContainer ? 'visible' : 'hidden',
               width: `${layout.width}px`,
             }}
           >
+            <g className={styles.columnGuides} aria-hidden="true">
+              {guidePositions.map((x) => (
+                <line key={x} x1={x} x2={x} y1={diagramTop} y2={diagramTop + diagramHeight} />
+              ))}
+            </g>
             <g className={styles.links} ref={linksRef} aria-hidden="true">
               {layout.links.map((link) => (
                 <path
@@ -443,7 +451,7 @@ export default function TangledTree({
             <g className={styles.linkTargets}>
               {layout.links.map((link) => (
                 <path
-                  aria-label={`Select ${link.source.kind === 'project' ? link.source.title : link.target.title} relationship`}
+                  aria-label={`${text.select} ${link.source.kind === 'project' ? link.source.title : link.target.title} — ${text.relationship}`}
                   d={tangledLinkPath(link)}
                   key={link.id}
                   onClick={(event) => handleLinkClick(event, link)}
@@ -480,7 +488,7 @@ export default function TangledTree({
                   : node.y - nodeHeight / 2 - 17
                 return (
                   <g
-                    aria-label={`Select ${KIND_BREADCRUMBS[node.kind]} ${node.title}`}
+                    aria-label={`${text.select} ${text.kinds[node.kind]} ${node.title}`}
                     aria-pressed={selected}
                     className={`${styles.node} ${node.kind === 'project' ? styles.projectNode : ''} ${muted ? styles.mutedNode : ''}`}
                     key={node.id}
@@ -493,7 +501,7 @@ export default function TangledTree({
                     role="button"
                     tabIndex={0}
                   >
-                    <title>{`${KIND_BREADCRUMBS[node.kind]}: ${node.title}`}</title>
+                    <title>{`${text.kinds[node.kind]}: ${node.title}`}</title>
                     <rect
                       className={styles.nodeOuter}
                       fill={selected ? '#111111' : (displayColors.get(node.id) ?? node.color)}
@@ -520,7 +528,7 @@ export default function TangledTree({
                       y={node.y - targetHeight / 2}
                     />
                     <foreignObject
-                      className={`${styles.nodeLabel} ${showView ? styles.selectedLabel : ''}`}
+                      className={`${styles.nodeLabel} ${node.kind === 'root' ? styles.rootLabel : ''} ${showView ? styles.selectedLabel : ''}`}
                       height={labelHeight}
                       width={labelWidth}
                       x={labelX}
@@ -530,12 +538,12 @@ export default function TangledTree({
                         <span className={styles.labelText}>{node.title}</span>
                         {showView && node.href.startsWith('/') ? (
                           <a
-                            aria-label={`View ${node.title}`}
+                            aria-label={`${text.view} ${node.title}`}
                             className={styles.viewLink}
                             href={node.href}
                             onClick={(event) => event.stopPropagation()}
                           >
-                            View
+                            {text.view}
                           </a>
                         ) : null}
                       </div>
@@ -566,7 +574,7 @@ export default function TangledTree({
                     height: bottom - top,
                   }}
                 >
-                  <span className={styles.bandLabel}>{KIND_LABELS[node.kind]}</span>
+                  <span className={styles.bandLabel}>{text.kinds[node.kind]}</span>
                 </div>
               )
             })}

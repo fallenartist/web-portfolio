@@ -24,7 +24,8 @@ export function getInternalLinkHref(
   link: NonNullable<NonNullable<Menu['items']>[number]['internalLink']>,
   legacyRootSlug?: string,
 ): string {
-  if (!link || typeof link.value !== 'object') return '/'
+  if (!link || !link.value || typeof link.value !== 'object') return '/'
+  if (link.relationTo === 'pages') return `/${encodeURIComponent(link.value.slug)}`
   if (
     link.relationTo === 'industries' ||
     link.relationTo === 'clients' ||
@@ -62,4 +63,24 @@ export function getMenuItemHref(
 
 export function getMenuItemLabel(item: MenuEntry): string {
   return item.title
+}
+
+// Unpublished or deleted page relationships must not appear as live navigation links.
+export function visiblePageMenu(menu: Menu | null): Menu | null {
+  if (!menu) return null
+  const available = (item: MenuEntry) => {
+    const link = item.internalLink
+    return (
+      item.type !== 'internal' ||
+      link?.relationTo !== 'pages' ||
+      Boolean(link.value && typeof link.value === 'object' && link.value._status === 'published')
+    )
+  }
+  return {
+    ...menu,
+    items: menu.items?.filter(available).map((item) => ({
+      ...item,
+      subItems: item.subItems?.filter(available),
+    })),
+  }
 }

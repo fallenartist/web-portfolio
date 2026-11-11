@@ -5,11 +5,40 @@ import { buildTangledTreeData, type TangledNodeKind } from '@/lib/tangled-tree-d
 import { getProjectsOverviewPath } from '@/lib/menu-links'
 import { getPortfolio } from '@/lib/site-data'
 import { findTreemapNode } from '@/lib/treemap-data'
+import type { Metadata } from 'next'
+import ContentPage from '@/components/ContentPage/ContentPage'
+import { getContentPage } from '@/lib/page-data'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string[] }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const page = slug.length === 1 ? await getContentPage(slug[0]) : null
+  if (!page) return {}
+  const { settings } = await getPortfolio()
+  return {
+    title: `${page.title} — ${settings.siteTitle || 'Design Portfolio'}`,
+    ...(page.metaDescription ? { description: page.metaDescription } : {}),
+  }
+}
 
 export default async function SlugPage({ params }: { params: Promise<{ slug: string[] }> }) {
   const { slug } = await params
   const portfolio = await getPortfolio()
   const { treemapData } = portfolio
+  const page = slug.length === 1 ? await getContentPage(slug[0]) : null
+  if (page)
+    return (
+      <ContentPage
+        page={page}
+        rootTitle={treemapData.title}
+        siteTitle={portfolio.settings.siteTitle || 'Design Portfolio'}
+        legacyRootSlug={treemapData.legacyRootSlug}
+        textSettings={treemapData.settings?.storyText}
+      />
+    )
   const overviewPath = getProjectsOverviewPath(portfolio.settings.projectsOverviewSlug)
   if (slug.length === 1 && slug[0] === portfolio.settings.projectsOverviewSlug) {
     const data = buildTangledTreeData(

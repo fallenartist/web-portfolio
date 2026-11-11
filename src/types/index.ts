@@ -134,6 +134,7 @@ export interface LightboxImage {
   data: { id: string; title?: string; image: string; alt?: string }
 }
 export interface LightboxOptions {
+  labels?: { images: string; close: string; previousImage: string; nextImage: string }
   containerSelector?: string
   imagePathPrefix?: string
   transitionDuration?: number

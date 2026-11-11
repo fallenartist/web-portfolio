@@ -146,7 +146,42 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   }
 }
 
+.languageSwitcher {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+  margin-inline: 8px;
+
+  button {
+    min-width: 32px;
+    min-height: 40px;
+    padding: 4px;
+    border: 0;
+    background: transparent;
+    color: #777;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+
+    &[aria-pressed='true'] {
+      color: var(--key-color);
+      font-weight: 600;
+    }
+
+    &:hover {
+      color: var(--key-color);
+    }
+
+    &:focus-visible {
+      outline: 1px solid var(--key-color);
+      outline-offset: -3px;
+    }
+  }
+}
+
 .hamburger {
+  flex-shrink: 0;
   width: 40px;
   height: 40px;
   background: none;
@@ -285,6 +320,18 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
 
 // Mobile specific styles
 @media (max-width: 767px) {
+  .nav {
+    > ul {
+      align-items: stretch;
+      padding-inline: var(--page-gutter);
+    }
+
+    .menuItem {
+      min-width: 0;
+      text-align: left;
+    }
+  }
+
   .breadcrumb {
     h1,
     .measureItem,

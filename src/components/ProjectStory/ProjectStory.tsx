@@ -1,8 +1,10 @@
 'use client'
 
 import Image from 'next/image'
+import { useLocale } from '@/components/LocaleProvider'
+import { useVideoAnalytics } from '@/components/Analytics/useVideoAnalytics'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import type {
   ProjectHero,
   ProjectMetadata,
@@ -14,6 +16,7 @@ import { mediaFocalPosition, proportionalMediaSize } from '@/lib/media-image'
 import { normalizeColour } from '@/lib/colour'
 import { projectTextConverters } from '@/lib/project-rich-text'
 import { enableVimeoControls } from '@/lib/video-embed'
+import { storyTextStyle } from '@/lib/story-typography'
 import styles from './ProjectStory.module.scss'
 
 type ResponsiveImage = {
@@ -43,6 +46,7 @@ function MetadataValues({
   items: ProjectMetadataItem[]
   projectGuidePath: string
 }) {
+  const { text } = useLocale()
   return items.map((item, index) => (
     <span key={`${item.kind}-${item.slug}`}>
       {index > 0 && ', '}
@@ -53,8 +57,8 @@ function MetadataValues({
           href={item.externalURL}
           target="_blank"
           rel="noreferrer"
-          aria-label={`Open ${item.title} website in a new window`}
-          title={`Open ${item.title} website`}
+          aria-label={`${text.openWebsite}: ${item.title} — ${text.newWindow}`}
+          title={`${text.openWebsite}: ${item.title}`}
         >
           <svg viewBox="0 0 16 16" aria-hidden="true">
             <path d="M5 11 12 4M7 4h5v5" />
@@ -72,15 +76,16 @@ function ProjectMetadataList({
   metadata: ProjectMetadata
   projectGuidePath: string
 }) {
+  const { text } = useLocale()
   const rows = [
-    metadata.client && { label: 'Client', items: [metadata.client] },
-    metadata.agency && { label: 'Agency', items: [metadata.agency] },
+    metadata.client && { label: text.kinds.client, items: [metadata.client] },
+    metadata.agency && { label: text.kinds.agency, items: [metadata.agency] },
     metadata.industries.length && {
-      label: metadata.industries.length === 1 ? 'Industry' : 'Industries',
+      label: metadata.industries.length === 1 ? text.kinds.industry : text.industries,
       items: metadata.industries,
     },
     metadata.tags.length && {
-      label: metadata.tags.length === 1 ? 'Tag' : 'Tags',
+      label: metadata.tags.length === 1 ? text.kinds.tag : text.tags,
       items: metadata.tags,
     },
   ].filter(Boolean) as { label: string; items: ProjectMetadataItem[] }[]
@@ -214,10 +219,17 @@ function HeroVideo({
   titleSettings?: ProjectTitleSettings
   onFitChange: (fit: 'cover' | 'contain') => void
 }) {
+  const { text } = useLocale()
   const [started, setStarted] = useState(hero.autoplay)
   const [loaded, setLoaded] = useState(false)
   const [fit, setFit] = useState(hero.fit)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const iframeRef = useVideoAnalytics({
+    url: hero.url,
+    enabled: started,
+    autoplay: hero.autoplay,
+    placement: 'hero',
+    label: `${title} — Hero`,
+  })
   const cover = imageSource({
     image: hero.cover,
     width: hero.coverWidth,
@@ -264,7 +276,7 @@ function HeroVideo({
     return () => {
       active = false
     }
-  }, [started, videoURL])
+  }, [started, videoURL, iframeRef])
 
   return (
     <figure className={styles.hero} data-video-fit={fit} style={heroStyle}>
@@ -286,7 +298,7 @@ function HeroVideo({
           ref={iframeRef}
           className={loaded ? styles.videoLoaded : undefined}
           src={videoURL}
-          title={`${title} Vimeo video`}
+          title={`${title} — ${text.vimeoVideo}`}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen
           referrerPolicy="strict-origin-when-cross-origin"
@@ -296,8 +308,10 @@ function HeroVideo({
         <button
           className={styles.heroPlay}
           type="button"
-          onClick={() => setStarted(true)}
-          aria-label={`Play ${title} video`}
+          onClick={() => {
+            setStarted(true)
+          }}
+          aria-label={`${text.play}: ${title}`}
         >
           <span className={styles.playButton} aria-hidden="true" />
         </button>
@@ -308,14 +322,17 @@ function HeroVideo({
         type="button"
         onClick={() => {
           const next = fit === 'cover' ? 'contain' : 'cover'
-          if (started && (next === 'contain' ? enableVimeoControls(hero.url) : hero.url) !== videoURL) {
+          if (
+            started &&
+            (next === 'contain' ? enableVimeoControls(hero.url) : hero.url) !== videoURL
+          ) {
             setLoaded(false)
           }
           setFit(next)
           onFitChange(next)
         }}
-        aria-label={fit === 'cover' ? 'Show the whole video' : 'Fill the hero with the video'}
-        title={fit === 'cover' ? 'Show whole video' : 'Fill hero'}
+        aria-label={fit === 'cover' ? text.wholeVideo : text.fillVideo}
+        title={fit === 'cover' ? text.wholeVideo : text.fillVideo}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           {fit === 'cover' ? (
@@ -329,8 +346,25 @@ function HeroVideo({
   )
 }
 
-function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 'video' }> }) {
+function StoryVideo({
+  block,
+  title,
+  index,
+}: {
+  block: Extract<ProjectStoryBlock, { blockType: 'video' }>
+  title: string
+  index: number
+}) {
+  const { text } = useLocale()
   const [started, setStarted] = useState(block.autoplay || !block.poster)
+  const iframeRef = useVideoAnalytics({
+    url: block.url,
+    enabled: started,
+    autoplay: block.autoplay,
+    placement: 'story',
+    label: `${title} — ${block.caption || `Video ${index + 1}`}`,
+    blockID: block.id,
+  })
   const poster = block.poster
     ? imageSource({
         image: block.poster,
@@ -349,8 +383,9 @@ function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 
       <div className={styles.videoFrame} style={frameStyle}>
         {started ? (
           <iframe
+            ref={iframeRef}
             src={block.url}
-            title={block.caption || 'Vimeo video'}
+            title={block.caption || text.vimeoVideo}
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowFullScreen
             loading="lazy"
@@ -360,8 +395,10 @@ function StoryVideo({ block }: { block: Extract<ProjectStoryBlock, { blockType: 
           <button
             className={styles.videoPoster}
             type="button"
-            onClick={() => setStarted(true)}
-            aria-label={`Play ${block.caption || 'video'}`}
+            onClick={() => {
+              setStarted(true)
+            }}
+            aria-label={`${text.play}: ${block.caption || text.video}`}
           >
             {poster && (
               <Image
@@ -441,12 +478,13 @@ export default function ProjectStory({
   nextProject?: TreemapData | null
   onNavigateProject: (project: TreemapData) => void
 }) {
+  const { text } = useLocale()
   const hero = project.projectHero
   const story = project.story || []
   const metadata = project.metadata
   const hasMetadata = Boolean(
     metadata &&
-      (metadata.client || metadata.agency || metadata.industries.length || metadata.tags.length),
+    (metadata.client || metadata.agency || metadata.industries.length || metadata.tags.length),
   )
   const storyLayout = arrangeStory(story)
   const settings = titleSettings || {
@@ -467,20 +505,15 @@ export default function ProjectStory({
     fontSize: 30,
     textColor: '#222222',
   }
-  const textColor = normalizeColour(textSettings.textColor) || '#222222'
-  const textSize = Math.min(72, Math.max(16, textSettings.fontSize))
   const quoteSize = Math.min(140, Math.max(24, textSettings.quoteFontSize))
   const descriptionSize = Math.min(72, Math.max(16, description.fontSize))
   const descriptionColor = normalizeColour(description.textColor) || '#222222'
   const storyStyle = {
+    ...storyTextStyle(textSettings),
     '--story-text-width': `${Math.min(100, Math.max(30, textSettings.width))}%`,
-    '--story-text-min-size': `${(textSize * 19) / 30}px`,
-    '--story-text-fluid-size': `${(textSize * 1.75) / 30}vw`,
-    '--story-text-size': `${textSize}px`,
     '--story-quote-min-size': `${quoteSize / 2}px`,
     '--story-quote-fluid-size': `${(quoteSize * 3.25) / 60}vw`,
     '--story-quote-size': `${quoteSize}px`,
-    '--story-text-color': textColor,
     '--project-description-font': description.fontFamily.trim() || 'October Condensed',
     '--project-description-min-size': `${(descriptionSize * 19) / 30}px`,
     '--project-description-fluid-size': `${(descriptionSize * 1.75) / 30}vw`,
@@ -536,10 +569,7 @@ export default function ProjectStory({
                 </div>
               )}
               {metadata && hasMetadata && (
-                <ProjectMetadataList
-                  metadata={metadata}
-                  projectGuidePath={projectGuidePath}
-                />
+                <ProjectMetadataList metadata={metadata} projectGuidePath={projectGuidePath} />
               )}
             </div>
           )}
@@ -547,7 +577,7 @@ export default function ProjectStory({
       )}
 
       <div className={styles.content}>
-        {storyLayout.map((item) => {
+        {storyLayout.map((item, index) => {
           if (item.kind === 'portraitPair') {
             return (
               <div
@@ -571,13 +601,14 @@ export default function ProjectStory({
               </section>
             )
           }
-          if (block.blockType === 'video') return <StoryVideo block={block} key={block.id} />
+          if (block.blockType === 'video')
+            return <StoryVideo block={block} title={project.title} index={index} key={block.id} />
           return <StoryImage block={block} key={block.id} />
         })}
       </div>
 
       {(previousProject || nextProject) && (
-        <nav className={styles.projectNavigation} aria-label="Adjacent projects">
+        <nav className={styles.projectNavigation} aria-label={text.adjacentProjects}>
           {previousProject ? (
             <button
               className={`${styles.projectLink} ${styles.previousProject}`}
@@ -586,7 +617,7 @@ export default function ProjectStory({
             >
               <ProjectPreview project={previousProject} />
               <span className={styles.projectLinkLabel}>
-                <small>Previous project</small>
+                <small>{text.previousProject}</small>
                 <strong>{previousProject.title}</strong>
               </span>
             </button>
@@ -601,7 +632,7 @@ export default function ProjectStory({
             >
               <ProjectPreview project={nextProject} />
               <span className={styles.projectLinkLabel}>
-                <small>Next project</small>
+                <small>{text.nextProject}</small>
                 <strong>{nextProject.title}</strong>
               </span>
             </button>

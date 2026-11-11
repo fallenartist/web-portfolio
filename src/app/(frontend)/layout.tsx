@@ -4,6 +4,10 @@ import '@/styles/lightbox.scss'
 import BreadcrumbProvider from '@/components/BreadcrumbProvider'
 import { normalizeColour } from '@/lib/colour'
 import { getMainMenu, getPortfolio } from '@/lib/site-data'
+import LocaleProvider from '@/components/LocaleProvider'
+import { getAvailableLocales, getLocale } from '@/lib/server-locale'
+import Analytics from '@/components/Analytics/Analytics'
+import { getPublicAnalyticsConfig } from '@/lib/analytics-server'
 
 // CMS content must reflect edits and must not require a database during build.
 export const dynamic = 'force-dynamic'
@@ -17,6 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const analyticsConfig = await getPublicAnalyticsConfig()
+  const [locale, available] = await Promise.all([getLocale(), getAvailableLocales()])
   const [{ appearance, settings, treemapData }, menu] = await Promise.all([
     getPortfolio(),
     getMainMenu(),
@@ -28,7 +34,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const menuBackgroundColor = normalizeColour(appearance.menuBackgroundColor) || '#f4f4f4'
   const keyColor = normalizeColour(appearance.keyColor) || '#cc2929'
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <link rel="stylesheet" href="https://webfonts.typotheque.com/WF-004891-002394.css" />
       </head>
@@ -40,17 +46,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           } as React.CSSProperties
         }
       >
-        <BreadcrumbProvider
-          title={settings?.siteTitle || 'Design Portfolio'}
-          menu={menu}
-          legacyRootSlug={treemapData.legacyRootSlug}
-          projectsOverviewSlug={settings?.projectsOverviewSlug || 'projects'}
-          projectGuideTitle={settings?.projectGuideTitle || 'Projects'}
-          rootLogo={rootLogo || undefined}
-          upLogo={upLogo || undefined}
-        >
-          {children}
-        </BreadcrumbProvider>
+        <LocaleProvider locale={locale} available={available}>
+          <Analytics config={analyticsConfig} />
+          <BreadcrumbProvider
+            title={settings?.siteTitle || 'Design Portfolio'}
+            menu={menu}
+            legacyRootSlug={treemapData.legacyRootSlug}
+            projectsOverviewSlug={settings?.projectsOverviewSlug || 'projects'}
+            projectGuideTitle={settings?.projectGuideTitle || 'Projects'}
+            rootLogo={rootLogo || undefined}
+            upLogo={upLogo || undefined}
+          >
+            {children}
+          </BreadcrumbProvider>
+        </LocaleProvider>
       </body>
     </html>
   )

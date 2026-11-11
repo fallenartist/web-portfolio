@@ -3,8 +3,12 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Menu } from '@/payload-types'
 import { fetchTreemapData } from './transformers'
+import { getLocale } from '@/lib/server-locale'
+import { visiblePageMenu } from '@/lib/menu-links'
 
-export const getPortfolio = cache(async () => fetchTreemapData(await getPayload({ config })))
+export const getPortfolio = cache(async () =>
+  fetchTreemapData(await getPayload({ config }), await getLocale()),
+)
 
 export function selectMainMenu(menus: Menu[]): Menu | null {
   return (
@@ -19,9 +23,11 @@ export const getMainMenu = cache(async () => {
   const payload = await getPayload({ config })
   const { docs } = await payload.find({
     collection: 'menus',
+    locale: await getLocale(),
+    fallbackLocale: 'en',
     depth: 3,
     pagination: false,
     overrideAccess: false,
   })
-  return selectMainMenu(docs)
+  return visiblePageMenu(selectMainMenu(docs))
 })

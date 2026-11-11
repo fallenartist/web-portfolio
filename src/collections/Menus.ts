@@ -23,7 +23,7 @@ const destinationFields = (): Field[] => [
   {
     name: 'internalLink',
     type: 'relationship',
-    relationTo: ['disciplines', 'projects', 'industries', 'clients', 'agencies', 'tags'],
+    relationTo: ['pages', 'disciplines', 'projects', 'industries', 'clients', 'agencies', 'tags'],
     admin: {
       condition: (_, siblingData) =>
         siblingData.type === 'internal' &&
@@ -90,6 +90,7 @@ export const Menus: CollectionConfig = {
         {
           name: 'title',
           type: 'text',
+          localized: true,
           required: true,
           admin: {
             description:
@@ -115,6 +116,7 @@ export const Menus: CollectionConfig = {
             {
               name: 'title',
               type: 'text',
+              localized: true,
               required: true,
               admin: {
                 description:

@@ -1,11 +1,9 @@
+import { stableSlug } from '@/fields/stable-slug'
 import type { CollectionConfig } from 'payload'
 import { lexicalEditor, TextStateFeature } from '@payloadcms/richtext-lexical'
 import { validateVideoURL } from '@/lib/video-embed'
 import { stripProjectCreateID } from '@/collections/hooks/strip-project-create-id'
-import {
-  ALL_SMALL_CAPS_FONT_FEATURES,
-  SMALL_CAPS_LETTER_SPACING,
-} from '@/lib/small-caps'
+import { ALL_SMALL_CAPS_FONT_FEATURES, SMALL_CAPS_LETTER_SPACING } from '@/lib/small-caps'
 
 const projectTextEditor = lexicalEditor({
   features: ({ rootFeatures }) => [
@@ -53,10 +51,11 @@ export const Projects: CollectionConfig = {
     beforeValidate: [stripProjectCreateID],
   },
   fields: [
-    { name: 'title', type: 'text', required: true, index: true },
+    { name: 'title', type: 'text', localized: true, required: true, index: true },
     {
       name: 'description',
       type: 'richText',
+      localized: true,
       editor: projectTextEditor,
       admin: { description: 'Shown below the hero, alongside the project title' },
     },
@@ -152,7 +151,7 @@ export const Projects: CollectionConfig = {
       type: 'blocks',
       admin: {
         description:
-          'Add images, videos and text in the order they should appear below the introduction',
+          'Images and block order are shared across languages. Switch the content locale to translate text and captions.',
         initCollapsed: true,
       },
       blocks: [
@@ -161,7 +160,7 @@ export const Projects: CollectionConfig = {
           labels: { singular: 'Image', plural: 'Images' },
           fields: [
             { name: 'image', type: 'upload', relationTo: 'media', required: true },
-            { name: 'caption', type: 'text' },
+            { name: 'caption', type: 'text', localized: true },
             {
               name: 'presentation',
               label: 'Presentation',
@@ -202,7 +201,7 @@ export const Projects: CollectionConfig = {
                   'Recommended; also determines whether the video uses portrait or landscape sizing',
               },
             },
-            { name: 'caption', type: 'text' },
+            { name: 'caption', type: 'text', localized: true },
             ...videoOptions,
           ],
         },
@@ -210,7 +209,13 @@ export const Projects: CollectionConfig = {
           slug: 'text',
           labels: { singular: 'Text', plural: 'Text blocks' },
           fields: [
-            { name: 'content', type: 'richText', required: true, editor: projectTextEditor },
+            {
+              name: 'content',
+              type: 'richText',
+              localized: true,
+              required: true,
+              editor: projectTextEditor,
+            },
             {
               name: 'quote',
               label: 'Display as quote',
@@ -227,24 +232,15 @@ export const Projects: CollectionConfig = {
       type: 'text',
       required: true,
       index: true,
-      admin: { position: 'sidebar' },
+      admin: { position: 'sidebar', description: 'Shared URL slug for both languages.' },
       hooks: {
-        beforeValidate: [
-          ({ data }) => {
-            if (!data?.slug && data?.title) {
-              return data.title
-                .toLowerCase()
-                .replace(/[^\w ]+/g, '')
-                .replace(/ +/g, '-')
-            }
-            return data?.slug
-          },
-        ],
+        beforeValidate: [stableSlug],
       },
     },
     {
       name: 'excerpt',
       type: 'textarea',
+      localized: true,
       admin: {
         position: 'sidebar',
         description: 'Short description for meta tags and previews',

@@ -47,7 +47,7 @@ export const Media: CollectionConfig = {
   upload: {
     // Payload owns this directory: every original needs a matching database
     // record and generated sizes, so files must enter through Admin or the API.
-    staticDir: path.resolve(__dirname, '../../public/media'),
+    staticDir: process.env.MEDIA_DIR || path.resolve(__dirname, '../../public/media'),
     // Keep `withoutEnlargement` unset. Payload then omits sizes larger than the
     // source; setting it to true re-encodes a duplicate at the source dimensions.
     imageSizes: [

@@ -52,3 +52,21 @@ The first approved copy preserved 11 projects, 1 Page, 71 media records, 1 user,
 The active release is `releases/20261111-node26-r2`. Verification passed for preview protection, JavaScript/CSS delivery, the Project Map redirect, published Pages, authenticated Dashboard/Page editor access, existing media delivery, and temporary upload/thumbnail/delete cleanup. The media collection returned to 71 records and no test upload files remained. Account-wide usage after verification was approximately 643 MB of the 1 GB RAM allocation and 15.1 GB of 25 GB disk space.
 
 This preview is a snapshot. New local edits and uploads are not automatically synchronized to it. Keep editing locally until the final launch transfer is agreed.
+
+## Production launch — 12 November 2026
+
+`https://lenart.pl` now runs Node 26 in Production mode, with one Passenger process, HTTPS enforced, TLS 1.2 minimum and MyDevil cache disabled. DNS and email configuration were preserved. `www.lenart.pl` also serves the application. The unused `ddns-synology.php` endpoint is retired.
+
+The application root is `~/domains/lenart.pl/public_nodejs/`, using the same bootstrap/current/releases/shared structure described above. The launch release is `releases/20261112-polish-launch`. Its separate production PostgreSQL database/user is `p1105_lenart_liv` on `pgsql44.mydevil.net`. Runtime secrets live in `shared/.env`, with no preview password. Never commit or serve that file. Uploads live in the absolute `shared/media` directory.
+
+The approved final local snapshot contains 14 projects, 1 published Page, 86 media records, 1 admin user, 1 menu and 36 migration-history records. Polish translations are editable localized CMS content; Polish availability is enabled in Settings. Existing English text, URLs, relationships and media are preserved. Three projects had no English descriptions, so their descriptions were left empty in both languages.
+
+**Production admin is now the source of truth for content.** Edit at `https://lenart.pl/admin`; local edits do not synchronize automatically. Future code releases must preserve the production database and shared uploads. Back up both before migrations or content imports. Refresh local development content from production when needed, rather than overwriting production with an older local snapshot.
+
+To conserve the MD1 memory allowance, `test.lenart.pl` now runs a small temporary 302 redirect to the live domain. Its previous database and release remain intact. The original preview bootstrap, runtime settings and current-release path are saved under its `shared/backups/pre-live-*` files. Restore those together and restart the preview when an isolated staging session is needed; account for the RAM required by a second Next/Payload process. Do not restore `shared/.env.launch-preview` for normal staging: it points to production content.
+
+Before the domain switch, the old PHP website and vhost configuration were saved under `~/lenart-launch-backups/20261112/`. Original `public_html` files remain untouched. The production database import, its pre-restore backup and restore log are under production `shared/backups/`. The existing Google site-verification HTML was retained in the new release.
+
+For an emergency return to the old static website, remove only the Node vhost (`devil www del lenart.pl`, **without `--remove`**), re-add `devil www add lenart.pl php`, and verify HTTPS/certificate bindings and the saved vhost options. This changes routing; it does not restore or erase production CMS content. For code rollback, switch `current` to a verified compatible release and restart `lenart.pl`; database changes may require their own recovery plan.
+
+Launch checks passed for all 17 sitemap URLs, both frontend languages, the single target-language switch, browser-language detection, saved-language preference, About list markup, media, JS/CSS delivery, login and private-file isolation. Production robots allow indexing and advertise the new sitemap. Local validation passed 69 tests, lint and the Node 26 production build.

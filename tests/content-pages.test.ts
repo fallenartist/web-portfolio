@@ -6,6 +6,23 @@ import { editPages, readPublishedPages } from '../src/collections/access/pages'
 import { occupiedPageSlugs, validatePageSlugFormat } from '../src/lib/page-slugs'
 import { findPublishedPage } from '../src/lib/page-queries'
 import { getInternalLinkHref, visiblePageMenu } from '../src/lib/menu-links'
+import { validateContentPageSlug } from '../src/collections/validations/page-slug'
+
+test('page URL validation preserves the language of the active save request', async () => {
+  const req = {
+    locale: 'pl',
+    payload: {
+      find: async () => ({ docs: [] }),
+      findGlobal: async (options: { locale?: string }) => {
+        // Payload's Local API applies an explicit locale to the same request.
+        if (options.locale) req.locale = options.locale
+        return { rootDisciplineSlug: 'work', projectsOverviewSlug: 'map' }
+      },
+    },
+  }
+  assert.equal(await validateContentPageSlug('about', { req } as never), true)
+  assert.equal(req.locale, 'pl')
+})
 
 test('page URLs avoid system routes and the visible portfolio hierarchy', () => {
   const reserved = occupiedPageSlugs(

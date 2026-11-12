@@ -42,6 +42,7 @@ export default function Header({
   onBreadcrumbClick,
 }: HeaderProps) {
   const { locale, available, text } = useLocale()
+  const switchLanguage = available.find((language) => language !== locale)
   const [openPath, setOpenPath] = useState<string | null>(null)
   const [abbreviateBreadcrumb, setAbbreviateBreadcrumb] = useState(false)
   const breadcrumbRef = useRef<HTMLElement>(null)
@@ -191,24 +192,19 @@ export default function Header({
         </div>
       </nav>
 
-      {available.length > 1 && (
-        <div className={styles.languageSwitcher} role="group" aria-label={text.language}>
-          {available.map((language) => (
-            <button
-              key={language}
-              type="button"
-              lang={language}
-              aria-label={language === 'pl' ? 'Polski' : 'English'}
-              aria-pressed={locale === language}
-              onClick={() => {
-                if (locale !== language)
-                  trackEvent('language_changed', { from_language: locale, to_language: language })
-                window.location.assign(languageSwitchURL(window.location.href, language).href)
-              }}
-            >
-              {language.toUpperCase()}
-            </button>
-          ))}
+      {switchLanguage && (
+        <div className={styles.languageSwitcher}>
+          <button
+            type="button"
+            lang={switchLanguage}
+            aria-label={locale === 'pl' ? 'Przełącz na język angielski' : 'Switch to Polish'}
+            onClick={() => {
+              trackEvent('language_changed', { from_language: locale, to_language: switchLanguage })
+              window.location.assign(languageSwitchURL(window.location.href, switchLanguage).href)
+            }}
+          >
+            {switchLanguage.toUpperCase()}
+          </button>
         </div>
       )}
 

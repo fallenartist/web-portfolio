@@ -1,34 +1,11 @@
-import type { CollectionConfig, Field, TextFieldValidation } from 'payload'
+import type { CollectionConfig, Field } from 'payload'
 import { lexicalEditor, UploadFeature } from '@payloadcms/richtext-lexical'
 import { stableSlug } from '@/fields/stable-slug'
-import { occupiedPageSlugs, validatePageSlugFormat } from '@/lib/page-slugs'
+import { validateContentPageSlug } from '@/collections/validations/page-slug'
 import { validateVideoURL } from '@/lib/video-embed'
 import { editPages, readPublishedPages } from '@/collections/access/pages'
 
-export const validateContentPageSlug: TextFieldValidation = async (value, { req }) => {
-  const format = validatePageSlugFormat(value)
-  if (format !== true) return format
-  const [disciplines, projects, settings] = await Promise.all([
-    req.payload.find({
-      collection: 'disciplines',
-      pagination: false,
-      depth: 0,
-      select: { slug: true, parent: true },
-      req,
-    }),
-    req.payload.find({
-      collection: 'projects',
-      pagination: false,
-      depth: 0,
-      select: { slug: true, discipline: true },
-      req,
-    }),
-    req.payload.findGlobal({ slug: 'settings', locale: 'en', depth: 0, req }),
-  ])
-  return occupiedPageSlugs(disciplines.docs, projects.docs, settings).has(String(value))
-    ? 'This URL is already used by the portfolio or a system route. Choose another slug.'
-    : true
-}
+export { validateContentPageSlug } from '@/collections/validations/page-slug'
 
 const textEditor = lexicalEditor({
   features: ({ defaultFeatures }) => [

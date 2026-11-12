@@ -50,3 +50,19 @@ a:focus-visible {
   color: var(--key-color);
   text-decoration: none;
 }
+
+/* Tailwind resets native list markers; restore them for authored content. */
+.payload-richtext ul {
+  list-style-type: disc;
+  padding-inline-start: 1.1em;
+}
+
+.payload-richtext ul > li::marker {
+  font-size: 0.6em;
+  color: currentColor;
+}
+
+.payload-richtext ol {
+  list-style-type: decimal;
+  padding-inline-start: 1.3em;
+}

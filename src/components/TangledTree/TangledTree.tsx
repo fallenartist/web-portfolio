@@ -170,7 +170,9 @@ export default function TangledTree({
       bandGap: mobile ? 54 : 48,
       nodeMarkerWidth: nodeSize,
       padding: nodeSize / 2,
-      rootColumnWidth: mobile ? 72 : 88,
+      rootColumnWidth: mobile
+        ? Math.max(72, Math.ceil((data.levels[0]?.[0]?.title.length || 4) * 7.5) + nodeSize + 16)
+        : 88,
     }
     const initial = constructTangledTreeLayout(data.levels, options)
     if (initial.height >= containerSize.height) return initial

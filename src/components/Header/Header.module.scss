@@ -164,11 +164,6 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
     font-size: 13px;
     cursor: pointer;
 
-    &[aria-pressed='true'] {
-      color: var(--key-color);
-      font-weight: 600;
-    }
-
     &:hover {
       color: var(--key-color);
     }

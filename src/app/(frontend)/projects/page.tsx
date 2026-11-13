@@ -18,6 +18,7 @@ export default async function ProjectsOverviewPage() {
     <main>
       <TangledTree
         data={data}
+        rootTitle={portfolio.treemapData.title}
         guideInstruction={portfolio.settings.projectGuideInstruction}
         guideTitle={portfolio.settings.projectGuideTitle}
         overviewPath={overviewPath}

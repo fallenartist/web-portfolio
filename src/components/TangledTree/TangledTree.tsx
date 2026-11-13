@@ -78,12 +78,14 @@ function minimumDiagramWidth(data: TangledTreeData, nodeSize: number, bundleWidt
 
 export default function TangledTree({
   data,
+  rootTitle,
   guideInstruction,
   guideTitle,
   initialSelectedId,
   overviewPath,
 }: {
   data: TangledTreeData
+  rootTitle: string
   guideInstruction?: null | string
   guideTitle?: null | string
   initialSelectedId?: string
@@ -215,7 +217,7 @@ export default function TangledTree({
 
   useEffect(() => {
     const breadcrumbs = [
-      { data: { title: text.kinds.root.toUpperCase() }, path: '/' },
+      { data: { title: rootTitle }, path: '/' },
       { data: { title: guideTitle?.trim() || text.projects }, path: overviewPath },
     ]
     if (selectedNode) {
@@ -231,7 +233,7 @@ export default function TangledTree({
       })
     }
     updateBreadcrumb(breadcrumbs)
-  }, [guideTitle, overviewPath, selectedNode, text, updateBreadcrumb])
+  }, [rootTitle, guideTitle, overviewPath, selectedNode, text, updateBreadcrumb])
 
   useEffect(() => {
     const syncSelectionFromHistory = () => {

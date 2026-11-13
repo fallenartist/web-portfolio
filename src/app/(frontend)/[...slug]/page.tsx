@@ -50,6 +50,7 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
       <main>
         <TangledTree
           data={data}
+          rootTitle={treemapData.title}
           guideInstruction={portfolio.settings.projectGuideInstruction}
           guideTitle={portfolio.settings.projectGuideTitle}
           overviewPath={overviewPath}
@@ -87,6 +88,7 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
       <main>
         <TangledTree
           data={data}
+          rootTitle={treemapData.title}
           guideInstruction={portfolio.settings.projectGuideInstruction}
           guideTitle={portfolio.settings.projectGuideTitle}
           initialSelectedId={selected.id}

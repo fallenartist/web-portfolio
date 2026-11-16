@@ -1,0 +1,115 @@
+.banner {
+  position: fixed;
+  z-index: 300;
+  inset: auto 24px 24px auto;
+  width: min(280px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  animation: bannerFadeIn 240ms ease-out;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: var(--menu-background);
+  color: #222;
+  box-shadow: 0 6px 32px #0002;
+  font-size: 18px;
+  line-height: 1.35;
+
+  h2 {
+    margin: 0;
+    font: inherit;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  p {
+    margin: 0 0 10px;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--key-color);
+    outline-offset: 3px;
+  }
+}
+.selection {
+  font-size: 15px;
+  color: #555;
+}
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+
+  button {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid #555;
+    border-radius: 2px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &:hover {
+      background: #f4f4f4;
+    }
+    &.accept {
+      border-color: #23713b;
+      background: #23713b;
+      color: #fff;
+
+      &:hover {
+        border-color: #19572c;
+        background: #19572c;
+      }
+    }
+    &:focus-visible {
+      outline: 2px solid var(--key-color);
+      outline-offset: 3px;
+    }
+  }
+}
+
+@keyframes bannerFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .banner {
+    inset: auto 16px 16px;
+    width: auto;
+    max-width: 280px;
+    margin-inline: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner {
+    animation: none;
+  }
+}
+
+.heading {
+  position: relative;
+  color: var(--menu-text-color, #444);
+  padding-inline-end: 48px;
+  margin-bottom: 8px;
+}
+.icon {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  line-height: 0;
+}
+.privacy {
+  color: inherit;
+  font-size: 16px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

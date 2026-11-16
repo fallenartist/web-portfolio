@@ -5,6 +5,7 @@
   --background-rgb: 255, 255, 255;
   --key-color: #cc2929;
   --menu-background: rgb(244 244 244 / 97%);
+  --menu-text-color: #444;
   --page-gutter: 12px;
   --small-caps-letter-spacing: 0.04em;
 }

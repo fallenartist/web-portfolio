@@ -75,6 +75,25 @@ test('analytics reports preserve totals, rank projects and fill missing dates', 
   assert.throws(() => parseAnalyticsReport([['bad']], 7), /Invalid analytics row/)
 })
 
+test('visitor locations rank distinct locations and retain unavailable data', () => {
+  const report = parseAnalyticsReport([
+    ['countries', 'Unknown', '', 1, 0, 0, 0],
+    ['countries', 'Poland', '', '12', 0, 0, 0],
+    ['cities', 'US/Illinois/Springfield', 'Springfield, Illinois, United States', 2, 0, 0, 0],
+    ['cities', 'US/Massachusetts/Springfield', 'Springfield, Massachusetts, United States', 5, 0, 0, 0],
+    ['cities', '//Unknown city', 'Unknown city', 1, 0, 0, 0],
+  ], 30)
+  assert.deepEqual(report.countries, [
+    { key: 'Poland', label: 'Poland', count: 12 },
+    { key: 'Unknown', label: 'Unknown', count: 1 },
+  ])
+  assert.equal(report.cities.length, 3)
+  assert.equal(report.cities[0].label, 'Springfield, Massachusetts, United States')
+  assert.equal(report.cities[2].label, 'Unknown city')
+  assert.deepEqual(emptyReport(30, 'setup', '').countries, [])
+  assert.deepEqual(parseAnalyticsReport([], 30).cities, [])
+})
+
 test('session metrics distinguish missing measurements from zero and format durations', () => {
   const empty = parseAnalyticsReport([], 7)
   assert.equal(empty.current.sessions, 0)

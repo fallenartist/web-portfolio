@@ -1,28 +1,12 @@
 import { stableSlug } from '@/fields/stable-slug'
 import type { CollectionConfig } from 'payload'
-import { lexicalEditor, TextStateFeature } from '@payloadcms/richtext-lexical'
+import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { validateVideoURL } from '@/lib/video-embed'
 import { stripProjectCreateID } from '@/collections/hooks/strip-project-create-id'
-import { ALL_SMALL_CAPS_FONT_FEATURES, SMALL_CAPS_LETTER_SPACING } from '@/lib/small-caps'
+import { typographyFeature } from '@/fields/typography-feature'
 
 const projectTextEditor = lexicalEditor({
-  features: ({ rootFeatures }) => [
-    ...rootFeatures,
-    TextStateFeature({
-      state: {
-        fontFeatures: {
-          allSmallCaps: {
-            label: 'All Small Caps',
-            css: {
-              'font-feature-settings': ALL_SMALL_CAPS_FONT_FEATURES,
-              'font-variant-caps': 'all-small-caps',
-              'letter-spacing': SMALL_CAPS_LETTER_SPACING,
-            },
-          },
-        },
-      },
-    }),
-  ],
+  features: ({ rootFeatures }) => [...rootFeatures, typographyFeature()],
 })
 
 const videoOptions = [
@@ -44,6 +28,13 @@ export const Projects: CollectionConfig = {
   admin: {
     group: 'Content',
     useAsTitle: 'title',
+    components: {
+      edit: {
+        beforeDocumentControls: [
+          '/components/admin/Pages/PageEditorTypography#PageEditorTypography',
+        ],
+      },
+    },
     defaultColumns: ['title', 'client', 'discipline', 'industries', 'priority', 'updatedAt'],
   },
   access: { read: () => true },
@@ -57,7 +48,10 @@ export const Projects: CollectionConfig = {
       type: 'richText',
       localized: true,
       editor: projectTextEditor,
-      admin: { description: 'Shown below the hero, alongside the project title' },
+      admin: {
+        className: 'project-body-editor',
+        description: 'Shown below the hero, alongside the project title',
+      },
     },
     {
       name: 'thumbnail',
@@ -215,6 +209,7 @@ export const Projects: CollectionConfig = {
               localized: true,
               required: true,
               editor: projectTextEditor,
+              admin: { className: 'project-body-editor' },
             },
             {
               name: 'quote',

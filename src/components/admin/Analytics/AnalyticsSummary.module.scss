@@ -81,13 +81,14 @@
   font-size: 12px;
 }
 .metrics {
+  container: analytics-metrics / inline-size;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 .metric {
   box-sizing: border-box;
-  flex: 1 1 140px;
+  flex: 1 1 100%;
   min-width: min(140px, 100%);
   display: flex;
   flex-direction: column;
@@ -106,6 +107,32 @@
   small {
     font-size: 11px;
     color: var(--theme-elevation-500);
+  }
+}
+
+// Balance the seven metrics rather than leaving five/six tiles above one.
+// Breakpoints allow at least 140px per tile, including the 8px gaps.
+@container analytics-metrics (min-width: 288px) {
+  .metric {
+    flex-basis: calc((100% - 8px) / 2);
+  }
+}
+@container analytics-metrics (min-width: 436px) {
+  .metric {
+    flex-basis: calc((100% - 16px) / 3);
+  }
+  .metric:where(:nth-child(n + 4)) {
+    flex-basis: calc((100% - 8px) / 2);
+  }
+}
+@container analytics-metrics (min-width: 584px) {
+  .metric {
+    flex-basis: calc((100% - 24px) / 4);
+  }
+}
+@container analytics-metrics (min-width: 1028px) {
+  .metric {
+    flex-basis: 140px;
   }
 }
 .chart {
@@ -161,6 +188,13 @@
     margin-top: 4px;
     font-size: 12px;
   }
+}
+.locations {
+  margin-top: 28px;
+}
+.locationBreakdowns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 16px;
 }
 .bar {
   position: absolute;

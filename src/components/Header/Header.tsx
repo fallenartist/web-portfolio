@@ -5,6 +5,8 @@ import Link from 'next/link'
 import styles from './Header.module.scss'
 import { usePathname } from 'next/navigation'
 import { useLocale } from '@/components/LocaleProvider'
+import { useCookieConsent } from '@/components/CookieConsent/CookieConsent'
+import CookieIcon from '@/components/CookieConsent/CookieIcon'
 import { languageSwitchURL } from '@/lib/locale'
 import { trackEvent } from '@/lib/analytics'
 import type { Menu } from '@/payload-types'
@@ -42,6 +44,8 @@ export default function Header({
   onBreadcrumbClick,
 }: HeaderProps) {
   const { locale, available, text } = useLocale()
+  const cookieConsent = useCookieConsent()
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
   const switchLanguage = available.find((language) => language !== locale)
   const [openPath, setOpenPath] = useState<string | null>(null)
   const [abbreviateBreadcrumb, setAbbreviateBreadcrumb] = useState(false)
@@ -210,6 +214,7 @@ export default function Header({
 
       {/* Hamburger Menu Button */}
       <button
+        ref={menuButtonRef}
         className={`${styles.hamburger} ${menuOpen ? styles.active : ''}`}
         onClick={() => setOpenPath(menuOpen ? null : pathname)}
         aria-expanded={menuOpen}
@@ -267,6 +272,22 @@ export default function Header({
               </Link>
             </li>
           </ul>
+        )}
+        {cookieConsent && (
+          <button
+            type="button"
+            className={styles.cookieSettings}
+            aria-label={cookieConsent.label}
+            title={cookieConsent.label}
+            aria-haspopup="dialog"
+            tabIndex={menuOpen ? 0 : -1}
+            onClick={() => {
+              setOpenPath(null)
+              cookieConsent.openSettings(menuButtonRef.current)
+            }}
+          >
+            <CookieIcon url={cookieConsent.iconURL} size={28} />
+          </button>
         )}
       </nav>
     </header>

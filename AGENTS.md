@@ -26,12 +26,13 @@
 - Collection schemas in `src/collections`
 - API routes using Next.js route handlers
 
-## TODO
+## Operational rules
 
-- [x] Add an `Agencies` collection to admin to record the studio through which a project was commissioned.
-- [x] Add a `Tags` collection to admin, listing all tags used in projects.
-- [ ] Show `Client:`, `Agency:`, and tags next to the description in the project UI.
-- [x] Present projects by industry, client, agency, and tag with clickable front-end filters.
+- Production admin is the content source of truth. Deploy code without replacing live data, secrets or uploads.
+- Build MyDevil releases locally with Node 26; install runtime dependencies on FreeBSD. Follow `docs/mydevil.md`.
+- Back up before migrations; use reviewed migrations rather than schema pushing. Generate types/import map after schema/editor changes.
+- Keep Payload package versions aligned and retain scoped dependency overrides until upstream supports their removal.
+- Track unfinished work in `TODO.md`; do not duplicate the backlog here.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

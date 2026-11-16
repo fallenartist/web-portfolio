@@ -1,6 +1,11 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useSyncExternalStore } from 'react'
+import {
+  getAnalyticsConsent,
+  subscribeAnalyticsConsent,
+  serverAnalyticsConsent,
+} from '@/lib/analytics-consent'
 import type { PlayerEventMap } from '@vimeo/player'
 import { trackEvent } from '@/lib/analytics'
 import { createVideoWatchTracker } from '@/lib/video-analytics'
@@ -21,12 +26,17 @@ export function useVideoAnalytics({
   label: string
   blockID?: string
 }) {
+  const consent = useSyncExternalStore(
+    subscribeAnalyticsConsent,
+    getAnalyticsConsent,
+    serverAnalyticsConsent,
+  )
   const ref = useRef<HTMLIFrameElement>(null)
   const trackerRef = useRef<ReturnType<typeof createVideoWatchTracker> | null>(null)
   const videoID = getVideoEmbed(url)?.id || ''
 
   useEffect(() => {
-    if (!enabled || !ref.current || !videoID) return
+    if (consent !== 'accepted' || !enabled || !ref.current || !videoID) return
     let active = true
     let detach: (() => void) | undefined
     // Keep a viewing across iframe URL changes (e.g. the hero fit/controls toggle).
@@ -94,9 +104,10 @@ export function useVideoAnalytics({
       active = false
       detach?.()
     }
-  }, [enabled, url, videoID, placement, label, blockID, autoplay])
+  }, [consent, enabled, url, videoID, placement, label, blockID, autoplay])
 
   useEffect(() => {
+    if (consent !== 'accepted') return
     const visibility = () => trackerRef.current?.visibility(document.visibilityState !== 'hidden')
     // Hidden-tab snapshots retain progress if the browser never delivers pagehide.
     const leave = () => trackerRef.current?.leave()
@@ -113,6 +124,6 @@ export function useVideoAnalytics({
       window.removeEventListener('pageshow', resume)
       document.removeEventListener('visibilitychange', visibility)
     }
-  }, [])
+  }, [consent])
   return ref
 }

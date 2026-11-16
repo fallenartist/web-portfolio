@@ -31,6 +31,9 @@ export default buildConfig({
     fallback: true,
   },
   admin: {
+    components: {
+      beforeNavLinks: ['/components/admin/Navigation/WebsiteLink#WebsiteLink'],
+    },
     dashboard: {
       widgets: [
         {

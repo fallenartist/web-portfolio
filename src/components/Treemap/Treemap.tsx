@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import * as d3 from 'd3'
 import { createD3Lightbox } from '@/lib/lightbox'
-import { coverMediaRect, hasOriginalAspectRatio } from '@/lib/media-image'
+import { coverMediaRect } from '@/lib/media-image'
+import { treemapImageSource } from '@/lib/treemap-image'
 import { useLocale } from '@/components/LocaleProvider'
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import ProjectStory from '@/components/ProjectStory/ProjectStory'
@@ -31,19 +32,7 @@ function imageFor(
   height: number,
   preserveAspectRatio = false,
 ): string | null {
-  const target = Math.max(width, height) * window.devicePixelRatio
-  const sizes = node.sizes
-  for (const name of ['thumbnail', 'small', 'medium', 'large'] as const) {
-    const image = sizes?.[name]
-    if (
-      image?.url &&
-      (!preserveAspectRatio || hasOriginalAspectRatio(image, node.width, node.height)) &&
-      Math.max(image.width || 0, image.height || 0) >= target
-    ) {
-      return image.url
-    }
-  }
-  return node.image || null
+  return treemapImageSource(node, width, height, window.devicePixelRatio, preserveAspectRatio)
 }
 
 export default function Treemap({ data }: { data: TreemapData }) {
@@ -107,6 +96,11 @@ export default function Treemap({ data }: { data: TreemapData }) {
         timers.delete(id)
       }
     }
+    let projectNavigationTimers: ReturnType<typeof setTimeout>[] = []
+    const cancelProjectNavigation = () => {
+      projectNavigationTimers.forEach(clearTimer)
+      projectNavigationTimers = []
+    }
     const lightbox = createD3Lightbox({
       labels: text,
       imagePathPrefix: '',
@@ -146,6 +140,14 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .attr('class', (d) => `${styles.node} ${styles['level' + level(d)]}`)
       .attr('role', 'button')
       .attr('aria-label', (d) => d.data.title || d.data.alt || text.viewImage)
+      .classed(
+        styles.loading,
+        (d) => d.data.kind === 'image' || (d.data.kind === 'project' && Boolean(d.data.thumb)),
+      )
+    // Every asset reveals its own cell; the initial layout itself stays still.
+    const revealCell = function (this: SVGImageElement) {
+      d3.select(this.closest('g')).classed(styles.loading, false)
+    }
     cells
       .append('rect')
       .attr('id', (d) => `tile-${d.data.id}`)
@@ -166,6 +168,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .append('svg')
       .attr('overflow', 'hidden')
       .append('image')
+      .on('load.reveal error.reveal', revealCell)
       .attr('href', (d) => d.data.thumb || null)
       .attr('class', styles.thumb)
       .attr('width', '100%')
@@ -176,6 +179,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .append('svg')
       .attr('overflow', 'hidden')
       .append('image')
+      .on('load.reveal error.reveal', revealCell)
       .attr('href', (d) =>
         d.data.hero
           ? imageFor(d.data, d.x1 - d.x0, d.y1 - d.y0, true)
@@ -208,6 +212,14 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .style('fill-opacity', 0)
     // Preserve overlay stacking: discipline labels above projects above gallery images.
     cells.sort((a, b) => b.depth - a.depth)
+    cells
+      .filter((d) => d.data.kind === 'project')
+      .append('foreignObject')
+      .attr('class', styles.touchTitle)
+      .attr('aria-hidden', 'true')
+      .append('xhtml:div')
+      .append('xhtml:span')
+      .text((d) => d.data.title)
 
     function zoom(
       node: TreemapNode,
@@ -276,6 +288,13 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .attr('y', (d) => innerH(d) / 2)
       cells.select('svg').transition(transition).attr('width', innerW).attr('height', innerH)
       cells
+        .select('foreignObject')
+        .transition(transition)
+        .attr('x', 8)
+        .attr('y', (d) => Math.max(4, innerH(d) - 70))
+        .attr('width', (d) => Math.max(0, innerW(d) - 16))
+        .attr('height', (d) => Math.max(0, Math.min(66, innerH(d) - 8)))
+      cells
         .classed(styles.hide, (d) => d.data.kind !== 'image' && d.depth <= node.depth)
         .attr('tabindex', (d) =>
           d.parent === node && (d.data.kind !== 'image' || d.data.hero) ? 0 : -1,
@@ -313,6 +332,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       }
     }
     function goToPath(path: string) {
+      cancelProjectNavigation()
       const target = root.descendants().find((d) => d.data.kind !== 'image' && pathFor(d) === path)
       if (target && target !== current) zoom(target)
     }
@@ -321,6 +341,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       const target = projectNodes.find((node) => node.data.id === project.id)
       if (!target || target === current) return
 
+      cancelProjectNavigation()
       setStoryVisible(false)
       container!.scrollTop = 0
 
@@ -331,13 +352,18 @@ export default function Treemap({ data }: { data: TreemapData }) {
       const downward = targetAncestors.slice(0, targetAncestors.indexOf(commonAncestor)).reverse()
       const steps = [...upward, ...downward]
       const stepDuration = duration || 0
+      const stepPause = duration ? 250 : 0
 
-      steps.forEach((step, index) => {
-        schedule(() => zoom(step, step === target, false, stepDuration), index * stepDuration)
-      })
+      projectNavigationTimers = steps.map((step, index) =>
+        schedule(
+          () => zoom(step, step === target, false, stepDuration),
+          index * (stepDuration + stepPause),
+        ),
+      )
     }
     navigateProjectRef.current = animateToProject
     function activate(node: TreemapNode) {
+      cancelProjectNavigation()
       if (node.data.kind === 'image' && node.data.image) {
         const images: LightboxImage[] = (node.parent?.children || [])
           .filter((n) => n.data.image)
@@ -366,6 +392,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
         }
       })
     const onBreadcrumb = (event: Event) => {
+      cancelProjectNavigation()
       const path = (event as CustomEvent<string>).detail
       const target = root.descendants().find((d) => d.data.kind !== 'image' && pathFor(d) === path)
       if (target) zoom(target, true)
@@ -391,6 +418,9 @@ export default function Treemap({ data }: { data: TreemapData }) {
       root
         .descendants()
         .find((n) => n.data.kind !== 'image' && pathFor(n) === window.location.pathname) || root,
+      false,
+      false,
+      0,
     )
 
     return () => {
@@ -415,6 +445,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
     <div
       className={`${styles.treemapContainer} ${storyVisible ? styles.storyOpen : ''}`}
       ref={containerRef}
+      data-project-scroll
     >
       <svg
         ref={svgRef}

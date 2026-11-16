@@ -4,12 +4,14 @@ import { stableSlug } from '@/fields/stable-slug'
 import { validateContentPageSlug } from '@/collections/validations/page-slug'
 import { validateVideoURL } from '@/lib/video-embed'
 import { editPages, readPublishedPages } from '@/collections/access/pages'
+import { typographyFeature } from '@/fields/typography-feature'
 
 export { validateContentPageSlug } from '@/collections/validations/page-slug'
 
 const textEditor = lexicalEditor({
   features: ({ defaultFeatures }) => [
     ...defaultFeatures.filter((feature) => !['upload', 'relationship'].includes(feature.key)),
+    typographyFeature(),
     UploadFeature({
       enabledCollections: ['media'],
       collections: {

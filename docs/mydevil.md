@@ -70,3 +70,9 @@ Before the domain switch, the old PHP website and vhost configuration were saved
 For an emergency return to the old static website, remove only the Node vhost (`devil www del lenart.pl`, **without `--remove`**), re-add `devil www add lenart.pl php`, and verify HTTPS/certificate bindings and the saved vhost options. This changes routing; it does not restore or erase production CMS content. For code rollback, switch `current` to a verified compatible release and restart `lenart.pl`; database changes may require their own recovery plan.
 
 Launch checks passed for all 17 sitemap URLs, both frontend languages, the single target-language switch, browser-language detection, saved-language preference, About list markup, media, JS/CSS delivery, login and private-file isolation. Production robots allow indexing and advertise the new sitemap. Local validation passed 69 tests, lint and the Node 26 production build.
+
+## Production update — 16 November 2026
+
+Active release: `releases/20261116-admin-layout-typography`, built from `38e4855` (merged in PR #7 as `8d2b27b`). Includes the admin, Cookies, geolocation dashboard, Layout and Typography updates. FreeBSD dependencies and Sharp were verified; the additive Cookies migration was applied after database/media/runtime backups in `shared/backups/20261116-admin-layout-typography/`. The previous release remains available for rollback.
+
+**Visitor analytics are temporarily disabled:** production `POSTHOG_ENABLED=false` and `COOKIE_BANNER_PREVIEW=false`. Cookies settings and the menu icon are available. After the policy is published and selected in Settings → Cookies, enable `POSTHOG_ENABLED` in the private runtime file and restart the site. IP exclusion is configured; local/development tracking stays disabled. Live verification passed all 17 sitemap routes, Polish pages, admin login, media, JS/CSS and private-file protection. `test.lenart.pl` remains a redirect.

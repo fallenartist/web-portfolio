@@ -19,6 +19,7 @@ import { getVideoEmbed } from '@/lib/video-embed'
 import { arrangePageBlocks } from '@/lib/page-layout'
 import { firstPageImage, populatedPageImage } from '@/lib/page-images'
 import { storyTextStyle, type StoryTextAppearance } from '@/lib/story-typography'
+import { projectTextConverters } from '@/lib/project-rich-text'
 import styles from './ContentPage.module.scss'
 
 type ContentBlock = NonNullable<Page['content']>[number]
@@ -136,7 +137,7 @@ export default function ContentPage({
 
   const firstImage = firstPageImage(page.content)
   const converters: JSXConvertersFunction = ({ defaultConverters }) => ({
-    ...defaultConverters,
+    ...projectTextConverters({ defaultConverters }),
     upload: ({ node }) => {
       if (node.relationTo !== 'media') return null
       const image = populatedPageImage(node.value)

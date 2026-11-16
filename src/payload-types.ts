@@ -1127,6 +1127,22 @@ export interface Setting {
    * Logo shown below the root; clicking it moves up one level
    */
   upLogo?: (number | null) | Media;
+  cookies?: {
+    title?: string | null;
+    message?: string | null;
+    details?: string | null;
+    acceptLabel?: string | null;
+    rejectLabel?: string | null;
+    privacyLabel?: string | null;
+    /**
+     * Optional published page linked from the cookie banner.
+     */
+    privacyPage?: (number | null) | Page;
+    /**
+     * Used in the menu and beside the banner title. Leave empty for the default icon.
+     */
+    icon?: (number | null) | Media;
+  };
   /**
    * English is always available. Enable translations here when they are ready for visitors. Disabled translations remain editable in admin.
    */
@@ -1194,6 +1210,18 @@ export interface SettingsSelect<T extends boolean = true> {
   projectGuideInstruction?: T;
   rootLogo?: T;
   upLogo?: T;
+  cookies?:
+    | T
+    | {
+        title?: T;
+        message?: T;
+        details?: T;
+        acceptLabel?: T;
+        rejectLabel?: T;
+        privacyLabel?: T;
+        privacyPage?: T;
+        icon?: T;
+      };
   languages?:
     | T
     | {

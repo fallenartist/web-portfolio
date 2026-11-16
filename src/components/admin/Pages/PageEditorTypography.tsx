@@ -19,5 +19,5 @@ export async function PageEditorTypography({
     .filter(([name]) => name !== '--story-text-color')
     .map(([name, value]) => `${name}:${value}`)
     .join(';')
-  return <style>{`.page-body-editor{${declarations}}`}</style>
+  return <style>{`.page-body-editor,.project-body-editor{${declarations}}`}</style>
 }

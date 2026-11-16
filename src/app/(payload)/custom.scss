@@ -37,7 +37,8 @@
   }
 }
 
-.page-body-editor .ContentEditable__root {
+.page-body-editor .ContentEditable__root,
+.project-body-editor .ContentEditable__root {
   @include typography.body;
   @include typography.headings;
   p,
@@ -69,6 +70,12 @@
     'smcp' 1,
     'c2sc' 1;
   font-variant-caps: all-small-caps;
+  letter-spacing: var(--small-caps-letter-spacing);
+}
+
+.rich-text-lexical [data-font-features='smallCaps'] {
+  font-feature-settings: 'liga' 1, 'onum' 1, 'pnum' 1, 'smcp' 1;
+  font-variant-caps: small-caps;
   letter-spacing: var(--small-caps-letter-spacing);
 }
 

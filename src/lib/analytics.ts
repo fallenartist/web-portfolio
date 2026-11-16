@@ -22,6 +22,7 @@ let sink: Sink | null = null
 let disabled = false
 let pending: AnalyticsEvent[] = []
 let lastPage = ''
+let currentPage: { path: string; title: string; kind: string; slug?: string } | null = null
 
 export function pauseAnalytics() {
   sink = null
@@ -56,7 +57,9 @@ export function trackEvent(name: AnalyticsEventName, properties: AnalyticsProper
 }
 
 export function trackPageView(path: string, title: string, kind: string, slug?: string) {
-  if (typeof window === 'undefined' || lastPage === path) return
+  if (typeof window === 'undefined') return
+  currentPage = { path, title, kind, slug }
+  if (lastPage === path) return
   lastPage = path
   trackEvent('$pageview', { page_path: path, page_title: title, page_kind: kind })
   if (kind === 'project') {
@@ -77,4 +80,15 @@ export function isLocalAnalyticsHost(hostname: string) {
     hostname.endsWith('.localhost') ||
     hostname.endsWith('.local')
   )
+}
+
+// Begin with the page currently visible after consent, not historical queued visits.
+export function trackCurrentPageView() {
+  if (typeof window === 'undefined') return
+  lastPage = ''
+  if (currentPage?.path === window.location.pathname) {
+    trackPageView(currentPage.path, currentPage.title, currentPage.kind, currentPage.slug)
+  }
+  // If the page component has not mounted yet, its normal page-view call
+  // supplies the correct project metadata once it is ready.
 }

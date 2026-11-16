@@ -2,7 +2,19 @@
 
 import { useEffect } from 'react'
 import { useLocale } from '@/components/LocaleProvider'
-import { isLocalAnalyticsHost, pauseAnalytics, setAnalyticsSink, trackEvent } from '@/lib/analytics'
+import {
+  isLocalAnalyticsHost,
+  setAnalyticsSink,
+  trackEvent,
+  trackCurrentPageView,
+} from '@/lib/analytics'
+import {
+  getAnalyticsConsent,
+  browserAllowsAnalytics,
+  subscribeAnalyticsConsent,
+} from '@/lib/analytics-consent'
+import { createConsentAnalyticsSession } from '@/lib/consent-analytics-session'
+import { getPostHogOptions } from '@/lib/posthog-options'
 
 export interface PublicAnalyticsConfig {
   token: string
@@ -20,56 +32,20 @@ export default function Analytics({ config }: { config: PublicAnalyticsConfig | 
       return
     }
     let active = true
-    pauseAnalytics()
+    const allowed = () => active && getAnalyticsConsent() === 'accepted' && browserAllowsAnalytics()
     const referrer = document.referrer ? new URL(document.referrer) : null
     const source =
       referrer && referrer.origin !== window.location.origin ? referrer.hostname : 'Direct'
-
-    void import('posthog-js')
-      .then(({ default: posthog }) => {
-        if (!active) return
-        posthog.init(config.token, {
-          api_host: config.apiHost,
-          ui_host: config.appHost,
-          cookieless_mode: 'always',
-          persistence: 'memory',
-          person_profiles: 'never',
-          autocapture: false,
-          capture_pageview: false,
-          capture_pageleave: true,
-          disable_session_recording: true,
-          capture_heatmaps: false,
-          capture_dead_clicks: false,
-          capture_performance: false,
-          capture_exceptions: false,
-          disable_surveys: true,
-          disable_web_experiments: true,
-          disable_product_tours: true,
-          advanced_disable_feature_flags: true,
-          respect_dnt: true,
-          save_campaign_params: false,
-          before_send: (event) => {
-            if (!event) return null
-            // Never forward query strings or fragments (including email-bearing campaign links).
-            for (const key of [
-              '$current_url',
-              '$referrer',
-              '$initial_current_url',
-              '$initial_referrer',
-            ]) {
-              const value = event.properties[key]
-              if (typeof value !== 'string') continue
-              try {
-                const url = new URL(value)
-                event.properties[key] = url.origin + url.pathname
-              } catch {
-                delete event.properties[key]
-              }
-            }
-            return event
-          },
-        })
+    const stop = createConsentAnalyticsSession({
+      token: config.token,
+      allowed,
+      subscribe: subscribeAnalyticsConsent,
+      load: () => import('posthog-js').then(({ default: posthog }) => posthog),
+      onStop: () => setAnalyticsSink(null),
+      options: getPostHogOptions(config, allowed),
+      onReady: (posthog) => {
         setAnalyticsSink(({ name, properties, timestamp }) => {
+          if (!allowed()) return
           posthog.capture(
             name,
             {
@@ -86,8 +62,9 @@ export default function Analytics({ config }: { config: PublicAnalyticsConfig | 
             { timestamp, send_instantly: true, transport: 'sendBeacon' },
           )
         })
-      })
-      .catch(() => setAnalyticsSink(null))
+        trackCurrentPageView()
+      },
+    })
 
     const onClick = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target.closest('a[href]') : null
@@ -109,7 +86,7 @@ export default function Analytics({ config }: { config: PublicAnalyticsConfig | 
     return () => {
       active = false
       document.removeEventListener('click', onClick)
-      pauseAnalytics()
+      stop()
     }
   }, [config, locale])
 

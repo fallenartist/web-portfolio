@@ -47,7 +47,7 @@ function Breakdown({
           {rows.map((row) => (
             <li key={row.key}>
               <span className={styles.bar} style={{ width: `${(row.count / maximum) * 100}%` }} />
-              <span className={styles.rowLabel}>
+              <span className={styles.rowLabel} title={row.label}>
                 {links && safeProjectPath(row.key) ? (
                   <a href={row.key} target="_blank" rel="noreferrer">
                     {row.label}
@@ -284,6 +284,19 @@ export default function AnalyticsSummary({ initialReport }: { initialReport: Ana
             <Breakdown title="Traffic sources" rows={report.sources} />
             <Breakdown title="Website language" rows={report.languages} />
           </div>
+          <section className={styles.locations} aria-label="Visitor locations">
+            <div className={styles.chartHeading}>
+              <h3>Visitor locations</h3>
+              <span>Visitors · Approximate locations by IP</span>
+            </div>
+            <div className={`${styles.breakdowns} ${styles.locationBreakdowns}`}>
+              <Breakdown title="Top countries" rows={report.countries} />
+              <Breakdown title="Top cities" rows={report.cities} />
+            </div>
+            <p className={styles.note}>
+              Unknown means location data was unavailable. A visitor can appear in more than one location.
+            </p>
+          </section>
           <section className={styles.videos} aria-label="Video engagement">
             <div className={styles.chartHeading}>
               <h3>Video engagement</h3>

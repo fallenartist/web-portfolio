@@ -1,5 +1,5 @@
 $headerHeight: 64px;
-$textColor: #444;
+$textColor: var(--menu-text-color, #444);
 $transitionTime: 400ms;
 $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
 
@@ -21,6 +21,7 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
 
     .nav {
       max-height: calc(100vh - $headerHeight);
+      overflow-y: auto;
       opacity: 1;
       padding-top: 20px;
       padding-bottom: 20px;
@@ -333,5 +334,34 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
     .separator {
       font-size: 18px;
     }
+  }
+}
+
+.nav:has(.cookieSettings) > ul {
+  padding-inline-end: calc(var(--page-gutter) + 48px);
+}
+
+.cookieSettings {
+  position: absolute;
+  top: 12px;
+  right: var(--page-gutter);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 6px;
+  border: 0;
+  background: none;
+  color: $textColor;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--key-color);
+  }
+  &:focus-visible {
+    outline: 1px solid var(--key-color);
+    outline-offset: 2px;
   }
 }

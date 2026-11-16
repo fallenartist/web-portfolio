@@ -7,6 +7,7 @@ import { getPortfolio } from '@/lib/site-data'
 import { findTreemapNode } from '@/lib/treemap-data'
 import { validatePageSlugFormat } from '@/lib/page-slugs'
 import { findPublishedPage } from '@/lib/page-queries'
+import { websiteTypography } from '@/lib/polish-typography'
 
 export const getContentPage = cache(async (slug: string) => {
   if (validatePageSlugFormat(slug) !== true) return null
@@ -20,5 +21,6 @@ export const getContentPage = cache(async (slug: string) => {
   )
     return null
   const payload = await getPayload({ config })
-  return findPublishedPage(payload, slug, await getLocale())
+  const locale = await getLocale()
+  return websiteTypography(await findPublishedPage(payload, slug, locale), locale)
 })

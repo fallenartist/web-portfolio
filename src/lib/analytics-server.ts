@@ -2,7 +2,8 @@ import 'server-only'
 
 import { fetchPostHogReport } from '@/lib/posthog-api'
 
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
+import { isAnalyticsIPExcluded } from '@/lib/analytics-exclusions'
 import { createAnalyticsCache } from '@/lib/analytics-cache'
 import type { PublicAnalyticsConfig } from '@/components/Analytics/Analytics'
 import { emptyReport, type AnalyticsPeriod, type AnalyticsReport } from '@/lib/analytics-report'
@@ -17,6 +18,7 @@ export async function getPublicAnalyticsConfig(): Promise<PublicAnalyticsConfig 
   if (process.env.NODE_ENV !== 'production' && process.env.POSTHOG_TRACK_DEVELOPMENT !== 'true')
     return null
   if ((await cookies()).has('payload-token')) return null
+  if (isAnalyticsIPExcluded(await headers(), process.env.POSTHOG_EXCLUDED_IPS)) return null
   return {
     token,
     apiHost:
@@ -40,7 +42,7 @@ export async function getAnalyticsReport(days: AnalyticsPeriod): Promise<Analyti
     return emptyReport(
       days,
       'setup',
-      'Connect your PostHog project to show website activity here. Setup steps are in README → Analytics.',
+      'Connect your PostHog project to show website activity here. Check the POSTHOG_* runtime settings in .env.example.',
     )
   }
   try {

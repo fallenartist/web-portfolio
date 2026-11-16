@@ -7,6 +7,8 @@ import { getMainMenu, getPortfolio } from '@/lib/site-data'
 import LocaleProvider from '@/components/LocaleProvider'
 import { getAvailableLocales, getLocale } from '@/lib/server-locale'
 import Analytics from '@/components/Analytics/Analytics'
+import CookieConsent from '@/components/CookieConsent/CookieConsent'
+import { getCookieBannerSettings } from '@/lib/cookie-settings'
 import { getPublicAnalyticsConfig } from '@/lib/analytics-server'
 
 // CMS content must reflect edits and must not require a database during build.
@@ -47,18 +49,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         }
       >
         <LocaleProvider locale={locale} available={available}>
-          <Analytics config={analyticsConfig} />
-          <BreadcrumbProvider
-            title={settings?.siteTitle || 'Design Portfolio'}
-            menu={menu}
-            legacyRootSlug={treemapData.legacyRootSlug}
-            projectsOverviewSlug={settings?.projectsOverviewSlug || 'projects'}
-            projectGuideTitle={settings?.projectGuideTitle || 'Projects'}
-            rootLogo={rootLogo || undefined}
-            upLogo={upLogo || undefined}
+          <CookieConsent
+            settings={getCookieBannerSettings(settings.cookies, locale)}
+            projectToken={process.env.POSTHOG_PROJECT_TOKEN}
+            prompt={Boolean(analyticsConfig) || process.env.COOKIE_BANNER_PREVIEW === 'true'}
           >
-            {children}
-          </BreadcrumbProvider>
+            <Analytics config={analyticsConfig} />
+            <BreadcrumbProvider
+              title={settings?.siteTitle || 'Design Portfolio'}
+              menu={menu}
+              legacyRootSlug={treemapData.legacyRootSlug}
+              projectsOverviewSlug={settings?.projectsOverviewSlug || 'projects'}
+              projectGuideTitle={settings?.projectGuideTitle || 'Projects'}
+              rootLogo={rootLogo || undefined}
+              upLogo={upLogo || undefined}
+            >
+              {children}
+            </BreadcrumbProvider>
+          </CookieConsent>
         </LocaleProvider>
       </body>
     </html>

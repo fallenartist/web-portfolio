@@ -36,6 +36,8 @@ export interface AnalyticsReport {
   projects: AnalyticsBreakdown[]
   sources: AnalyticsBreakdown[]
   languages: AnalyticsBreakdown[]
+  countries: AnalyticsBreakdown[]
+  cities: AnalyticsBreakdown[]
   videos: VideoAnalytics[]
 }
 
@@ -68,6 +70,8 @@ export function emptyReport(
     projects: [],
     sources: [],
     languages: [],
+    countries: [],
+    cities: [],
     videos: [],
   }
 }
@@ -137,6 +141,24 @@ export function buildAnalyticsQuery(days: AnalyticsPeriod, now = new Date()) {
     UNION ALL
     SELECT 'languages', coalesce(nullIf(toString(properties.site_language), ''), 'Unknown'), '', ${numeric('count()', '0', '0', '0')}
     FROM events WHERE ${current} AND event = '$pageview' GROUP BY 2
+    UNION ALL
+    SELECT 'countries', country, '', ${numeric('visitors', '0', '0', '0')} FROM (
+      SELECT coalesce(nullIf(toString(properties.$geoip_country_name), ''), 'Unknown') AS country,
+        uniq(distinct_id) AS visitors
+      FROM events WHERE ${current} AND event = '$pageview' GROUP BY country
+      ORDER BY visitors DESC, country LIMIT 8
+    )
+    UNION ALL
+    SELECT 'cities', concat(country, '/', region, '/', city),
+      concat(city, if(region = '', '', concat(', ', region)), if(country = '', '', concat(', ', country))),
+      ${numeric('visitors', '0', '0', '0')} FROM (
+      SELECT coalesce(nullIf(toString(properties.$geoip_city_name), ''), 'Unknown city') AS city,
+        coalesce(toString(properties.$geoip_subdivision_1_name), '') AS region,
+        coalesce(toString(properties.$geoip_country_name), '') AS country,
+        uniq(distinct_id) AS visitors
+      FROM events WHERE ${current} AND event = '$pageview' GROUP BY city, region, country
+      ORDER BY visitors DESC, country, region, city LIMIT 8
+    )
     UNION ALL
     SELECT 'videos', video_key, video_label, ${numeric('starts', 'completions', 'avg_watch_seconds', 'avg_watched_percent')} FROM video_summary
     UNION ALL
@@ -239,7 +261,10 @@ export function parseAnalyticsReport(
         })
       videos.set(key, video)
     } else if (section === 'daily') daily.set(key.slice(0, 10), count(a))
-    else if (section === 'projects' || section === 'sources' || section === 'languages') {
+    else if (
+      section === 'projects' || section === 'sources' || section === 'languages' ||
+      section === 'countries' || section === 'cities'
+    ) {
       report[section].push({
         key,
         label: typeof label === 'string' && label ? label : key,
@@ -249,6 +274,9 @@ export function parseAnalyticsReport(
   }
   report.projects.sort((a, b) => b.count - a.count)
   report.sources.sort((a, b) => b.count - a.count)
+  for (const rows of [report.countries, report.cities]) {
+    rows.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+  }
   report.videos = [...videos.values()]
     .filter((video) => video.starts > 0)
     .sort((a, b) => b.starts - a.starts)

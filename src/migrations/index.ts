@@ -33,6 +33,7 @@ import * as migration_20261110_091745_content_pages from './20261110_091745_cont
 import * as migration_20261110_111135_content_page_layout from './20261110_111135_content_page_layout'
 import * as migration_20261111_103102_page_title_visibility from './20261111_103102_page_title_visibility'
 import * as migration_20261111_105611_page_paragraph_flow from './20261111_105611_page_paragraph_flow'
+import * as migration_20261116_144747_cookie_settings from './20261116_144747_cookie_settings'
 
 export const migrations = [
   {
@@ -209,5 +210,10 @@ export const migrations = [
     up: migration_20261111_105611_page_paragraph_flow.up,
     down: migration_20261111_105611_page_paragraph_flow.down,
     name: '20261111_105611_page_paragraph_flow',
+  },
+  {
+    up: migration_20261116_144747_cookie_settings.up,
+    down: migration_20261116_144747_cookie_settings.down,
+    name: '20261116_144747_cookie_settings',
   },
 ]

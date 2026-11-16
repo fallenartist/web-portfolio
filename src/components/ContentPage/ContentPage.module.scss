@@ -80,6 +80,7 @@
   }
   > :first-child > :first-child {
     margin-top: 0;
+    text-box: trim-start cap alphabetic;
   }
   > :last-child > :last-child {
     margin-bottom: 0;
@@ -135,7 +136,7 @@
 
 .flowImage {
   break-inside: avoid;
-  margin-block: 1em;
+  margin-block: 0 1em;
 }
 .flowFull {
   clear: both;
@@ -144,6 +145,9 @@
 .wrapRight {
   width: calc((100% - var(--page-column-gap)) / 2);
   margin-top: 0;
+}
+.flowImage + p {
+  text-box: trim-start cap alphabetic;
 }
 .wrapLeft {
   float: left;

@@ -1,4 +1,5 @@
 import type { GlobalConfig } from 'payload'
+import { cookieDefaults } from '@/lib/cookie-settings'
 
 export const Settings: GlobalConfig = {
   slug: 'settings',
@@ -104,6 +105,67 @@ export const Settings: GlobalConfig = {
       admin: {
         description: 'Logo shown below the root; clicking it moves up one level',
       },
+    },
+    {
+      name: 'cookies',
+      label: 'Cookies',
+      type: 'group',
+      fields: [
+        { name: 'title', type: 'text', localized: true, defaultValue: cookieDefaults.en.title },
+        {
+          name: 'message',
+          type: 'textarea',
+          localized: true,
+          defaultValue: cookieDefaults.en.message,
+        },
+        {
+          name: 'details',
+          label: 'Analytics details',
+          type: 'textarea',
+          localized: true,
+          defaultValue: cookieDefaults.en.details,
+          admin: { hidden: true },
+        },
+        {
+          name: 'acceptLabel',
+          label: 'Accept button',
+          type: 'text',
+          localized: true,
+          defaultValue: cookieDefaults.en.acceptLabel,
+        },
+        {
+          name: 'rejectLabel',
+          label: 'Reject button',
+          type: 'text',
+          localized: true,
+          defaultValue: cookieDefaults.en.rejectLabel,
+        },
+        {
+          name: 'privacyLabel',
+          label: 'Privacy link text',
+          type: 'text',
+          localized: true,
+          defaultValue: cookieDefaults.en.privacyLabel,
+        },
+        {
+          name: 'privacyPage',
+          label: 'Privacy details page',
+          type: 'relationship',
+          relationTo: 'pages',
+          filterOptions: { _status: { equals: 'published' } },
+          admin: { description: 'Optional published page linked from the cookie banner.' },
+        },
+        {
+          name: 'icon',
+          label: 'Cookie icon',
+          type: 'upload',
+          relationTo: 'media',
+          admin: {
+            description:
+              'Used in the menu and beside the banner title. Leave empty for the default icon.',
+          },
+        },
+      ],
     },
     {
       name: 'languages',

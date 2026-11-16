@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useLocale } from '@/components/LocaleProvider'
 import { useVideoAnalytics } from '@/components/Analytics/useVideoAnalytics'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type {
   ProjectHero,
   ProjectMetadata,
@@ -17,6 +17,7 @@ import { normalizeColour } from '@/lib/colour'
 import { projectTextConverters } from '@/lib/project-rich-text'
 import { enableVimeoControls } from '@/lib/video-embed'
 import { storyTextStyle } from '@/lib/story-typography'
+import { treemapImageSource } from '@/lib/treemap-image'
 import styles from './ProjectStory.module.scss'
 
 type ResponsiveImage = {
@@ -419,7 +420,7 @@ function StoryVideo({
   )
 }
 
-function ProjectPreview({ project }: { project: TreemapData }) {
+function ProjectPreview({ project, eager }: { project: TreemapData; eager: boolean }) {
   const hero = project.children?.find((item) => item.kind === 'image' && item.hero)
   const heroPreview = hero?.sizes?.thumbnail?.url || hero?.sizes?.small?.url || hero?.image
   const previewStyle = {
@@ -434,6 +435,7 @@ function ProjectPreview({ project }: { project: TreemapData }) {
       {heroPreview ? (
         <Image
           className={styles.previewHero}
+          loading={eager ? 'eager' : 'lazy'}
           src={heroPreview}
           width={320}
           height={200}
@@ -448,6 +450,7 @@ function ProjectPreview({ project }: { project: TreemapData }) {
       {project.thumb && (
         <Image
           className={styles.previewThumbnail}
+          loading={eager ? 'eager' : 'lazy'}
           src={project.thumb}
           width={80}
           height={80}
@@ -479,6 +482,50 @@ export default function ProjectStory({
   onNavigateProject: (project: TreemapData) => void
 }) {
   const { text } = useLocale()
+  const navigationRef = useRef<HTMLElement>(null)
+  const [preloadNeighbors, setPreloadNeighbors] = useState(false)
+  useEffect(() => {
+    const navigation = navigationRef.current
+    if (!navigation) return
+    const preload = () => {
+      setPreloadNeighbors(true)
+      for (const neighbor of [previousProject, nextProject]) {
+        if (!neighbor) continue
+        const hero = neighbor.children?.find((node) => node.kind === 'image' && node.hero)
+        const sources = [
+          neighbor.thumb,
+          hero &&
+            treemapImageSource(
+              hero,
+              window.innerWidth,
+              window.innerHeight - 64,
+              window.devicePixelRatio,
+              true,
+            ),
+        ]
+        for (const src of sources) {
+          if (!src) continue
+          const image = new window.Image()
+          image.src = src
+        }
+      }
+    }
+    if (!('IntersectionObserver' in window)) {
+      preload()
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          preload()
+          observer.disconnect()
+        }
+      },
+      { root: navigation.closest('[data-project-scroll]'), rootMargin: '400px 0px' },
+    )
+    observer.observe(navigation)
+    return () => observer.disconnect()
+  }, [previousProject, nextProject])
   const hero = project.projectHero
   const story = project.story || []
   const metadata = project.metadata
@@ -608,14 +655,18 @@ export default function ProjectStory({
       </div>
 
       {(previousProject || nextProject) && (
-        <nav className={styles.projectNavigation} aria-label={text.adjacentProjects}>
+        <nav
+          ref={navigationRef}
+          className={styles.projectNavigation}
+          aria-label={text.adjacentProjects}
+        >
           {previousProject ? (
             <button
               className={`${styles.projectLink} ${styles.previousProject}`}
               type="button"
               onClick={() => onNavigateProject(previousProject)}
             >
-              <ProjectPreview project={previousProject} />
+              <ProjectPreview project={previousProject} eager={preloadNeighbors} />
               <span className={styles.projectLinkLabel}>
                 <small>{text.previousProject}</small>
                 <strong>{previousProject.title}</strong>
@@ -630,7 +681,7 @@ export default function ProjectStory({
               type="button"
               onClick={() => onNavigateProject(nextProject)}
             >
-              <ProjectPreview project={nextProject} />
+              <ProjectPreview project={nextProject} eager={preloadNeighbors} />
               <span className={styles.projectLinkLabel}>
                 <small>{text.nextProject}</small>
                 <strong>{nextProject.title}</strong>

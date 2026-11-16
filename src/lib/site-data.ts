@@ -5,10 +5,12 @@ import type { Menu } from '@/payload-types'
 import { fetchTreemapData } from './transformers'
 import { getLocale } from '@/lib/server-locale'
 import { visiblePageMenu } from '@/lib/menu-links'
+import { websiteTypography } from '@/lib/polish-typography'
 
-export const getPortfolio = cache(async () =>
-  fetchTreemapData(await getPayload({ config }), await getLocale()),
-)
+export const getPortfolio = cache(async () => {
+  const locale = await getLocale()
+  return websiteTypography(await fetchTreemapData(await getPayload({ config }), locale), locale)
+})
 
 export function selectMainMenu(menus: Menu[]): Menu | null {
   return (
@@ -29,5 +31,5 @@ export const getMainMenu = cache(async () => {
     pagination: false,
     overrideAccess: false,
   })
-  return visiblePageMenu(selectMainMenu(docs))
+  return websiteTypography(visiblePageMenu(selectMainMenu(docs)), await getLocale())
 })

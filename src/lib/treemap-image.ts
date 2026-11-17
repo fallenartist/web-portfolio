@@ -6,7 +6,7 @@ export function treemapImageSource(
   width: number,
   height: number,
   pixelRatio = 1,
-  preserveAspectRatio = false,
+  preserveAspectRatio = node.hero === true,
 ) {
   const target = Math.max(width, height) * pixelRatio
   for (const name of ['thumbnail', 'small', 'medium', 'large'] as const) {

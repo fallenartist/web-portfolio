@@ -20,3 +20,20 @@ test('neighbor preloading uses the same proportional image and pixel density as 
   assert.equal(treemapImageSource(hero, 300, 200), '/square.jpg')
   assert.equal(treemapImageSource({} as TreemapData, 800, 600), null)
 })
+
+test('portrait heroes retain their framing in overview and project views instead of using square crops', () => {
+  const mertz = {
+    hero: true,
+    image: '/Mertz-packshot.jpg',
+    width: 2362,
+    height: 3384,
+    sizes: {
+      thumbnail: { url: '/Mertz-packshot-400x400.jpg', width: 400, height: 400 },
+      small: { url: '/Mertz-packshot-800x1146.jpg', width: 800, height: 1146 },
+      medium: { url: '/Mertz-packshot-1600x2292.jpg', width: 1600, height: 2292 },
+    },
+  } as TreemapData
+  assert.equal(treemapImageSource(mertz, 240, 150), '/Mertz-packshot-800x1146.jpg')
+  assert.equal(treemapImageSource(mertz, 1440, 836), '/Mertz-packshot-1600x2292.jpg')
+  assert.equal(treemapImageSource(mertz, 1440, 836, 2), '/Mertz-packshot.jpg')
+})

@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import * as d3 from 'd3'
 import { createD3Lightbox } from '@/lib/lightbox'
-import { coverMediaRect } from '@/lib/media-image'
+import { coverMediaRect, proportionalMediaSize } from '@/lib/media-image'
 import { treemapImageSource } from '@/lib/treemap-image'
+import { createTreemapMotion } from '@/lib/treemap-motion'
+import { createTreemapImageSwap } from '@/lib/treemap-image-swap'
 import { useLocale } from '@/components/LocaleProvider'
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import ProjectStory from '@/components/ProjectStory/ProjectStory'
@@ -45,6 +47,8 @@ export default function Treemap({ data }: { data: TreemapData }) {
   const { updateBreadcrumb } = useBreadcrumb()
   const [storyProject, setStoryProject] = useState<TreemapData | null>(null)
   const [storyVisible, setStoryVisible] = useState(false)
+  const [storyFallbackImage, setStoryFallbackImage] = useState<string | undefined>()
+  const [preferStoryFallback, setPreferStoryFallback] = useState(false)
   const [storyNeighbors, setStoryNeighbors] = useState<{
     previous: TreemapData | null
     next: TreemapData | null
@@ -96,11 +100,13 @@ export default function Treemap({ data }: { data: TreemapData }) {
         timers.delete(id)
       }
     }
-    let projectNavigationTimers: ReturnType<typeof setTimeout>[] = []
-    const cancelProjectNavigation = () => {
-      projectNavigationTimers.forEach(clearTimer)
-      projectNavigationTimers = []
-    }
+    const motion = createTreemapMotion<TreemapNode>({
+      zoom: (node, final) => zoom(node, final),
+      resize: resizeTreemap,
+      pauseMs: duration ? 250 : 0,
+    })
+    const cancelProjectNavigation = motion.cancelNavigation
+    const imageSwaps = createTreemapImageSwap()
     const lightbox = createD3Lightbox({
       labels: text,
       imagePathPrefix: '',
@@ -226,8 +232,10 @@ export default function Treemap({ data }: { data: TreemapData }) {
       changeHistory = false,
       preserveStory = false,
       transitionDuration = duration,
-    ) {
-      if (disposed) return
+    ): Promise<boolean> {
+      if (disposed) return Promise.resolve(false)
+      const finishView = motion.beginView()
+      const swapWhenReady = imageSwaps.beginView()
       const isProject = node.data.kind === 'project'
       if (isProject) {
         const projectIndex = projectNodes.indexOf(node)
@@ -237,6 +245,13 @@ export default function Treemap({ data }: { data: TreemapData }) {
         })
         if (!preserveStory) {
           setStoryVisible(false)
+          setPreferStoryFallback(false)
+          const currentCover = cells
+            .filter((d) => d.parent === node && d.data.hero === true)
+            .select<SVGImageElement>('image')
+          setStoryFallbackImage(
+            currentCover.empty() ? undefined : currentCover.attr('href') || undefined,
+          )
           setStoryProject(node.data)
         }
       } else {
@@ -302,39 +317,75 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .attr('aria-hidden', (d) =>
           d.parent === node && (d.data.kind !== 'image' || d.data.hero) ? null : 'true',
         )
-      cells
-        .filter((d) => d.data.kind === 'image')
-        .select('image')
-        .attr('href', (d) =>
-          d.parent === node
-            ? d.data.hero
-              ? imageFor(d.data, innerW(d), innerH(d), true)
-              : imageFor(d.data, innerW(d), innerH(d))
-            : d.data.sizes?.thumbnail?.url || d.data.image || null,
-        )
+      const images = cells.filter((d) => d.data.kind === 'image').select<SVGImageElement>('image')
+      const targetSource = (d: TreemapNode) =>
+        d.data.hero
+          ? isProject && d.parent === node
+            ? proportionalMediaSize(d.data.sizes, d.data.width, d.data.height)?.url ||
+              d.data.image ||
+              null
+            : imageFor(
+                d.data,
+                Math.min(innerW(d), viewportWidth),
+                Math.min(innerH(d), viewportHeight),
+                true,
+              )
+          : d.parent === node
+            ? imageFor(d.data, innerW(d), innerH(d))
+            : d.data.sizes?.thumbnail?.url || d.data.image || null
+      const imageTransition = images
         .attr('preserveAspectRatio', 'xMidYMid slice')
         .transition(transition)
         .attr('x', (d) => (d.data.hero ? heroCrop(d, innerW(d), innerH(d)).x : 0))
         .attr('y', (d) => (d.data.hero ? heroCrop(d, innerW(d), innerH(d)).y : 0))
         .attr('width', (d) => (d.data.hero ? heroCrop(d, innerW(d), innerH(d)).width : innerW(d)))
         .attr('height', (d) => (d.data.hero ? heroCrop(d, innerW(d), innerH(d)).height : innerH(d)))
-      if (isProject && !preserveStory) {
-        const revealStory = () => {
-          container!.scrollTop = 0
-          setStoryVisible(true)
-        }
-        const targetHeroOverlay = heroOverlays.filter((d) => d.parent === node)
-        if (targetHeroOverlay.empty()) {
-          cellTransition.filter((d) => d === node).on('end.story', revealStory)
-        } else {
-          heroOverlayTransition.filter((d) => d.parent === node).on('end.story', revealStory)
-        }
-      }
+      const geometryFinished = Promise.all([
+        cellTransition.end(),
+        imageTransition.end(),
+        heroOverlayTransition.end(),
+      ])
+      const coverReady: Promise<boolean>[] = []
+      images.each((d, index, elements) => {
+        const image = elements[index]
+        const src = targetSource(d)
+        if (!src) return
+        const cover = isProject && d.parent === node && d.data.hero === true
+        const visible =
+          x(d.x1) > 0 && x(d.x0) < viewportWidth && y(d.y1) > 0 && y(d.y0) < viewportHeight
+        if (!cover && !visible) return
+        if (image.getAttribute('href') === src && !cover) return
+        const ready = swapWhenReady(src, geometryFinished, () => {
+          if (image.getAttribute('href') !== src) image.setAttribute('href', src)
+        })
+        // Visible tiles upgrade independently; only the selected cover gates
+        // the story handoff. Off-screen images keep their existing source.
+        if (cover) coverReady.push(ready)
+      })
+      return geometryFinished
+        .then(() => Promise.all(coverReady))
+        .then((decodedCovers) =>
+          finishView(() => {
+            if (isProject && !preserveStory) {
+              container!.scrollTop = 0
+              setPreferStoryFallback(decodedCovers.some((ready) => !ready))
+              setStoryVisible(true)
+            }
+          }),
+        )
+        .catch(() => {
+          finishView()
+          return false
+        })
     }
     function goToPath(path: string) {
-      cancelProjectNavigation()
       const target = root.descendants().find((d) => d.data.kind !== 'image' && pathFor(d) === path)
-      if (target && target !== current) zoom(target)
+      // pushState also updates usePathname. That notification must not cancel
+      // the transition which is already travelling to the same node.
+      if (target && target !== current) {
+        cancelProjectNavigation()
+        void zoom(target)
+      }
     }
     navigateRef.current = goToPath
     function animateToProject(project: TreemapData) {
@@ -351,15 +402,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       const upward = currentAncestors.slice(1, currentAncestors.indexOf(commonAncestor) + 1)
       const downward = targetAncestors.slice(0, targetAncestors.indexOf(commonAncestor)).reverse()
       const steps = [...upward, ...downward]
-      const stepDuration = duration || 0
-      const stepPause = duration ? 250 : 0
-
-      projectNavigationTimers = steps.map((step, index) =>
-        schedule(
-          () => zoom(step, step === target, false, stepDuration),
-          index * (stepDuration + stepPause),
-        ),
-      )
+      void motion.navigate(steps)
     }
     navigateProjectRef.current = animateToProject
     function activate(node: TreemapNode) {
@@ -397,21 +440,25 @@ export default function Treemap({ data }: { data: TreemapData }) {
       const target = root.descendants().find((d) => d.data.kind !== 'image' && pathFor(d) === path)
       if (target) zoom(target, true)
     }
-    const onPopState = () => goToPath(window.location.pathname)
+    const onPopState = () => {
+      cancelProjectNavigation()
+      goToPath(window.location.pathname)
+    }
     window.addEventListener('breadcrumb-click', onBreadcrumb)
     window.addEventListener('popstate', onPopState)
     let resizeTimer: ReturnType<typeof setTimeout> | undefined
+    function resizeTreemap() {
+      const nextWidth = element!.clientWidth || 1
+      const nextHeight = element!.clientHeight || 1
+      if (nextWidth === width && nextHeight === height) return
+      width = nextWidth
+      height = nextHeight
+      treemap.size([width, height])(root)
+      void zoom(current, false, true, 0)
+    }
     const observer = new ResizeObserver(() => {
       clearTimer(resizeTimer)
-      resizeTimer = schedule(() => {
-        const nextWidth = element.clientWidth || 1
-        const nextHeight = element.clientHeight || 1
-        if (nextWidth === width && nextHeight === height) return
-        width = nextWidth
-        height = nextHeight
-        treemap.size([width, height])(root)
-        zoom(current, false, true, 0)
-      }, 250)
+      resizeTimer = schedule(() => motion.requestResize(), 250)
     })
     observer.observe(element)
     zoom(
@@ -425,6 +472,8 @@ export default function Treemap({ data }: { data: TreemapData }) {
 
     return () => {
       disposed = true
+      motion.dispose()
+      imageSwaps.dispose()
       observer.disconnect()
       for (const timer of timers) clearTimeout(timer)
       window.removeEventListener('breadcrumb-click', onBreadcrumb)
@@ -458,6 +507,8 @@ export default function Treemap({ data }: { data: TreemapData }) {
           <ProjectStory
             key={storyProject.id}
             project={storyProject}
+            heroFallbackImage={storyFallbackImage}
+            preferHeroFallback={preferStoryFallback}
             titleSettings={data.settings?.projectTitle}
             storyTextSettings={data.settings?.storyText}
             descriptionSettings={data.settings?.projectDescription}

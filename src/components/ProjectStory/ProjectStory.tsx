@@ -17,7 +17,7 @@ import { normalizeColour } from '@/lib/colour'
 import { projectTextConverters } from '@/lib/project-rich-text'
 import { enableVimeoControls } from '@/lib/video-embed'
 import { storyTextStyle } from '@/lib/story-typography'
-import { treemapImageSource } from '@/lib/treemap-image'
+import { decodeTreemapImage } from '@/lib/treemap-image-swap'
 import styles from './ProjectStory.module.scss'
 
 type ResponsiveImage = {
@@ -214,16 +214,21 @@ function HeroVideo({
   title,
   titleSettings,
   onFitChange,
+  fallbackImage,
+  preferFallback,
 }: {
   hero: Extract<ProjectHero, { type: 'video' }>
   title: string
   titleSettings?: ProjectTitleSettings
   onFitChange: (fit: 'cover' | 'contain') => void
+  fallbackImage?: string
+  preferFallback?: boolean
 }) {
   const { text } = useLocale()
   const [started, setStarted] = useState(hero.autoplay)
   const [loaded, setLoaded] = useState(false)
   const [fit, setFit] = useState(hero.fit)
+  const [coverFailed, setCoverFailed] = useState(false)
   const iframeRef = useVideoAnalytics({
     url: hero.url,
     enabled: started,
@@ -284,7 +289,8 @@ function HeroVideo({
       {!loaded && (
         <Image
           className={styles.heroCover}
-          src={cover.src}
+          src={(coverFailed || preferFallback) && fallbackImage ? fallbackImage : cover.src}
+          onError={() => setCoverFailed(true)}
           width={cover.width}
           height={cover.height}
           sizes="100vw"
@@ -471,6 +477,8 @@ export default function ProjectStory({
   previousProject,
   nextProject,
   onNavigateProject,
+  heroFallbackImage,
+  preferHeroFallback,
 }: {
   project: TreemapData
   titleSettings?: ProjectTitleSettings
@@ -480,6 +488,8 @@ export default function ProjectStory({
   previousProject?: TreemapData | null
   nextProject?: TreemapData | null
   onNavigateProject: (project: TreemapData) => void
+  heroFallbackImage?: string
+  preferHeroFallback?: boolean
 }) {
   const { text } = useLocale()
   const navigationRef = useRef<HTMLElement>(null)
@@ -494,19 +504,11 @@ export default function ProjectStory({
         const hero = neighbor.children?.find((node) => node.kind === 'image' && node.hero)
         const sources = [
           neighbor.thumb,
-          hero &&
-            treemapImageSource(
-              hero,
-              window.innerWidth,
-              window.innerHeight - 64,
-              window.devicePixelRatio,
-              true,
-            ),
+          hero && (proportionalMediaSize(hero.sizes, hero.width, hero.height)?.url || hero.image),
         ]
         for (const src of sources) {
           if (!src) continue
-          const image = new window.Image()
-          image.src = src
+          void decodeTreemapImage(src)
         }
       }
     }
@@ -527,6 +529,7 @@ export default function ProjectStory({
     return () => observer.disconnect()
   }, [previousProject, nextProject])
   const hero = project.projectHero
+  const [heroFailed, setHeroFailed] = useState(false)
   const story = project.story || []
   const metadata = project.metadata
   const hasMetadata = Boolean(
@@ -582,7 +585,12 @@ export default function ProjectStory({
           return (
             <figure className={styles.hero}>
               <Image
-                src={source.src}
+                src={
+                  (heroFailed || preferHeroFallback) && heroFallbackImage
+                    ? heroFallbackImage
+                    : source.src
+                }
+                onError={() => setHeroFailed(true)}
                 width={source.width}
                 height={source.height}
                 sizes="100vw"
@@ -598,6 +606,8 @@ export default function ProjectStory({
       {hero?.type === 'video' && (
         <HeroVideo
           hero={hero}
+          fallbackImage={heroFallbackImage}
+          preferFallback={preferHeroFallback}
           key={hero.url}
           title={project.title}
           titleSettings={settings.placement === 'overlay' ? settings : undefined}

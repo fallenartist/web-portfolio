@@ -11,6 +11,7 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   height: calc(100dvh - #{$headerHeight});
   margin-top: $headerHeight; // Add margin-top to offset the fixed header
   overflow: hidden;
+  scrollbar-gutter: stable;
 
   &.storyOpen {
     overflow-y: auto;

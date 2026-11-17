@@ -76,3 +76,9 @@ Launch checks passed for all 17 sitemap URLs, both frontend languages, the singl
 Active release: `releases/20261116-admin-layout-typography`, built from `38e4855` (merged in PR #7 as `8d2b27b`). Includes the admin, Cookies, geolocation dashboard, Layout and Typography updates. FreeBSD dependencies and Sharp were verified; the additive Cookies migration was applied after database/media/runtime backups in `shared/backups/20261116-admin-layout-typography/`. The previous release remains available for rollback.
 
 **Visitor analytics are temporarily disabled:** production `POSTHOG_ENABLED=false` and `COOKIE_BANNER_PREVIEW=false`. Cookies settings and the menu icon are available. After the policy is published and selected in Settings → Cookies, enable `POSTHOG_ENABLED` in the private runtime file and restart the site. IP exclusion is configured; local/development tracking stays disabled. Live verification passed all 17 sitemap routes, Polish pages, admin login, media, JS/CSS and private-file protection. `test.lenart.pl` remains a redirect.
+
+## Production update — 17 November 2026
+
+Active release: `releases/20261117-treemap-transitions`, built locally with Node 26 from merged `main` revision `1550a92` (PR #8). Restores staged treemap navigation and retains each image during zoom until its replacement is decoded and geometry is settled. Validation: 94 tests, lint, production build and desktop Safari navigation passed; the live build ID, all 17 sitemap routes, EN/PL projects, admin login, static assets, media and private-file protection were checked.
+
+No database migration or content/media copy was needed. Runtime settings are unchanged, including disabled visitor analytics. The prior release is `releases/20261116-admin-layout-typography`; its path and a private runtime snapshot are recorded in `shared/backups/20261117-treemap-transitions/` for rollback. `test.lenart.pl` remains a redirect.

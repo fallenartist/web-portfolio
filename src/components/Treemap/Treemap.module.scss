@@ -5,6 +5,18 @@ $textHoverColor: #d40;
 $transitionTime: 600ms;
 $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
 
+@mixin revealTitle {
+  rect {
+    fill-opacity: 0.9;
+  }
+  .label {
+    fill: hsla(0, 0%, 100%, 1);
+  }
+  .thumb {
+    opacity: 0;
+  }
+}
+
 .treemapContainer {
   position: relative;
   width: 100%;
@@ -55,6 +67,7 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   transition: opacity $transitionTime $transitionEase;
   will-change: transform;
   cursor: pointer;
+  touch-action: manipulation;
 
   rect {
     stroke-width: 0;
@@ -112,18 +125,13 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
   }
 
   // Hover effects
-  &:hover,
+  &.titlePreview,
   &:focus-visible {
-    rect {
-      fill-opacity: 0.9;
-    }
-
-    .label {
-      fill: hsla(0, 0%, 100%, 1);
-    }
-
-    .thumb {
-      opacity: 0;
+    @include revealTitle;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @include revealTitle;
     }
   }
 
@@ -168,51 +176,6 @@ $transitionEase: cubic-bezier(0.9, 0, 0.1, 1);
 
 .node.loading {
   opacity: 0;
-}
-
-.touchTitle {
-  display: none;
-  pointer-events: none;
-}
-
-@media (hover: none), (pointer: coarse) {
-  .node.level2 {
-    .label {
-      display: none;
-    }
-    .thumb {
-      opacity: 0.9;
-    }
-    rect {
-      fill-opacity: 0.6;
-    }
-    &.hide rect {
-      fill-opacity: 0;
-    }
-  }
-  .touchTitle {
-    display: block;
-    overflow: hidden;
-    div {
-      display: flex;
-      align-items: flex-end;
-      height: 100%;
-      color: #fff;
-      font-size: clamp(14px, 3vmin, 26px);
-      font-weight: 500;
-      line-height: 1.1;
-      text-shadow:
-        0 1px 5px #000,
-        0 0 12px #0008;
-    }
-    span {
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
-      overflow: hidden;
-      overflow-wrap: anywhere;
-    }
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -8,6 +8,7 @@ import { coverMediaRect, proportionalMediaSize } from '@/lib/media-image'
 import { treemapImageSource } from '@/lib/treemap-image'
 import { createTreemapMotion } from '@/lib/treemap-motion'
 import { createTreemapImageSwap } from '@/lib/treemap-image-swap'
+import { createTreemapTapSelection } from '@/lib/treemap-tap-selection'
 import { useLocale } from '@/components/LocaleProvider'
 import { useBreadcrumb } from '@/components/BreadcrumbProvider'
 import ProjectStory from '@/components/ProjectStory/ProjectStory'
@@ -107,6 +108,8 @@ export default function Treemap({ data }: { data: TreemapData }) {
     })
     const cancelProjectNavigation = motion.cancelNavigation
     const imageSwaps = createTreemapImageSwap()
+    const tapSelection = createTreemapTapSelection()
+    let lastPointerType = ''
     const lightbox = createD3Lightbox({
       labels: text,
       imagePathPrefix: '',
@@ -218,14 +221,10 @@ export default function Treemap({ data }: { data: TreemapData }) {
       .style('fill-opacity', 0)
     // Preserve overlay stacking: discipline labels above projects above gallery images.
     cells.sort((a, b) => b.depth - a.depth)
-    cells
-      .filter((d) => d.data.kind === 'project')
-      .append('foreignObject')
-      .attr('class', styles.touchTitle)
-      .attr('aria-hidden', 'true')
-      .append('xhtml:div')
-      .append('xhtml:span')
-      .text((d) => d.data.title)
+    const clearTitlePreview = () => {
+      tapSelection.clear()
+      cells.classed(styles.titlePreview, false)
+    }
 
     function zoom(
       node: TreemapNode,
@@ -234,6 +233,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
       transitionDuration = duration,
     ): Promise<boolean> {
       if (disposed) return Promise.resolve(false)
+      clearTitlePreview()
       const finishView = motion.beginView()
       const swapWhenReady = imageSwaps.beginView()
       const isProject = node.data.kind === 'project'
@@ -302,13 +302,6 @@ export default function Treemap({ data }: { data: TreemapData }) {
         .attr('x', (d) => innerW(d) / 2)
         .attr('y', (d) => innerH(d) / 2)
       cells.select('svg').transition(transition).attr('width', innerW).attr('height', innerH)
-      cells
-        .select('foreignObject')
-        .transition(transition)
-        .attr('x', 8)
-        .attr('y', (d) => Math.max(4, innerH(d) - 70))
-        .attr('width', (d) => Math.max(0, innerW(d) - 16))
-        .attr('height', (d) => Math.max(0, Math.min(66, innerH(d) - 8)))
       cells
         .classed(styles.hide, (d) => d.data.kind !== 'image' && d.depth <= node.depth)
         .attr('tabindex', (d) =>
@@ -406,6 +399,7 @@ export default function Treemap({ data }: { data: TreemapData }) {
     }
     navigateProjectRef.current = animateToProject
     function activate(node: TreemapNode) {
+      clearTitlePreview()
       cancelProjectNavigation()
       if (node.data.kind === 'image' && node.data.image) {
         const images: LightboxImage[] = (node.parent?.children || [])
@@ -427,13 +421,36 @@ export default function Treemap({ data }: { data: TreemapData }) {
       } else zoom(node, true)
     }
     cells
-      .on('click', (_event, d) => activate(d))
+      .on('pointerdown.input', (event: PointerEvent) => {
+        lastPointerType = event.pointerType
+      })
+      .on('click', (event: MouseEvent, d) => {
+        const pointerType = (event as PointerEvent).pointerType || lastPointerType
+        const touch =
+          event.detail !== 0 &&
+          (pointerType === 'touch' ||
+            (pointerType !== 'mouse' && window.matchMedia('(hover: none)').matches))
+        const previewFirst = touch && (d.data.kind === 'discipline' || d.data.kind === 'project')
+        if (!tapSelection.activate(d.data.id, previewFirst)) {
+          cells.classed(styles.titlePreview, (node) => node.data.id === tapSelection.selected)
+          return
+        }
+        activate(d)
+      })
       .on('keydown', (event: KeyboardEvent, d) => {
+        if (event.key === 'Escape') clearTitlePreview()
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
           activate(d)
         }
       })
+    const onOutsidePointer = (event: PointerEvent) => {
+      if (event.target instanceof Node && !element.contains(event.target)) clearTitlePreview()
+    }
+    document.addEventListener('pointerdown', onOutsidePointer)
+    svg.on('click.preview', (event: MouseEvent) => {
+      if (event.target === element) clearTitlePreview()
+    })
     const onBreadcrumb = (event: Event) => {
       cancelProjectNavigation()
       const path = (event as CustomEvent<string>).detail
@@ -478,6 +495,8 @@ export default function Treemap({ data }: { data: TreemapData }) {
       for (const timer of timers) clearTimeout(timer)
       window.removeEventListener('breadcrumb-click', onBreadcrumb)
       window.removeEventListener('popstate', onPopState)
+      document.removeEventListener('pointerdown', onOutsidePointer)
+      svg.on('click.preview', null)
       svg.interrupt()
       svg.selectAll('*').interrupt().remove()
       lightbox.destroy()

@@ -86,3 +86,9 @@ No database migration or content/media copy was needed. Runtime settings are unc
 Latest release: `releases/20261117-mobile-treemap-titles`, built from merged `main` revision `1a884dc` (PR #9). Restores the original mobile look with first-tap title preview and second-tap zoom; preserves the image and animation fixes. Validation passed 97 tests, lint, the Node 26 build, Safari narrow-layout review, live build ID, 20 page checks, eight JS/CSS assets and private-file protection. No migrations or content changes; analytics remain disabled. Rollback target: `releases/20261117-treemap-transitions`, recorded with the runtime snapshot in `shared/backups/20261117-mobile-treemap-titles/`.
 
 Switch release symlinks atomically with Node's `renameSync('current.next', 'current')`; plain FreeBSD `mv` follows the destination symlink into the previous release directory.
+
+## Production update — 19 November 2026
+
+Active release: `releases/20261119-cookie-mode-menu`, built with Node 26 from merged `main` revision `a4ac6b9` (PR #10). Includes matching page/project-description typography, the Cookies analytics-mode switch and a single target-language flag in the menu. The additive `cookies_enabled` migration defaults on to preserve existing behaviour; database, uploads and runtime backups are in `shared/backups/20261119-cookie-mode-menu/`. Content counts remain 14 projects, two pages and 90 media records. Rollback target: `releases/20261117-mobile-treemap-titles`; the extra column is compatible with that release.
+
+Validation passed 100 tests, lint, the Node 26 build, live build ID, 20 page checks, eight JS/CSS assets, both flag SVGs, single target-language flags in EN/PL, media and private-file protection. Runtime settings are unchanged: visitor analytics remain disabled. Before selecting cookieless analytics, enable cookieless tracking in the PostHog project settings too.

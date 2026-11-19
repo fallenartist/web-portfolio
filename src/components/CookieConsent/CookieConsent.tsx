@@ -37,14 +37,16 @@ export default function CookieConsent({
   const [dismissed, setDismissed] = useState(false)
   const panel = useRef<HTMLElement>(null)
   const returnFocus = useRef<HTMLElement | null>(null)
-  const visible = settingsOpen || (prompt && !dismissed && choice === 'pending')
+  const visible =
+    settings.enabled && (settingsOpen || (prompt && !dismissed && choice === 'pending'))
   useEffect(() => {
     if (visible) panel.current?.focus({ preventScroll: true })
   }, [visible])
 
   useEffect(() => {
-    if (choice === 'pending' || choice === 'rejected') clearAnalyticsStorage(projectToken)
-  }, [choice, projectToken])
+    if (!settings.enabled || choice === 'pending' || choice === 'rejected')
+      clearAnalyticsStorage(projectToken)
+  }, [choice, projectToken, settings.enabled])
 
   const close = (dismiss = false) => {
     setSettingsOpen(false)
@@ -60,14 +62,18 @@ export default function CookieConsent({
 
   return (
     <CookieConsentContext.Provider
-      value={{
-        label,
-        iconURL: settings.iconURL,
-        openSettings: (trigger) => {
-          returnFocus.current = trigger
-          setSettingsOpen(true)
-        },
-      }}
+      value={
+        settings.enabled
+          ? {
+              label,
+              iconURL: settings.iconURL,
+              openSettings: (trigger) => {
+                returnFocus.current = trigger
+                setSettingsOpen(true)
+              },
+            }
+          : null
+      }
     >
       {children}
       {visible && (

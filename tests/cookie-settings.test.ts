@@ -29,3 +29,9 @@ test('only published privacy pages are linked and the selected icon URL is retai
   )
   assert.equal(getCookieBannerSettings({ privacyPage: 1, icon: 1 }, 'en').privacyHref, undefined)
 })
+
+test('the global cookie switch defaults to existing behaviour and supports cookieless mode', () => {
+  assert.equal(getCookieBannerSettings(undefined, 'en').enabled, true)
+  assert.equal(getCookieBannerSettings({ enabled: false }, 'pl').enabled, false)
+  assert.equal(getCookieBannerSettings({ enabled: true }, 'en').enabled, true)
+})

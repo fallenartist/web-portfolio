@@ -12,6 +12,7 @@ import {
   getAnalyticsConsent,
   browserAllowsAnalytics,
   subscribeAnalyticsConsent,
+  clearAnalyticsStorage,
 } from '@/lib/analytics-consent'
 import { createConsentAnalyticsSession } from '@/lib/consent-analytics-session'
 import { getPostHogOptions } from '@/lib/posthog-options'
@@ -21,6 +22,7 @@ export interface PublicAnalyticsConfig {
   apiHost: string
   appHost: string
   trackLocalhost: boolean
+  mode?: 'cookies' | 'cookieless'
 }
 
 export default function Analytics({ config }: { config: PublicAnalyticsConfig | null }) {
@@ -32,7 +34,12 @@ export default function Analytics({ config }: { config: PublicAnalyticsConfig | 
       return
     }
     let active = true
-    const allowed = () => active && getAnalyticsConsent() === 'accepted' && browserAllowsAnalytics()
+    const cookieless = config.mode === 'cookieless'
+    if (cookieless) clearAnalyticsStorage(config.token)
+    const allowed = () =>
+      active &&
+      browserAllowsAnalytics() &&
+      (cookieless ? getAnalyticsConsent() !== 'rejected' : getAnalyticsConsent() === 'accepted')
     const referrer = document.referrer ? new URL(document.referrer) : null
     const source =
       referrer && referrer.origin !== window.location.origin ? referrer.hostname : 'Direct'

@@ -1128,6 +1128,10 @@ export interface Setting {
    */
   upLogo?: (number | null) | Media;
   cookies?: {
+    /**
+     * On: show cookie controls and enable full analytics after consent. Off: hide cookie controls and use cookieless analytics without automatic clicks or recordings. Enable cookieless tracking in PostHog project settings too. The server analytics master switch and exclusions still apply.
+     */
+    enabled?: boolean | null;
     title?: string | null;
     message?: string | null;
     details?: string | null;
@@ -1213,6 +1217,7 @@ export interface SettingsSelect<T extends boolean = true> {
   cookies?:
     | T
     | {
+        enabled?: T;
         title?: T;
         message?: T;
         details?: T;

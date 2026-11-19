@@ -38,7 +38,7 @@ test('only versioned, explicit, unexpired consent can enable tracking', () => {
   }
 })
 
-function harness(initial = false, deferred = false) {
+function harness(initial = false, deferred = false, cookieless = false) {
   let permission = initial
   let notify = () => {}
   let loads = 0
@@ -74,7 +74,11 @@ function harness(initial = false, deferred = false) {
   }
   const dispose = createConsentAnalyticsSession({
     token: 'test-token',
-    options: { opt_out_capturing_by_default: true, opt_out_persistence_by_default: true },
+    options: {
+      cookieless_mode: cookieless ? 'always' : undefined,
+      opt_out_capturing_by_default: true,
+      opt_out_persistence_by_default: true,
+    },
     allowed: () => permission,
     subscribe: (listener) => {
       notify = listener
@@ -322,4 +326,45 @@ test('a fast SDK waits for late page metadata instead of losing a project-open e
     if (original) Object.defineProperty(globalThis, 'window', original)
     else Reflect.deleteProperty(globalThis, 'window')
   }
+})
+
+test('cookieless mode never opts in, persists an opt-out or starts recordings', async () => {
+  const h = harness(true, false, true)
+  await tick()
+  assert.deepEqual(
+    h.calls.filter((c) => c !== 'sink-off'),
+    ['init', 'ready'],
+  )
+  h.allow(false)
+  assert.ok(h.calls.includes('stop-recording'))
+  assert.ok(!h.calls.includes('opt-out'))
+  assert.ok(!h.calls.includes('clear-identity'))
+  h.allow(true)
+  await tick()
+  h.dispose()
+  assert.ok(!h.calls.includes('record'))
+  assert.ok(!h.calls.includes('opt-in'))
+})
+
+test('cookieless SDK options disable persistent identity, autocapture and recordings', async () => {
+  const { getPostHogOptions } = await import('../src/lib/posthog-options')
+  let allowed = true
+  const options = getPostHogOptions(
+    { apiHost: 'https://eu.i.posthog.com', appHost: 'https://eu.posthog.com', mode: 'cookieless' },
+    () => allowed,
+  )
+  assert.equal(options.cookieless_mode, 'always')
+  assert.equal(options.persistence, 'memory')
+  assert.equal(options.disable_persistence, true)
+  assert.equal(options.opt_out_capturing_by_default, false)
+  assert.equal(options.person_profiles, 'never')
+  assert.equal(options.autocapture, false)
+  assert.equal(options.disable_session_recording, true)
+  assert.equal(options.respect_dnt, true)
+  const filter = options.before_send
+  if (typeof filter !== 'function') throw Error('Capture filter required')
+  const event = { uuid: '00000000-0000-0000-0000-000000000001', event: '$pageview', properties: {} }
+  assert.ok(filter(event))
+  allowed = false
+  assert.equal(filter(event), null)
 })

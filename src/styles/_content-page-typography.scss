@@ -6,6 +6,7 @@
 }
 
 @mixin body {
+  font-family: var(--story-text-font, 'October Condensed'), sans-serif;
   font-size: clamp(
     var(--story-text-min-size, 19px),
     var(--story-text-fluid-size, 1.75vw),

@@ -36,6 +36,7 @@ export function createConsentAnalyticsSession({
   let loading = false
   let closed = false
   let needsCleanup = false
+  const cookieless = options.cookieless_mode === 'always'
 
   const stop = () => {
     onStop()
@@ -44,9 +45,11 @@ export function createConsentAnalyticsSession({
       running = false
       try {
         client.stopSessionRecording()
-        client.opt_out_capturing()
-        client.reset(true)
-        client.opt_out_capturing()
+        if (!cookieless) {
+          client.opt_out_capturing()
+          client.reset(true)
+          client.opt_out_capturing()
+        }
         client.set_config({
           autocapture: false,
           capture_pageleave: false,
@@ -75,13 +78,13 @@ export function createConsentAnalyticsSession({
           client.init(token, options)
           initialized = true
         } else client.set_config(options)
-        client.opt_in_capturing({ captureEventName: false })
+        if (!cookieless) client.opt_in_capturing({ captureEventName: false })
         running = true
         if (!allowed()) {
           stop()
           return
         }
-        client.startSessionRecording()
+        if (!cookieless) client.startSessionRecording()
         onReady(client)
       })
       .catch(() => {

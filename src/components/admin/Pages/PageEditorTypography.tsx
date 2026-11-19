@@ -15,9 +15,12 @@ export async function PageEditorTypography({
     overrideAccess: false,
   })
   // Keep the admin theme's text colour for contrast, while sharing the site's type sizes.
-  const declarations = Object.entries(storyTextStyle(appearance.storyText))
-    .filter(([name]) => name !== '--story-text-color')
-    .map(([name, value]) => `${name}:${value}`)
-    .join(';')
-  return <style>{`.page-body-editor,.project-body-editor{${declarations}}`}</style>
+  const declarations = (settings: Parameters<typeof storyTextStyle>[0]) =>
+    Object.entries(storyTextStyle(settings))
+      .filter(([name]) => name !== '--story-text-color')
+      .map(([name, value]) => `${name}:${value}`)
+      .join(';')
+  return (
+    <style>{`.page-body-editor{${declarations(appearance.projectDescription)}}.project-body-editor{${declarations(appearance.storyText)}}`}</style>
+  )
 }

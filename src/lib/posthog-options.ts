@@ -1,27 +1,31 @@
 import type { PostHogConfig } from 'posthog-js'
 
 export function getPostHogOptions(
-  config: { apiHost: string; appHost: string },
+  config: { apiHost: string; appHost: string; mode?: 'cookies' | 'cookieless' },
   allowed: () => boolean,
 ): Partial<PostHogConfig> {
+  const cookieless = config.mode === 'cookieless'
   return {
     api_host: config.apiHost,
     ui_host: config.appHost,
-    cookieless_mode: undefined,
-    persistence: 'cookie',
+    cookieless_mode: cookieless ? 'always' : undefined,
+    persistence: cookieless ? 'memory' : 'cookie',
+    disable_persistence: cookieless,
     cookie_expiration: 180,
     cross_subdomain_cookie: false,
-    opt_out_capturing_by_default: true,
+    opt_out_capturing_by_default: !cookieless,
     opt_out_persistence_by_default: true,
     opt_out_capturing_persistence_type: 'localStorage',
     person_profiles: 'never',
-    autocapture: {
-      element_attribute_ignorelist: ['href', 'src', 'value'],
-      capture_copied_text: false,
-    },
+    autocapture: cookieless
+      ? false
+      : {
+          element_attribute_ignorelist: ['href', 'src', 'value'],
+          capture_copied_text: false,
+        },
     capture_pageview: false,
     capture_pageleave: true,
-    disable_session_recording: false,
+    disable_session_recording: cookieless,
     session_recording: {
       maskAllInputs: true,
       blockSelector: 'iframe, [data-private], input[type="file"]',

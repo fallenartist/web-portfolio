@@ -35,6 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     settings?.upLogo && typeof settings.upLogo === 'object' ? settings.upLogo.url : undefined
   const menuBackgroundColor = normalizeColour(appearance.menuBackgroundColor) || '#f4f4f4'
   const keyColor = normalizeColour(appearance.keyColor) || '#cc2929'
+  const cookieSettings = getCookieBannerSettings(settings.cookies, locale)
   return (
     <html lang={locale}>
       <head>
@@ -50,11 +51,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       >
         <LocaleProvider locale={locale} available={available}>
           <CookieConsent
-            settings={getCookieBannerSettings(settings.cookies, locale)}
+            settings={cookieSettings}
             projectToken={process.env.POSTHOG_PROJECT_TOKEN}
             prompt={Boolean(analyticsConfig) || process.env.COOKIE_BANNER_PREVIEW === 'true'}
           >
-            <Analytics config={analyticsConfig} />
+            <Analytics
+              config={
+                analyticsConfig
+                  ? { ...analyticsConfig, mode: cookieSettings.enabled ? 'cookies' : 'cookieless' }
+                  : null
+              }
+            />
             <BreadcrumbProvider
               title={settings?.siteTitle || 'Design Portfolio'}
               menu={menu}

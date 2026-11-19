@@ -25,6 +25,7 @@ export const cookieDefaults = {
 }
 
 export interface CookieBannerSettings {
+  enabled: boolean
   title: string
   message: string
   acceptLabel: string
@@ -42,6 +43,7 @@ export function getCookieBannerSettings(
   const page = settings?.privacyPage
   const icon = settings?.icon
   return {
+    enabled: settings?.enabled !== false,
     title: settings?.title?.trim() || defaults.title,
     message: settings?.message?.trim() || defaults.message,
     acceptLabel: settings?.acceptLabel?.trim() || defaults.acceptLabel,

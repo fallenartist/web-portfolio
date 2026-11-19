@@ -10,7 +10,7 @@ Next.js 16, React 19, Payload 3 and PostgreSQL. Use Node 26 and pnpm 9.15.9.
 - Develop: `pnpm install --frozen-lockfile`, then `pnpm dev`.
 - Check: `pnpm lint`, `pnpm test`, `pnpm build`.
 - Schema changes: generate types/import map, review migrations, back up the database, then run `pnpm payload migrate`. Automatic schema pushing is disabled.
-- PostHog: cookie-based analytics, automatic clicks and masked session recordings only after consent; server-only personal API key with Query Read. Admin-cookie browsers and addresses in `POSTHOG_EXCLUDED_IPS` are excluded. Keep development/localhost tracking disabled.
+- PostHog: Settings → Cookies switches between consent-based cookies/clicks/masked recordings and cookieless analytics. Enable cookieless tracking in the PostHog project before using that mode. `POSTHOG_ENABLED` remains the master switch; server-only personal API key with Query Read. Admin-cookie browsers and addresses in `POSTHOG_EXCLUDED_IPS` are excluded. Keep development/localhost tracking disabled.
 
 ## Deployment
 

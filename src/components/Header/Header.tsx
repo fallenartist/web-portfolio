@@ -44,9 +44,9 @@ export default function Header({
   onBreadcrumbClick,
 }: HeaderProps) {
   const { locale, available, text } = useLocale()
+  const switchLanguage = available.find((language) => language !== locale)
   const cookieConsent = useCookieConsent()
   const menuButtonRef = useRef<HTMLButtonElement>(null)
-  const switchLanguage = available.find((language) => language !== locale)
   const [openPath, setOpenPath] = useState<string | null>(null)
   const [abbreviateBreadcrumb, setAbbreviateBreadcrumb] = useState(false)
   const breadcrumbRef = useRef<HTMLElement>(null)
@@ -196,22 +196,6 @@ export default function Header({
         </div>
       </nav>
 
-      {switchLanguage && (
-        <div className={styles.languageSwitcher}>
-          <button
-            type="button"
-            lang={switchLanguage}
-            aria-label={locale === 'pl' ? 'Przełącz na język angielski' : 'Switch to Polish'}
-            onClick={() => {
-              trackEvent('language_changed', { from_language: locale, to_language: switchLanguage })
-              window.location.assign(languageSwitchURL(window.location.href, switchLanguage).href)
-            }}
-          >
-            {switchLanguage.toUpperCase()}
-          </button>
-        </div>
-      )}
-
       {/* Hamburger Menu Button */}
       <button
         ref={menuButtonRef}
@@ -273,22 +257,47 @@ export default function Header({
             </li>
           </ul>
         )}
-        {cookieConsent && (
-          <button
-            type="button"
-            className={styles.cookieSettings}
-            aria-label={cookieConsent.label}
-            title={cookieConsent.label}
-            aria-haspopup="dialog"
-            tabIndex={menuOpen ? 0 : -1}
-            onClick={() => {
-              setOpenPath(null)
-              cookieConsent.openSettings(menuButtonRef.current)
-            }}
-          >
-            <CookieIcon url={cookieConsent.iconURL} size={28} />
-          </button>
-        )}
+        <div className={styles.menuControls}>
+          {switchLanguage && (
+            <button
+              type="button"
+              lang={switchLanguage}
+              className={styles.menuControl}
+              aria-label={locale === 'pl' ? 'Przełącz na język angielski' : 'Switch to Polish'}
+              title={switchLanguage === 'pl' ? 'Polski' : 'English'}
+              tabIndex={menuOpen ? 0 : -1}
+              onClick={() => {
+                trackEvent('language_changed', { from_language: locale, to_language: switchLanguage })
+                window.location.assign(languageSwitchURL(window.location.href, switchLanguage).href)
+              }}
+            >
+              <span
+                className={styles.flag}
+                style={{
+                  maskImage: `url(/flag-${switchLanguage.toUpperCase()}.svg)`,
+                  WebkitMaskImage: `url(/flag-${switchLanguage.toUpperCase()}.svg)`,
+                }}
+                aria-hidden="true"
+              />
+            </button>
+          )}
+          {cookieConsent && (
+            <button
+              type="button"
+              className={styles.menuControl}
+              aria-label={cookieConsent.label}
+              title={cookieConsent.label}
+              aria-haspopup="dialog"
+              tabIndex={menuOpen ? 0 : -1}
+              onClick={() => {
+                setOpenPath(null)
+                cookieConsent.openSettings(menuButtonRef.current)
+              }}
+            >
+              <CookieIcon url={cookieConsent.iconURL} size={28} />
+            </button>
+          )}
+        </div>
       </nav>
     </header>
   )

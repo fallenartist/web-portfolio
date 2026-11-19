@@ -111,6 +111,16 @@ export const Settings: GlobalConfig = {
       label: 'Cookies',
       type: 'group',
       fields: [
+        {
+          name: 'enabled',
+          label: 'Enable analytics cookies',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description:
+              'On: show cookie controls and enable full analytics after consent. Off: hide cookie controls and use cookieless analytics without automatic clicks or recordings. Enable cookieless tracking in PostHog project settings too. The server analytics master switch and exclusions still apply.',
+          },
+        },
         { name: 'title', type: 'text', localized: true, defaultValue: cookieDefaults.en.title },
         {
           name: 'message',

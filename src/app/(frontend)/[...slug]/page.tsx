@@ -36,7 +36,7 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
         rootTitle={treemapData.title}
         siteTitle={portfolio.settings.siteTitle || 'Design Portfolio'}
         legacyRootSlug={treemapData.legacyRootSlug}
-        textSettings={treemapData.settings?.storyText}
+        textSettings={treemapData.settings?.projectDescription}
       />
     )
   const overviewPath = getProjectsOverviewPath(portfolio.settings.projectsOverviewSlug)

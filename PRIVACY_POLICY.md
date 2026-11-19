@@ -39,13 +39,15 @@ Analytics events are retained for **[CONFIRM: event retention period in this Pos
 
 The website uses cookies and similar browser storage for the following purposes:
 
-| Storage | Purpose | Lifetime |
-| --- | --- | --- |
-| `portfolio-language` cookie | Remembers the language you select. | Up to one year. |
-| `portfolio-analytics-consent-v1` in local storage | Remembers your acceptance or rejection of analytics. | The choice is treated as valid for 180 days; the stored entry may remain until replaced or browser data is cleared. |
-| PostHog analytics cookie, normally named `ph_<project-token>_posthog` | Recognises a browser and associates visits and interactions after consent. | Configured for 180 days; expiry may be renewed during use. |
-| PostHog supporting local/session storage | Maintains analytics session and opt-out state where used by the SDK. | Session storage lasts for the tab session; local storage may persist until cleared. Withdrawal triggers removal of this site's project-specific analytics storage. |
-| Administrator authentication cookie (`payload-token`) | Allows authorised administrators to sign in. It is not needed by ordinary visitors. | Production authentication tokens expire after two hours. |
+- **`portfolio-language` cookie** — Remembers the language you select. Up to one year.
+
+- **`portfolio-analytics-consent-v1` in local storage** — Remembers your acceptance or rejection of analytics. The choice is treated as valid for 180 days; the stored entry may remain until replaced or browser data is cleared.
+
+- **PostHog analytics cookie, normally named `ph_<project-token>_posthog`** — Recognises a browser and associates visits and interactions after consent. Configured for 180 days; expiry may be renewed during use.
+
+- **PostHog supporting local/session storage** — Maintains analytics session and opt-out state where used by the SDK. Session storage lasts for the tab session; local storage may persist until cleared. Withdrawal triggers removal of this site's project-specific analytics storage.
+
+- **Administrator authentication cookie (`payload-token`)** — Allows authorised administrators to sign in. It is not needed by ordinary visitors. Production authentication tokens expire after two hours.
 
 Language and consent preferences support functionality you request and remembering your privacy choice; they are not used for analytics. Optional analytics storage is used only after acceptance.
 
@@ -130,13 +132,15 @@ Zdarzenia analityczne są przechowywane przez **[CONFIRM: okres retencji zdarze�
 
 Strona korzysta z plików cookie i podobnych mechanizmów pamięci przeglądarki:
 
-| Dane w przeglądarce | Cel | Czas przechowywania |
-| --- | --- | --- |
-| Cookie `portfolio-language` | Zapamiętanie wybranego języka. | Do jednego roku. |
-| `portfolio-analytics-consent-v1` w local storage | Zapamiętanie zgody na analitykę lub jej odrzucenia. | Wybór jest uznawany za ważny przez 180 dni; wpis może pozostać do zastąpienia lub usunięcia danych przeglądarki. |
-| Cookie analityczne PostHog, zwykle `ph_<project-token>_posthog` | Rozpoznawanie przeglądarki i powiązanie odwiedzin oraz interakcji po wyrażeniu zgody. | Skonfigurowane na 180 dni; termin ważności może być odnawiany podczas korzystania ze strony. |
-| Pomocnicze dane PostHog w local storage i session storage | Obsługa sesji analitycznej i stanu wyłączenia analityki, jeśli SDK korzysta z tych mechanizmów. | Session storage działa w obrębie sesji karty; local storage może pozostać do usunięcia. Wycofanie zgody uruchamia usuwanie danych analitycznych tego projektu. |
-| Cookie uwierzytelniające administratora (`payload-token`) | Logowanie uprawnionych administratorów; nie jest potrzebne zwykłym odwiedzającym. | Tokeny uwierzytelniające w środowisku produkcyjnym wygasają po dwóch godzinach. |
+- **Cookie `portfolio-language`** — Zapamiętanie wybranego języka. Do jednego roku.
+
+- **`portfolio-analytics-consent-v1` w local storage** — Zapamiętanie zgody na analitykę lub jej odrzucenia. Wybór jest uznawany za ważny przez 180 dni; wpis może pozostać do zastąpienia lub usunięcia danych przeglądarki.
+
+- **Cookie analityczne PostHog, zwykle `ph_<project-token>_posthog`** — Rozpoznawanie przeglądarki i powiązanie odwiedzin oraz interakcji po wyrażeniu zgody. Skonfigurowane na 180 dni; termin ważności może być odnawiany podczas korzystania ze strony.
+
+- **Pomocnicze dane PostHog w local storage i session storage** — Obsługa sesji analitycznej i stanu wyłączenia analityki, jeśli SDK korzysta z tych mechanizmów. Session storage działa w obrębie sesji karty; local storage może pozostać do usunięcia. Wycofanie zgody uruchamia usuwanie danych analitycznych tego projektu.
+
+- **Cookie uwierzytelniające administratora (`payload-token`)** — Logowanie uprawnionych administratorów; nie jest potrzebne zwykłym odwiedzającym. Tokeny uwierzytelniające w środowisku produkcyjnym wygasają po dwóch godzinach.
 
 Preferencje języka i zgody obsługują wybraną przez Ciebie funkcję oraz zapamiętanie decyzji dotyczącej prywatności; nie służą analityce. Opcjonalne dane analityczne są zapisywane dopiero po akceptacji.
 
